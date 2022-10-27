@@ -1,10 +1,10 @@
 {
-	"name": "@sapphire/template",
+	"name": "@PGP04/rf03",
 	"version": "0.0.1",
-	"description": "template",
+	"description": "Requisito Funcional 03 - Pesquisa de produtos através dos campos comuns a todos os produtos",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
-	"author": "@sapphire",
+	"author": "@PGP04",
 	"license": "MIT",
 	"scripts": {
 		"lint": "eslint src tests --ext ts --fix",
@@ -16,6 +16,7 @@
 		"build": "tsc -b src",
 		"clean": "tsc -b src --clean",
 		"watch": "tsc -b src -w",
+		"dev": "nodemon",
 		"sversion": "standard-version",
 		"commit": "git-cz",
 		"cz": "git-cz",
@@ -24,14 +25,21 @@
 		"postpack": "pinst --enable"
 	},
 	"dependencies": {
+		"@mikro-orm/core": "^5.5.0",
+		"@mikro-orm/mysql": "^5.5.0",
+		"@mikro-orm/reflection": "^5.5.0",
+		"express": "^4.18.2",
+		"mysql2": "^2.3.3",
 		"tslib": "^2.4.0"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^17.1.2",
 		"@commitlint/config-conventional": "^17.1.0",
+		"@mikro-orm/cli": "^5.5.0",
 		"@sapphire/eslint-config": "^4.3.8",
 		"@sapphire/prettier-config": "^1.4.4",
 		"@sapphire/ts-config": "^3.3.4",
+		"@types/express": "^4",
 		"@types/jest": "^29.2.0",
 		"@types/node": "^17.0.31",
 		"@typescript-eslint/eslint-plugin": "^5.40.1",
@@ -43,6 +51,7 @@
 		"husky": "^8.0.1",
 		"jest": "^29.2.1",
 		"lint-staged": "^13.0.3",
+		"nodemon": "^2.0.20",
 		"pinst": "^3.0.0",
 		"prettier": "^2.7.1",
 		"pretty-quick": "^3.1.3",
@@ -54,7 +63,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/sapphiredev/sapphire-template.git"
+		"url": "git+https://github.com/fcul-lti/rf03.git"
 	},
 	"files": [
 		"dist",
@@ -75,9 +84,9 @@
 		"discordjs"
 	],
 	"bugs": {
-		"url": "https://github.com/sapphiredev/sapphire-template/issues"
+		"url": "https://github.com/fcul-lti/rf03/issues"
 	},
-	"homepage": "https://www.sapphirejs.dev",
+	"homepage": "https://fc.ul.pt",
 	"commitlint": {
 		"extends": [
 			"@commitlint/config-conventional"

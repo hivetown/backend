@@ -4,7 +4,11 @@
 		"rootDir": "./",
 		"outDir": "../dist",
 		"composite": true,
-		"preserveConstEnums": true
+		"preserveConstEnums": true,
+		"declaration": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"esModuleInterop": true
 	},
-	"include": ["."]
+	"include": [".", "../mikro-orm.config.ts", "../mikro-orm.config.ts"]
 }
