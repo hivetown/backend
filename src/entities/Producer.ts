@@ -1,12 +1,65 @@
-import { Collection, Entity, OneToMany } from '@mikro-orm/core';
-import { UserType } from '../types/enums';
+import { Collection, Entity, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
 import { Product } from './Product';
-import { User } from './User';
 
 @Entity()
-export class Producer extends User {
-	public type = UserType.PRODUCER;
+export class Producer {
+	@PrimaryKey({ autoincrement: true })
+	private id!: number;
+
+	@Property()
+	private name!: string;
+
+	@Property()
+	private email!: string;
+
+	@Property()
+	private phone!: number;
+
+	@Property()
+	private vat!: number;
 
 	@OneToMany(() => Product, (product) => product.producer)
-	public products = new Collection<Product>(this);
+	private products = new Collection<Product>(this);
+
+	// #region Getters and Setters
+	public getId(): number {
+		return this.id;
+	}
+
+	public getName(): string {
+		return this.name;
+	}
+
+	public setName(name: string): void {
+		this.name = name;
+	}
+
+	public getEmail(): string {
+		return this.email;
+	}
+
+	public setEmail(email: string): void {
+		this.email = email;
+	}
+
+	public getPhone(): number {
+		return this.phone;
+	}
+
+	public setPhone(phone: number): void {
+		this.phone = phone;
+	}
+
+	public getVat(): number {
+		return this.vat;
+	}
+
+	public setVat(vat: number): void {
+		this.vat = vat;
+	}
+
+	public getProductN(n: number): Product {
+		return this.products[n];
+	}
+	// #endregion
 }

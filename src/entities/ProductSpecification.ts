@@ -4,17 +4,51 @@ import { Product } from './Product';
 @Entity()
 export class ProductSpecification {
 	@PrimaryKey({ autoincrement: true })
-	public id!: number;
+	private id!: number;
 
 	@Property()
-	public name!: string;
+	private name!: string;
 
 	@Property()
-	public description!: string;
+	private description!: string;
 
 	@Property()
-	public image!: string;
+	private image!: string;
 
 	@OneToMany(() => Product, (product) => product.specification)
-	public products = new Collection<Product>(this);
+	private products = new Collection<Product>(this);
+
+	// #region Getters and Setters
+	public getId(): number {
+		return this.id;
+	}
+
+	public getName(): string {
+		return this.name;
+	}
+
+	public setName(name: string): void {
+		this.name = name;
+	}
+
+	public getDescription(): string {
+		return this.description;
+	}
+
+	public setDescription(description: string): void {
+		this.description = description;
+	}
+
+	public getImage(): string {
+		return this.image;
+	}
+
+	public setImage(image: string): void {
+		this.image = image;
+	}
+
+	public getProductN(n: number): Product {
+		return this.products[n];
+	}
+	// #endregion
 }

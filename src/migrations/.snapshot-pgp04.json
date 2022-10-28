@@ -1,0 +1,210 @@
+{
+	"namespaces": [],
+	"tables": [
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(255)",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"email": {
+					"name": "email",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"phone": {
+					"name": "phone",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"vat": {
+					"name": "vat",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				}
+			},
+			"name": "producer",
+			"indexes": [
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(255)",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"description": {
+					"name": "description",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"image": {
+					"name": "image",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				}
+			},
+			"name": "product_specification",
+			"indexes": [
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(255)",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"specification_id": {
+					"name": "specification_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"current_price": {
+					"name": "current_price",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"production_date": {
+					"name": "production_date",
+					"type": "date",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "date"
+				},
+				"producer_id": {
+					"name": "producer_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				}
+			},
+			"name": "product",
+			"indexes": [
+				{
+					"columnNames": ["specification_id"],
+					"composite": false,
+					"keyName": "product_specification_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"columnNames": ["producer_id"],
+					"composite": false,
+					"keyName": "product_producer_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"product_specification_id_foreign": {
+					"constraintName": "product_specification_id_foreign",
+					"columnNames": ["specification_id"],
+					"localTableName": "product",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "product_specification",
+					"updateRule": "cascade"
+				},
+				"product_producer_id_foreign": {
+					"constraintName": "product_producer_id_foreign",
+					"columnNames": ["producer_id"],
+					"localTableName": "product",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "producer",
+					"updateRule": "cascade"
+				}
+			}
+		}
+	]
+}

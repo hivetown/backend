@@ -1,5 +1,10 @@
 # RF03
 
+## Setup
+
+1. Copiar variáveis de ambiente e editar variáveis de ambiente (`.env`)
+    1. `cp .env.example .env`
+
 ## Desenvolver (no vscode)
 
 Pode-se usar `npm run` no lugar de `yarn` para executar os comandos.

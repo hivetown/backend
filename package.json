@@ -28,6 +28,7 @@
 		"@mikro-orm/core": "^5.5.0",
 		"@mikro-orm/mysql": "^5.5.0",
 		"@mikro-orm/reflection": "^5.5.0",
+		"dotenv-cra": "^3.0.2",
 		"express": "^4.18.2",
 		"mysql2": "^2.3.3",
 		"tslib": "^2.4.0"
@@ -36,6 +37,7 @@
 		"@commitlint/cli": "^17.1.2",
 		"@commitlint/config-conventional": "^17.1.0",
 		"@mikro-orm/cli": "^5.5.0",
+		"@mikro-orm/migrations": "^5.5.0",
 		"@sapphire/eslint-config": "^4.3.8",
 		"@sapphire/prettier-config": "^1.4.4",
 		"@sapphire/ts-config": "^3.3.4",
