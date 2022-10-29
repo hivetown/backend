@@ -1,5 +1,5 @@
 {
-	"name": "@PGP04/rf03",
+	"name": "@pgp04/rf03",
 	"version": "0.0.1",
 	"description": "Requisito Funcional 03 - Pesquisa de produtos através dos campos comuns a todos os produtos",
 	"main": "dist/index.js",
@@ -28,6 +28,7 @@
 		"@mikro-orm/core": "^5.5.0",
 		"@mikro-orm/mysql": "^5.5.0",
 		"@mikro-orm/reflection": "^5.5.0",
+		"cors": "^2.8.5",
 		"dotenv-cra": "^3.0.2",
 		"express": "^4.18.2",
 		"mysql2": "^2.3.3",
@@ -41,6 +42,7 @@
 		"@sapphire/eslint-config": "^4.3.8",
 		"@sapphire/prettier-config": "^1.4.4",
 		"@sapphire/ts-config": "^3.3.4",
+		"@types/cors": "^2",
 		"@types/express": "^4",
 		"@types/jest": "^29.2.0",
 		"@types/node": "^17.0.31",
@@ -75,16 +77,6 @@
 		"node": ">=v14.0.0",
 		"npm": ">=7.0.0"
 	},
-	"keywords": [
-		"@sapphire/template",
-		"bot",
-		"typescript",
-		"ts",
-		"yarn",
-		"discord",
-		"sapphire",
-		"discordjs"
-	],
 	"bugs": {
 		"url": "https://github.com/fcul-lti/rf03/issues"
 	},

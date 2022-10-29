@@ -1,4 +1,5 @@
 import type http from 'http';
+import cors from 'cors';
 import { RequestContext } from '@mikro-orm/core';
 import { EntityManager, EntityRepository, MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import express, { NextFunction, Request, Response } from 'express';
@@ -24,6 +25,7 @@ export const main = async () => {
 	container.productSpecificationRepository = container.orm.em.getRepository(ProductSpecification);
 
 	app.use(express.json());
+	app.use(cors());
 	app.use((_req: Request, _res: Response, next: NextFunction) => RequestContext.create(container.orm.em, next));
 
 	app.get('/', (_req: Request, res: Response) => res.json({ message: 'Hello World!' }));
