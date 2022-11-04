@@ -5,12 +5,14 @@
 			"columns": {
 				"id": {
 					"name": "id",
-					"type": "varchar(255)",
+					"type": "numeric(10,0)",
 					"unsigned": true,
 					"autoincrement": true,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
+					"precision": 10,
+					"scale": 0,
+					"mappedType": "decimal"
 				},
 				"name": {
 					"name": "name",
@@ -32,21 +34,25 @@
 				},
 				"phone": {
 					"name": "phone",
-					"type": "varchar(255)",
+					"type": "numeric(10,0)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
+					"precision": 10,
+					"scale": 0,
+					"mappedType": "decimal"
 				},
 				"vat": {
 					"name": "vat",
-					"type": "varchar(255)",
+					"type": "numeric(10,0)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
+					"precision": 10,
+					"scale": 0,
+					"mappedType": "decimal"
 				}
 			},
 			"name": "producer",
@@ -118,12 +124,14 @@
 			"columns": {
 				"id": {
 					"name": "id",
-					"type": "varchar(255)",
+					"type": "numeric(10,0)",
 					"unsigned": true,
 					"autoincrement": true,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
+					"precision": 10,
+					"scale": 0,
+					"mappedType": "decimal"
 				},
 				"specification_id": {
 					"name": "specification_id",
@@ -136,30 +144,35 @@
 				},
 				"current_price": {
 					"name": "current_price",
-					"type": "varchar(255)",
+					"type": "numeric(10,0)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
+					"precision": 10,
+					"scale": 0,
+					"mappedType": "decimal"
 				},
 				"production_date": {
 					"name": "production_date",
-					"type": "date",
+					"type": "datetime",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "date"
+					"length": 0,
+					"mappedType": "datetime"
 				},
 				"producer_id": {
 					"name": "producer_id",
-					"type": "varchar(255)",
+					"type": "numeric(10,0)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
+					"precision": 10,
+					"scale": 0,
+					"mappedType": "decimal"
 				}
 			},
 			"name": "product",

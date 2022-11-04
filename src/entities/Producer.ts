@@ -3,7 +3,7 @@ import { Product } from './Product';
 
 @Entity()
 export class Producer {
-	@PrimaryKey({ autoincrement: true })
+	@PrimaryKey({ autoincrement: true, type: 'numeric' })
 	private id!: number;
 
 	@Property()
@@ -12,10 +12,10 @@ export class Producer {
 	@Property()
 	private email!: string;
 
-	@Property()
+	@Property({ type: 'numeric' })
 	private phone!: number;
 
-	@Property()
+	@Property({ type: 'numeric' })
 	private vat!: number;
 
 	@OneToMany(() => Product, (product) => product.producer)

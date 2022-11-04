@@ -1,20 +1,20 @@
-import { DateType, Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import type { Producer } from './Producer';
 import type { ProductSpecification } from './ProductSpecification';
 
 @Entity()
 export class Product {
-	@PrimaryKey({ autoincrement: true })
+	@PrimaryKey({ autoincrement: true, type: 'numeric' })
 	private id!: number;
 
 	// eslint-disable-next-line @typescript-eslint/member-ordering
 	@ManyToOne()
 	public specification!: ProductSpecification;
 
-	@Property()
+	@Property({ type: 'numeric' })
 	private currentPrice!: number;
 
-	@Property({ type: DateType })
+	@Property({ type: 'date' })
 	private productionDate!: Date;
 
 	// eslint-disable-next-line @typescript-eslint/member-ordering
