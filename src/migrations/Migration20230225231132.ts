@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class Migration20230220182320 extends Migration {
+export class Migration20230225231132 extends Migration {
 	async up(): Promise<void> {
 		this.addSql(
 			'create table `address` (`id` int unsigned not null auto_increment primary key, `number` numeric(10,0) not null, `door` numeric(10,0) not null, `floor` numeric(10,0) not null, `zip_code` varchar(255) not null, `street` varchar(255) not null, `parish` varchar(255) not null, `county` varchar(255) not null, `city` varchar(255) not null, `district` varchar(255) not null, `latitude` numeric(10,0) not null, `longitude` numeric(10,0) not null) default character set utf8mb4 engine = InnoDB;'
@@ -240,117 +240,5 @@ export class Migration20230220182320 extends Migration {
 		this.addSql(
 			'alter table `shipment_event` add constraint `shipment_event_shipment_status_id_foreign` foreign key (`shipment_status_id`) references `shipment_status` (`id`) on update cascade;'
 		);
-	}
-
-	async down(): Promise<void> {
-		this.addSql('alter table `production_unit` drop foreign key `production_unit_address_id_foreign`;');
-
-		this.addSql('alter table `order` drop foreign key `order_shipping_address_id_foreign`;');
-
-		this.addSql('alter table `consumer_addresses` drop foreign key `consumer_addresses_address_id_foreign`;');
-
-		this.addSql('alter table `shipment_event` drop foreign key `shipment_event_address_id_foreign`;');
-
-		this.addSql('alter table `category` drop foreign key `category_parent_id_foreign`;');
-
-		this.addSql('alter table `category_fields` drop foreign key `category_fields_category_id_foreign`;');
-
-		this.addSql('alter table `product_spec_category` drop foreign key `product_spec_category_category_id_foreign`;');
-
-		this.addSql('alter table `category_fields` drop foreign key `category_fields_field_id_foreign`;');
-
-		this.addSql('alter table `field_possible_value` drop foreign key `field_possible_value_field_id_foreign`;');
-
-		this.addSql('alter table `product_spec_field` drop foreign key `product_spec_field_field_id_foreign`;');
-
-		this.addSql('alter table `production_unit` drop foreign key `production_unit_producer_id_foreign`;');
-
-		this.addSql('alter table `producer_product` drop foreign key `producer_product_producer_id_foreign`;');
-
-		this.addSql('alter table `carrier` drop foreign key `carrier_production_unit_id_foreign`;');
-
-		this.addSql('alter table `producer_product` drop foreign key `producer_product_production_unit_id_foreign`;');
-
-		this.addSql('alter table `shipment` drop foreign key `shipment_carrier_id_foreign`;');
-
-		this.addSql('alter table `producer_product` drop foreign key `producer_product_product_spec_id_foreign`;');
-
-		this.addSql('alter table `product_spec_category` drop foreign key `product_spec_category_product_spec_id_foreign`;');
-
-		this.addSql('alter table `product_spec_field` drop foreign key `product_spec_field_spec_id_foreign`;');
-
-		this.addSql('alter table `cart_item` drop foreign key `cart_item_product_id_foreign`;');
-
-		this.addSql('alter table `order_item` drop foreign key `order_item_producer_product_id_foreign`;');
-
-		this.addSql('alter table `cart` drop foreign key `cart_items_id_foreign`;');
-
-		this.addSql('alter table `cart_item` drop foreign key `cart_item_cart_id_foreign`;');
-
-		this.addSql('alter table `consumer` drop foreign key `consumer_cart_id_foreign`;');
-
-		this.addSql('alter table `cart` drop foreign key `cart_consumer_id_foreign`;');
-
-		this.addSql('alter table `order` drop foreign key `order_consumer_id_foreign`;');
-
-		this.addSql('alter table `consumer_addresses` drop foreign key `consumer_addresses_consumer_id_foreign`;');
-
-		this.addSql('alter table `order_item` drop foreign key `order_item_order_id_foreign`;');
-
-		this.addSql('alter table `product_spec_field` drop foreign key `product_spec_field_category_id_foreign`;');
-
-		this.addSql('alter table `order_item` drop foreign key `order_item_shipment_id_foreign`;');
-
-		this.addSql('alter table `shipment_orders` drop foreign key `shipment_orders_shipment_id_foreign`;');
-
-		this.addSql('alter table `shipment_event` drop foreign key `shipment_event_shipment_id_foreign`;');
-
-		this.addSql('alter table `shipment_orders` drop foreign key `shipment_orders_order_item_id_foreign`;');
-
-		this.addSql('alter table `shipment_event` drop foreign key `shipment_event_shipment_status_id_foreign`;');
-
-		this.addSql('drop table if exists `address`;');
-
-		this.addSql('drop table if exists `category`;');
-
-		this.addSql('drop table if exists `field`;');
-
-		this.addSql('drop table if exists `category_fields`;');
-
-		this.addSql('drop table if exists `field_possible_value`;');
-
-		this.addSql('drop table if exists `producer`;');
-
-		this.addSql('drop table if exists `production_unit`;');
-
-		this.addSql('drop table if exists `carrier`;');
-
-		this.addSql('drop table if exists `product_spec`;');
-
-		this.addSql('drop table if exists `producer_product`;');
-
-		this.addSql('drop table if exists `cart_item`;');
-
-		this.addSql('drop table if exists `cart`;');
-
-		this.addSql('drop table if exists `consumer`;');
-
-		this.addSql('drop table if exists `order`;');
-
-		this.addSql('drop table if exists `consumer_addresses`;');
-
-		this.addSql('drop table if exists `product_spec_category`;');
-
-		this.addSql('drop table if exists `product_spec_field`;');
-
-		this.addSql('drop table if exists `shipment`;');
-
-		this.addSql('drop table if exists `order_item`;');
-
-		this.addSql('drop table if exists `shipment_orders`;');
-
-		this.addSql('drop table if exists `shipment_status`;');
-
-		this.addSql('drop table if exists `shipment_event`;');
 	}
 }

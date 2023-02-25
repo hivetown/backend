@@ -1,9 +1,9 @@
 import { Collection, Entity, Enum, ManyToMany, OneToMany, OneToOne, PrimaryKey } from '@mikro-orm/core';
-import { Address } from './Address';
 import { Cart } from './Cart';
-import { Order } from './Order';
 import { UserType } from '../enums/UserType';
 import { User } from './User';
+import type { Address } from './Address';
+import type { Order } from './Order';
 
 @Entity()
 export class Consumer extends User {

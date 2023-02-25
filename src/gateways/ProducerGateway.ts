@@ -1,6 +1,5 @@
-import { EntityRepository } from '@mikro-orm/core';
+import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { Producer } from '../entities';
-import { MikroORM } from '@mikro-orm/mysql';
 
 export class ProducerGateway {
 	private repository: EntityRepository<Producer>;

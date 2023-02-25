@@ -1,6 +1,6 @@
 import { Collection, Entity, ManyToOne, OneToOne, PrimaryKey } from '@mikro-orm/core';
-import { CartItem } from './CartItem';
 import { Consumer } from './Consumer';
+import type { CartItem } from './CartItem';
 
 @Entity()
 export class Cart {

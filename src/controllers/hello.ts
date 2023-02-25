@@ -1,9 +1,7 @@
 import { Response, Controller, Get } from '@decorators/express';
 import { Injectable } from '@decorators/di';
 import * as Express from 'express';
-import { Producer } from '../entities/Producer';
-import { ProducerProduct } from '../entities/ProducerProduct';
-import { ProducerProductStatus } from '../enums/ProducerProductStatus';
+import { container } from '..';
 
 // Create the controller
 @Controller('/hello')
@@ -23,34 +21,14 @@ export class HelloController {
 
 	// Demo of using domain package
 	@Get('/domain')
-	public domain(@Response() res: Express.Response) {
-		const product = new ProducerProduct();
-		product.currentPrice = 1.99;
-		product.id = 1;
-		product.producer = new Producer();
-		product.producer.id = 2;
-		product.producer.name = 'Producer Name';
-		product.producer.email = 'producer@email.com';
-		product.producer.phone = 1234567890;
-		product.producer.vat = 1234567890;
-		product.productSpec = { id: 1, name: 'some product', description: 'some description', images: ['some image'], categories: null };
-		product.productionDate = new Date();
-		product.status = ProducerProductStatus.Available;
-
-		console.log('antes do init');
+	public async domain(@Response() res: Express.Response) {
 		try {
-			// const pg: ProducerGateway = new ProducerGateway(orm);
-			console.log('deu bom');
-		} catch (err) {
-			console.log(err);
+			const producers = await container.producerGateway.findAll();
+
+			res.json({ producers });
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
 		}
-
-		// let producers: Producer[] = ProducerGateway.findAll();
-
-		// for (let producer of producers) {
-		// 	console.log(producer.name);
-		// }
-
-		res.json({ product });
 	}
 }

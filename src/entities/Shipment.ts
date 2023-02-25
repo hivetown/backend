@@ -1,7 +1,7 @@
 import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryKey } from '@mikro-orm/core';
 import { Carrier } from './Carrier';
-import { OrderItem } from './OrderItem';
-import { ShipmentEvent } from './ShipmentEvent';
+import type { OrderItem } from './OrderItem';
+import type { ShipmentEvent } from './ShipmentEvent';
 
 @Entity()
 export class Shipment {

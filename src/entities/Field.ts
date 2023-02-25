@@ -1,6 +1,6 @@
 import { Collection, Entity, Enum, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
 import { FieldType } from '../enums/FieldType';
-import { FieldPossibleValue } from './FieldPossibleValue';
+import type { FieldPossibleValue } from './FieldPossibleValue';
 
 @Entity()
 export class Field {

@@ -1,5 +1,5 @@
 import { Collection, Entity, ManyToMany, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
-import { Field } from './Field';
+import type { Field } from './Field';
 
 @Entity()
 export class Category {

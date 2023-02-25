@@ -1,5 +1,5 @@
 import { Collection, Entity, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
-import { ProductSpecCategory } from './ProductSpecCategory';
+import type { ProductSpecCategory } from './ProductSpecCategory';
 
 @Entity()
 export class ProductSpec {

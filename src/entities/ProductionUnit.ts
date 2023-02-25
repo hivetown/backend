@@ -1,8 +1,8 @@
 import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
 import { Address } from './Address';
-import { Carrier } from './Carrier';
 import { Producer } from './Producer';
-import { ProducerProduct } from './ProducerProduct';
+import type { ProducerProduct } from './ProducerProduct';
+import type { Carrier } from './Carrier';
 
 @Entity()
 export class ProductionUnit {
