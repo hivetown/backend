@@ -1,14 +1,15 @@
 {
-	"extends": "../tsconfig.base.json",
-	"compilerOptions": {
-		"rootDir": "./",
-		"outDir": "../dist",
-		"composite": true,
-		"preserveConstEnums": true,
-		"declaration": true,
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
-		"esModuleInterop": true
-	},
-	"include": [".", "../mikro-orm.config.ts", "../mikro-orm.config.ts"]
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ES2022",
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "esModuleInterop": true
+    },
+    // "extends": "tsconfig/base.json",
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules"],
+
 }
+  
