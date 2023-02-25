@@ -1,10 +1,10 @@
 {
-	"name": "@pgp04/rf03",
+	"name": "@hivetown/backend",
 	"version": "0.0.1",
-	"description": "Requisito Funcional 03 - Pesquisa de produtos através dos campos comuns a todos os produtos",
+	"description": "Hivetown Backend",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
-	"author": "@PGP04",
+	"author": "Hivetown",
 	"license": "MIT",
 	"scripts": {
 		"lint": "eslint src tests --ext ts --fix",
@@ -67,7 +67,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/fcul-lti/rf03.git"
+		"url": "git+https://github.com/hivetown/backend.git"
 	},
 	"files": [
 		"dist",
@@ -78,9 +78,9 @@
 		"npm": ">=7.0.0"
 	},
 	"bugs": {
-		"url": "https://github.com/fcul-lti/rf03/issues"
+		"url": "https://github.com/hivetown/backend/issues"
 	},
-	"homepage": "https://fc.ul.pt",
+	"homepage": "https://hivetown.pt",
 	"commitlint": {
 		"extends": [
 			"@commitlint/config-conventional"
