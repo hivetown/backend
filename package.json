@@ -22,11 +22,14 @@
 		"cz": "git-cz",
 		"postinstall": "husky install .github/husky",
 		"prepack": "yarn build && pinst --disable",
-		"postpack": "pinst --enable"
+		"postpack": "pinst --enable",
+		"upgrade": "yarn upgrade"
 	},
 	"dependencies": {
-		"@mikro-orm/core": "^5.5.0",
-		"@mikro-orm/mysql": "^5.5.0",
+		"@decorators/di": "^2.0.0",
+		"@decorators/express": "^2.9.1",
+		"@mikro-orm/core": "^5.6.11",
+		"@mikro-orm/mysql": "^5.6.11",
 		"@mikro-orm/reflection": "^5.5.0",
 		"cors": "^2.8.5",
 		"dotenv-cra": "^3.0.2",

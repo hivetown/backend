@@ -4,8 +4,16 @@ import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 const config: Options = {
 	entities: ['./dist/entities/**'],
 	entitiesTs: ['./src/entities/**'],
+	port: 3306,
+	user: 'root',
+	host: 'localhost',
 	type: 'mysql',
-	metadataProvider: TsMorphMetadataProvider
+	dbName: 'hivetown',
+	password: 'hello',
+	metadataProvider: TsMorphMetadataProvider,
+	migrations: {
+		path: 'migrations'
+	}
 };
 
 export default config;
