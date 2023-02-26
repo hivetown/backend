@@ -16,4 +16,20 @@ export class ProductSpecCategory {
 
 	@OneToMany(() => ProductSpecField, (field) => field.category)
 	public fields = new Collection<ProductSpecField>(this);
+
+	public getId(): number {
+		return this.id;
+	}
+
+	public getProductSpec(): ProductSpec {
+		return this.productSpec;
+	}
+
+	public getCategory(): Category {
+		return this.category;
+	}
+
+	public getFields(): ProductSpecField[] {
+		return this.fields.getItems();
+	}
 }

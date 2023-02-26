@@ -2,6 +2,7 @@ import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
+import type { Category } from '../entities';
 
 @Controller('/products')
 @Injectable()
@@ -55,18 +56,19 @@ export class ProductsController {
 		}
 	}
 
-	// @Get('/specification/:id/categories/:categoryId')
-	// public async productCategoryBySpecificationId(
-	// 	@Response() res: Express.Response,
-	// 	@Params('id') id: number,
-	// 	@Params('categoryId') categoryId: number
-	// ) {
-	// 	try {
-	// 		const category = await container.productSpecCategoryGateway.findCategoryBySpecificationId(id, categoryId);
-	// 		res.json({ category });
-	// 	} catch (error) {
-	// 		console.error(error);
-	// 		res.status(500).json({ error: (error as any).message });
-	// 	}
-	// }
+	@Get('/specification/:id/categories/:categoryId')
+	public async productCategoryBySpecificationId(
+		@Response() res: Express.Response,
+		@Params('id') id: number,
+		@Params('categoryId') categoryId: number
+	) {
+		try {
+			const category = await container.productSpecCategoryGateway.findCategoryBySpecificationId(id, categoryId);
+			const c: Category = category[0].getCategory();
+			res.json({ c });
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 }

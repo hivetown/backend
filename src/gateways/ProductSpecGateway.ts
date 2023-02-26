@@ -1,4 +1,4 @@
-import type { EntityRepository, MikroORM } from '@mikro-orm/core';
+import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { ProductSpec } from '../entities';
 
 export class ProductSpecGateway {
