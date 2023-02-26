@@ -13,4 +13,20 @@ export class Producer extends User {
 
 	@OneToMany('ProductionUnit', 'producer')
 	public productionUnits = new Collection<ProductionUnit>(this);
+
+	public getId(): number {
+		return this.id;
+	}
+
+	public getType(): UserType {
+		return this.type;
+	}
+
+	public getProductionUnits(): Collection<ProductionUnit> {
+		return this.productionUnits;
+	}
+
+	public toString(): string {
+		return `Producer ${this.name} (id=${this.getId()}, type=${this.getType()})`;
+	}
 }
