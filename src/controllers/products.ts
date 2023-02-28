@@ -34,6 +34,17 @@ export class ProductsController {
 		}
 	}
 
+	@Get('/category/:id')
+	public async productByCategoryId(@Response() res: Express.Response, @Params('id') id: number) {
+		try {
+			const products = await container.productGateway.findByCategoryId(id);
+			res.json({ products });
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
 	@Get('/specification/:id')
 	public async productBySpecificationId(@Response() res: Express.Response, @Params('id') id: number) {
 		try {

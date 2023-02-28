@@ -17,10 +17,10 @@ export class ProductSpecCategoryGateway {
 		return categories;
 	}
 
-	public findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory[]> {
+	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory[]> {
 		// const category = this.repository.find({ productSpec: id, category: categoryId }, { populate: ['category'] });
 		// return category;
-		const category = this.repository
+		const category = await this.repository
 			.createQueryBuilder('e')
 			.leftJoinAndSelect('e.category', 'category')
 			.where({ productSpec: id, category: categoryId })

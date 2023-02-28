@@ -28,4 +28,17 @@ export class ProductGateway {
 		const products = await this.repository.find({ productSpec: id }, { populate: ['producer', 'productionUnit', 'productSpec'] });
 		return products;
 	}
+
+	public async findByCategoryId(id: number): Promise<ProducerProduct[]> {
+		const products = await this.repository
+			.createQueryBuilder('p')
+			.select('p.*')
+			.leftJoin('p.productSpec', 's')
+			.leftJoin('s.categories', 'sc')
+			.where(`sc.category_id = '${id}' and p.product_spec_id = sc.product_spec_id`)
+			.getResult();
+		await this.repository.populate(products, ['producer', 'productionUnit', 'productSpec']); // ver se há outra forma de fazer
+
+		return products;
+	}
 }
