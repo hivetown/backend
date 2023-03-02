@@ -8,27 +8,32 @@ export class ProductGateway {
 		this.repository = orm.em.getRepository(ProducerProduct);
 	}
 
+	// Pesquisa todos os produtos populacionando o produtor, a unidade de produção e a especificação do produto
 	public async findAll(): Promise<ProducerProduct[]> {
 		const products = await this.repository.findAll({ populate: ['producer', 'productionUnit', 'productSpec'] });
 		return products;
 	}
 
+	// Pesquisa todos os produtos populacionando o produtor
 	public async findAllWithProducer(): Promise<ProducerProduct[]> {
 		// colocar ainda o size de respostas
 		const products = await this.repository.findAll({ populate: ['producer'] });
 		return products;
 	}
 
+	// Pesquisa o produto pelo id dele mesmo
 	public async findById(id: number): Promise<ProducerProduct | null> {
 		const product = await this.repository.findOne(id, { populate: ['producer', 'productionUnit', 'productSpec'] });
 		return product;
 	}
 
+	// Pesquisa produtos por id de uma ProductSpec
 	public async findBySpecificationId(id: number): Promise<ProducerProduct[]> {
 		const products = await this.repository.find({ productSpec: id }, { populate: ['producer', 'productionUnit', 'productSpec'] });
 		return products;
 	}
 
+	// Pesquisa produtos pelo id de uma categoria
 	public async findByCategoryId(id: number): Promise<ProducerProduct[]> {
 		const products = await this.repository
 			.createQueryBuilder('p')

@@ -12,4 +12,9 @@ export class ProductSpecGateway {
 		const productSpecs = await this.repository.findAll({ populate: ['categories'] });
 		return productSpecs;
 	}
+
+	public async findById(id: number): Promise<ProductSpec | null> {
+		const productSpec = await this.repository.findOne(id);
+		return productSpec;
+	}
 }

@@ -7,6 +7,7 @@ import { attachControllers } from '@decorators/express';
 import { CategoryGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
+import { ProductSpecGateway } from './gateways/ProductSpecGateway';
 
 export const container = {} as {
 	server: http.Server;
@@ -16,6 +17,7 @@ export const container = {} as {
 	productGateway: ProductGateway;
 	productSpecCategoryGateway: ProductSpecCategoryGateway;
 	categoryGateway: CategoryGateway;
+	productSpecGatway: ProductSpecGateway;
 };
 
 export const app = express();
@@ -27,6 +29,7 @@ export const main = async () => {
 	container.productGateway = new ProductGateway(container.orm);
 	container.productSpecCategoryGateway = new ProductSpecCategoryGateway(container.orm);
 	container.categoryGateway = new CategoryGateway(container.orm);
+	container.productSpecGatway = new ProductSpecGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
