@@ -4,10 +4,8 @@ const config = {
 	preset: 'ts-jest',
 	testMatch: ['<rootDir>/tests/**/*.test.ts'],
 	collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
-	globals: {
-		'ts-jest': {
-			tsconfig: '<rootDir>/tests/tsconfig.json'
-		}
+	transform: {
+		'^.+\\.ts$': 'ts-jest'
 	}
 };
 
