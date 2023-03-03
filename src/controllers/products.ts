@@ -78,7 +78,7 @@ export class ProductsController {
 	) {
 		try {
 			const category = await container.productSpecCategoryGateway.findCategoryBySpecificationId(id, categoryId);
-			const c: Category = category[0].getCategory();
+			const c: Category = category[0].category;
 			res.json({ c });
 		} catch (error) {
 			console.error(error);
