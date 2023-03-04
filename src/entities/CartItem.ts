@@ -14,4 +14,18 @@ export class CartItem {
 
 	@ManyToOne()
 	public cart!: Cart;
+
+	public constructor(product: ProducerProduct, cart: Cart) {
+		this.product = product;
+		this.quantity = 1;
+		this.cart = cart;
+	}
+
+	public addQuantity(quantity: number): void {
+		this.quantity = quantity;
+	}
+
+	public getTotalPrice(): number {
+		return this.product.currentPrice * this.quantity;
+	}
 }
