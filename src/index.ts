@@ -8,6 +8,7 @@ import { CategoryGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGa
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
+import { CategoryController } from './controllers/category';
 
 export const container = {} as {
 	server: http.Server;
@@ -37,6 +38,7 @@ export const main = async () => {
 
 	await attachControllers(app, [HelloController]);
 	await attachControllers(app, [ProductsController]);
+	await attachControllers(app, [CategoryController]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
