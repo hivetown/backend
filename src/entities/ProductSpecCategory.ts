@@ -13,6 +13,6 @@ export class ProductSpecCategory {
 
 	public [PrimaryKeyType]?: [number, number];
 
-	@OneToMany(() => ProductSpecField, (field) => field.category)
+	@OneToMany(() => ProductSpecField, (field) => field.productSpecCategory)
 	public fields = new Collection<ProductSpecField>(this);
 }
