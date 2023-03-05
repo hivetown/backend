@@ -7,7 +7,7 @@ export class Carrier {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'string' })
+	@Property()
 	public licensePlate!: string;
 
 	@ManyToOne()

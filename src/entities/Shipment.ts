@@ -1,4 +1,4 @@
-import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryKey } from '@mikro-orm/core';
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey } from '@mikro-orm/core';
 import { Carrier } from './Carrier';
 import type { OrderItem } from './OrderItem';
 import type { ShipmentEvent } from './ShipmentEvent';
@@ -8,11 +8,11 @@ export class Shipment {
 	@PrimaryKey()
 	public id!: number;
 
-	@ManyToMany()
-	public orders = new Collection<OrderItem>(this);
-
 	@ManyToOne()
 	public carrier!: Carrier;
+
+	@OneToMany('OrderItem', 'shipment')
+	public orders = new Collection<OrderItem>(this);
 
 	@OneToMany('ShipmentEvent', 'shipment')
 	public events = new Collection<ShipmentEvent>(this);
