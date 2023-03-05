@@ -13,7 +13,7 @@ export class Consumer extends User {
 	@Enum({ persist: false })
 	public type = UserType.Consumer;
 
-	@OneToOne()
+	@OneToOne({ owner: true, joinColumn: 'id' })
 	public cart!: Cart;
 
 	@OneToMany('Order', 'consumer')
