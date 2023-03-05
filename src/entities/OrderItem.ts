@@ -5,20 +5,17 @@ import { Shipment } from './Shipment';
 
 @Entity()
 export class OrderItem {
-	@PrimaryKey()
-	public id!: number;
+	@ManyToOne({ primary: true })
+	public order!: Order;
 
-	@Property({ type: 'numeric' })
+	@ManyToOne({ primary: true })
+	public producerProduct!: ProducerProduct;
+
+	@Property({ type: 'int' })
 	public quantity!: number;
 
 	@Property({ type: 'numeric' })
 	public price!: number;
-
-	@ManyToOne()
-	public order!: Order;
-
-	@ManyToOne()
-	public producerProduct!: ProducerProduct;
 
 	@ManyToOne()
 	public shipment!: Shipment;

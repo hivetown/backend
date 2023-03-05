@@ -5,9 +5,9 @@ export class ShipmentStatus {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'string' })
+	@Property()
 	public name!: string;
 
-	@Property({ type: 'string' })
+	@Property()
 	public description!: string;
 }

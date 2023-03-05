@@ -6,7 +6,7 @@ export class Category {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'string' })
+	@Property()
 	public name!: string;
 
 	@ManyToOne()

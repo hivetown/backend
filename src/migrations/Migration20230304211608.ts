@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class Migration20230225231132 extends Migration {
+export class Migration20230304211608 extends Migration {
 	async up(): Promise<void> {
 		this.addSql(
 			'create table `address` (`id` int unsigned not null auto_increment primary key, `number` numeric(10,0) not null, `door` numeric(10,0) not null, `floor` numeric(10,0) not null, `zip_code` varchar(255) not null, `street` varchar(255) not null, `parish` varchar(255) not null, `county` varchar(255) not null, `city` varchar(255) not null, `district` varchar(255) not null, `latitude` numeric(10,0) not null, `longitude` numeric(10,0) not null) default character set utf8mb4 engine = InnoDB;'
@@ -27,7 +27,7 @@ export class Migration20230225231132 extends Migration {
 		this.addSql('alter table `field_possible_value` add index `field_possible_value_field_id_index`(`field_id`);');
 
 		this.addSql(
-			"create table `producer` (`id` int unsigned not null auto_increment primary key, `name` varchar(255) not null, `email` varchar(255) not null, `phone` numeric(10,0) not null, `vat` numeric(10,0) not null, `type` enum('CONSUMER', 'PRODUCER') not null default 'PRODUCER') default character set utf8mb4 engine = InnoDB;"
+			'create table `producer` (`id` int unsigned not null auto_increment primary key, `name` varchar(255) not null, `email` varchar(255) not null, `phone` numeric(10,0) not null, `vat` numeric(10,0) not null) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `producer` add unique `producer_vat_unique`(`vat`);');
 
@@ -47,29 +47,30 @@ export class Migration20230225231132 extends Migration {
 		);
 
 		this.addSql(
-			"create table `producer_product` (`id` int unsigned not null auto_increment primary key, `current_price` numeric(10,0) not null, `production_date` datetime not null, `producer_id` int unsigned not null, `production_unit_id` int unsigned not null, `product_spec_id` int unsigned not null, `status` enum('AVAILABLE', 'SOLD_OUT') not null) default character set utf8mb4 engine = InnoDB;"
+			"create table `producer_product` (`id` int unsigned not null auto_increment primary key, `current_price` numeric(10,0) not null, `production_date` datetime not null, `status` enum('AVAILABLE', 'SOLD_OUT') not null, `producer_id` int unsigned not null, `production_unit_id` int unsigned not null, `product_spec_id` int unsigned not null) default character set utf8mb4 engine = InnoDB;"
 		);
 		this.addSql('alter table `producer_product` add index `producer_product_producer_id_index`(`producer_id`);');
 		this.addSql('alter table `producer_product` add index `producer_product_production_unit_id_index`(`production_unit_id`);');
 		this.addSql('alter table `producer_product` add index `producer_product_product_spec_id_index`(`product_spec_id`);');
 
 		this.addSql(
-			'create table `cart_item` (`id` int unsigned not null auto_increment primary key, `quantity` numeric(10,0) not null, `product_id` int unsigned not null, `cart_id` int unsigned not null) default character set utf8mb4 engine = InnoDB;'
+			'create table `cart_item` (`product_id` int unsigned not null, `cart_consumer_id` int unsigned not null, `quantity` numeric(10,0) not null, primary key (`product_id`, `cart_consumer_id`)) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `cart_item` add index `cart_item_product_id_index`(`product_id`);');
-		this.addSql('alter table `cart_item` add index `cart_item_cart_id_index`(`cart_id`);');
+		this.addSql('alter table `cart_item` add index `cart_item_cart_consumer_id_index`(`cart_consumer_id`);');
 
 		this.addSql(
-			'create table `cart` (`id` int unsigned not null auto_increment primary key, `consumer_id` int unsigned not null, `items_id` int unsigned not null) default character set utf8mb4 engine = InnoDB;'
+			'create table `cart` (`consumer_id` int unsigned not null, `items_product_id` int unsigned not null, `items_cart_consumer_id` int unsigned not null, primary key (`consumer_id`)) default character set utf8mb4 engine = InnoDB;'
 		);
-		this.addSql('alter table `cart` add unique `cart_consumer_id_unique`(`consumer_id`);');
-		this.addSql('alter table `cart` add index `cart_items_id_index`(`items_id`);');
+		this.addSql(
+			'alter table `cart` add index `cart_items_product_id_items_cart_consumer_id_index`(`items_product_id`, `items_cart_consumer_id`);'
+		);
 
 		this.addSql(
-			"create table `consumer` (`id` int unsigned not null auto_increment primary key, `name` varchar(255) not null, `email` varchar(255) not null, `phone` numeric(10,0) not null, `vat` numeric(10,0) not null, `type` enum('CONSUMER', 'PRODUCER') not null default 'CONSUMER', `cart_id` int unsigned not null) default character set utf8mb4 engine = InnoDB;"
+			'create table `consumer` (`id` int unsigned not null auto_increment primary key, `name` varchar(255) not null, `email` varchar(255) not null, `phone` numeric(10,0) not null, `vat` numeric(10,0) not null, `cart_consumer_id` int unsigned not null) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `consumer` add unique `consumer_vat_unique`(`vat`);');
-		this.addSql('alter table `consumer` add unique `consumer_cart_id_unique`(`cart_id`);');
+		this.addSql('alter table `consumer` add unique `consumer_cart_consumer_id_unique`(`cart_consumer_id`);');
 
 		this.addSql(
 			'create table `order` (`id` int unsigned not null auto_increment primary key, `consumer_id` int unsigned null, `shipping_address_id` int unsigned null) default character set utf8mb4 engine = InnoDB;'
@@ -84,17 +85,19 @@ export class Migration20230225231132 extends Migration {
 		this.addSql('alter table `consumer_addresses` add index `consumer_addresses_address_id_index`(`address_id`);');
 
 		this.addSql(
-			'create table `product_spec_category` (`id` int unsigned not null auto_increment primary key, `product_spec_id` int unsigned not null, `category_id` int unsigned not null) default character set utf8mb4 engine = InnoDB;'
+			'create table `product_spec_category` (`product_spec_id` int unsigned not null, `category_id` int unsigned not null, primary key (`product_spec_id`, `category_id`)) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `product_spec_category` add index `product_spec_category_product_spec_id_index`(`product_spec_id`);');
 		this.addSql('alter table `product_spec_category` add index `product_spec_category_category_id_index`(`category_id`);');
 
 		this.addSql(
-			'create table `product_spec_field` (`spec_id` int unsigned not null, `field_id` int unsigned not null, `category_id` int unsigned not null, `value` varchar(255) not null, primary key (`spec_id`, `field_id`, `category_id`)) default character set utf8mb4 engine = InnoDB;'
+			'create table `product_spec_field` (`spec_id` int unsigned not null, `category_product_spec_id` int unsigned not null, `category_category_id` int unsigned not null, `field_id` int unsigned not null, `value` varchar(255) not null, primary key (`spec_id`, `category_product_spec_id`, `category_category_id`, `field_id`)) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `product_spec_field` add index `product_spec_field_spec_id_index`(`spec_id`);');
 		this.addSql('alter table `product_spec_field` add index `product_spec_field_field_id_index`(`field_id`);');
-		this.addSql('alter table `product_spec_field` add index `product_spec_field_category_id_index`(`category_id`);');
+		this.addSql(
+			'alter table `product_spec_field` add index `product_spec_field_category_product_spec_id_categor_ba7e3_index`(`category_product_spec_id`, `category_category_id`);'
+		);
 
 		this.addSql(
 			'create table `shipment` (`id` int unsigned not null auto_increment primary key, `carrier_id` int unsigned not null) default character set utf8mb4 engine = InnoDB;'
@@ -102,17 +105,19 @@ export class Migration20230225231132 extends Migration {
 		this.addSql('alter table `shipment` add index `shipment_carrier_id_index`(`carrier_id`);');
 
 		this.addSql(
-			'create table `order_item` (`id` int unsigned not null auto_increment primary key, `quantity` numeric(10,0) not null, `price` numeric(10,0) not null, `order_id` int unsigned not null, `producer_product_id` int unsigned not null, `shipment_id` int unsigned not null) default character set utf8mb4 engine = InnoDB;'
+			'create table `order_item` (`order_id` int unsigned not null, `producer_product_id` int unsigned not null, `quantity` int not null, `price` numeric(10,0) not null, `shipment_id` int unsigned not null, primary key (`order_id`, `producer_product_id`)) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `order_item` add index `order_item_order_id_index`(`order_id`);');
 		this.addSql('alter table `order_item` add index `order_item_producer_product_id_index`(`producer_product_id`);');
 		this.addSql('alter table `order_item` add index `order_item_shipment_id_index`(`shipment_id`);');
 
 		this.addSql(
-			'create table `shipment_orders` (`shipment_id` int unsigned not null, `order_item_id` int unsigned not null, primary key (`shipment_id`, `order_item_id`)) default character set utf8mb4 engine = InnoDB;'
+			'create table `shipment_orders` (`shipment_id` int unsigned not null, `order_item_order_id` int unsigned not null, `order_item_producer_product_id` int unsigned not null, primary key (`shipment_id`, `order_item_order_id`, `order_item_producer_product_id`)) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `shipment_orders` add index `shipment_orders_shipment_id_index`(`shipment_id`);');
-		this.addSql('alter table `shipment_orders` add index `shipment_orders_order_item_id_index`(`order_item_id`);');
+		this.addSql(
+			'alter table `shipment_orders` add index `shipment_orders_order_item_order_id_order_item_prod_747f7_index`(`order_item_order_id`, `order_item_producer_product_id`);'
+		);
 
 		this.addSql(
 			'create table `shipment_status` (`id` int unsigned not null auto_increment primary key, `name` varchar(255) not null, `description` varchar(255) not null) default character set utf8mb4 engine = InnoDB;'
@@ -165,18 +170,18 @@ export class Migration20230225231132 extends Migration {
 			'alter table `cart_item` add constraint `cart_item_product_id_foreign` foreign key (`product_id`) references `producer_product` (`id`) on update cascade;'
 		);
 		this.addSql(
-			'alter table `cart_item` add constraint `cart_item_cart_id_foreign` foreign key (`cart_id`) references `cart` (`id`) on update cascade;'
+			'alter table `cart_item` add constraint `cart_item_cart_consumer_id_foreign` foreign key (`cart_consumer_id`) references `cart` (`consumer_id`) on update cascade;'
 		);
 
 		this.addSql(
-			'alter table `cart` add constraint `cart_consumer_id_foreign` foreign key (`consumer_id`) references `consumer` (`id`) on update cascade;'
+			'alter table `cart` add constraint `cart_consumer_id_foreign` foreign key (`consumer_id`) references `consumer` (`id`) on update cascade on delete cascade;'
 		);
 		this.addSql(
-			'alter table `cart` add constraint `cart_items_id_foreign` foreign key (`items_id`) references `cart_item` (`id`) on update cascade;'
+			'alter table `cart` add constraint `cart_items_product_id_items_cart_consumer_id_foreign` foreign key (`items_product_id`, `items_cart_consumer_id`) references `cart_item` (`product_id`, `cart_consumer_id`) on update cascade;'
 		);
 
 		this.addSql(
-			'alter table `consumer` add constraint `consumer_cart_id_foreign` foreign key (`cart_id`) references `cart` (`id`) on update cascade;'
+			'alter table `consumer` add constraint `consumer_cart_consumer_id_foreign` foreign key (`cart_consumer_id`) references `cart` (`consumer_id`) on update cascade;'
 		);
 
 		this.addSql(
@@ -204,10 +209,10 @@ export class Migration20230225231132 extends Migration {
 			'alter table `product_spec_field` add constraint `product_spec_field_spec_id_foreign` foreign key (`spec_id`) references `product_spec` (`id`) on update cascade;'
 		);
 		this.addSql(
-			'alter table `product_spec_field` add constraint `product_spec_field_field_id_foreign` foreign key (`field_id`) references `field` (`id`) on update cascade;'
+			'alter table `product_spec_field` add constraint `product_spec_field_category_product_spec_id_categ_e530e_foreign` foreign key (`category_product_spec_id`, `category_category_id`) references `product_spec_category` (`product_spec_id`, `category_id`) on update cascade;'
 		);
 		this.addSql(
-			'alter table `product_spec_field` add constraint `product_spec_field_category_id_foreign` foreign key (`category_id`) references `product_spec_category` (`id`) on update cascade;'
+			'alter table `product_spec_field` add constraint `product_spec_field_field_id_foreign` foreign key (`field_id`) references `field` (`id`) on update cascade;'
 		);
 
 		this.addSql(
@@ -228,7 +233,7 @@ export class Migration20230225231132 extends Migration {
 			'alter table `shipment_orders` add constraint `shipment_orders_shipment_id_foreign` foreign key (`shipment_id`) references `shipment` (`id`) on update cascade on delete cascade;'
 		);
 		this.addSql(
-			'alter table `shipment_orders` add constraint `shipment_orders_order_item_id_foreign` foreign key (`order_item_id`) references `order_item` (`id`) on update cascade on delete cascade;'
+			'alter table `shipment_orders` add constraint `shipment_orders_order_item_order_id_order_item_pr_46cd8_foreign` foreign key (`order_item_order_id`, `order_item_producer_product_id`) references `order_item` (`order_id`, `producer_product_id`) on update cascade on delete cascade;'
 		);
 
 		this.addSql(
