@@ -10,7 +10,7 @@ export class Consumer extends User {
 	@PrimaryKey()
 	public id!: number;
 
-	@Enum()
+	@Enum({ persist: false })
 	public type = UserType.Consumer;
 
 	@OneToOne()

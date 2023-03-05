@@ -1,17 +1,16 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, ManyToOne, PrimaryKeyType, Property } from '@mikro-orm/core';
 import { Cart, ProducerProduct } from '../entities';
 
 @Entity()
 export class CartItem {
-	@PrimaryKey()
-	public id!: number;
-
-	@Property({ type: 'numeric' })
-	public quantity!: number;
-
-	@ManyToOne()
+	@ManyToOne({ primary: true })
 	public product!: ProducerProduct;
 
-	@ManyToOne()
+	@ManyToOne({ primary: true })
 	public cart!: Cart;
+
+	public [PrimaryKeyType]?: [number, number];
+
+	@Property({ type: 'int' })
+	public quantity!: number;
 }

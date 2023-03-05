@@ -15,6 +15,9 @@ export class ProducerProduct {
 	@Property({ type: 'date' })
 	public productionDate!: Date;
 
+	@Enum()
+	public status!: ProducerProductStatus;
+
 	@ManyToOne()
 	public producer!: Producer;
 
@@ -23,7 +26,4 @@ export class ProducerProduct {
 
 	@ManyToOne()
 	public productSpec!: ProductSpec;
-
-	@Enum()
-	public status!: ProducerProductStatus;
 }

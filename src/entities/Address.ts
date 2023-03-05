@@ -5,13 +5,13 @@ export class Address {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'numeric' })
+	@Property({ type: 'int' })
 	public number!: number;
 
-	@Property({ type: 'numeric' })
+	@Property({ type: 'int' })
 	public door!: number;
 
-	@Property({ type: 'numeric' })
+	@Property({ type: 'int' })
 	public floor!: number;
 
 	@Property()

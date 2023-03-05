@@ -8,7 +8,7 @@ export class Producer extends User {
 	@PrimaryKey()
 	public id!: number;
 
-	@Enum()
+	@Enum({ persist: false })
 	public type = UserType.Producer;
 
 	@OneToMany('ProductionUnit', 'producer')

@@ -6,13 +6,13 @@ export class ProductSpec {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'string' })
+	@Property()
 	public name!: string;
 
-	@Property({ type: 'string' })
+	@Property()
 	public description!: string;
 
-	@Property()
+	@Property({ type: 'array' })
 	public images!: string[];
 
 	@OneToMany('ProductSpecCategory', 'productSpec')
