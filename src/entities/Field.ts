@@ -7,10 +7,10 @@ export class Field {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'string' })
+	@Property()
 	public name!: string;
 
-	@Property({ type: 'string' })
+	@Property()
 	public unit!: string;
 
 	@Enum()

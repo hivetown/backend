@@ -9,13 +9,13 @@ export class ProductSpecField {
 	public spec!: ProductSpec;
 
 	@ManyToOne({ primary: true })
-	public field!: Field;
+	public category!: ProductSpecCategory;
 
 	@ManyToOne({ primary: true })
-	public category!: ProductSpecCategory;
+	public field!: Field;
+
+	public [PrimaryKeyType]?: [number, number, number];
 
 	@Property()
 	public value!: unknown;
-
-	public [PrimaryKeyType]?: [ProductSpec, Field, ProductSpecCategory];
 }
