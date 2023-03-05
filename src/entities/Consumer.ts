@@ -4,6 +4,7 @@ import { UserType } from '../enums/UserType';
 import { User } from './User';
 import type { Address } from './Address';
 import type { Order } from './Order';
+import type { Image } from './Image';
 
 @Entity()
 export class Consumer extends User {
@@ -21,4 +22,7 @@ export class Consumer extends User {
 
 	@ManyToMany()
 	public addresses = new Collection<Address>(this);
+
+	@OneToOne()
+	public image?: Image;
 }
