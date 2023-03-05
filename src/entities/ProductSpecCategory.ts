@@ -1,4 +1,4 @@
-import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, PrimaryKeyType } from '@mikro-orm/core';
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKeyType } from '@mikro-orm/core';
 import { Category } from './Category';
 import { ProductSpec } from './ProductSpec';
 import { ProductSpecField } from './ProductSpecField';
