@@ -1,6 +1,5 @@
 import { Entity, ManyToOne, PrimaryKeyType, Property } from '@mikro-orm/core';
 import { Field } from './Field';
-import { ProductSpec } from './ProductSpec';
 import { ProductSpecCategory } from './ProductSpecCategory';
 
 @Entity()

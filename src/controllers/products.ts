@@ -12,14 +12,14 @@ export class ProductsController {
 	public async allProducts(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
 			let products: ProducerProduct[] = new Array<ProducerProduct>();
-			if (!req) {
-				products = await container.productGateway.findAll();
-			} else if (req) {
-				const { categoryId } = req.query;
+			if (req.query.categoryId) {
+				const categoryId = typeof req.query.categoryId === 'string' ? req.query.categoryId : '';
 				products = await container.productGateway.findByCategoryId(Number(categoryId));
+			} else {
+				products = await container.productGateway.findAll();
 			}
 
-			res.json({ products });
+			res.status(200).json({ products });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -30,7 +30,11 @@ export class ProductsController {
 	public async productSpecById(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
 		try {
 			const productSpec = await container.productSpecGatway.findById(productSpecId);
-			res.json({ productSpec });
+			if (productSpec) {
+				res.status(200).json({ productSpec });
+			} else {
+				res.status(404).json({ error: 'Product Spec not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -38,21 +42,30 @@ export class ProductsController {
 	}
 
 	@Get('/:productSpecId/products')
-	public async productsBySpecificationId(@Response() res: Express.Response, @Params('id') id: number) {
+	public async productsBySpecificationId(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
 		try {
-			const products = await container.productGateway.findBySpecificationId(id);
-			res.json({ products });
+			const products = await container.productGateway.findBySpecificationId(productSpecId);
+			if (products.length > 0) {
+				res.status(200).json({ products });
+			} else {
+				res.status(404).json({ error: 'Product Spec not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
 
-	@Get('/:productSpecId/producer')
-	public async producerByProductSpec(@Response() res: Express.Response, @Params('id') id: number) {
+	@Get('/:productSpecId/producers')
+	public async producerByProductSpec(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
 		try {
-			const products = await container.productGateway.findBySpecificationId(id);
-			res.json({ products });
+			const products = await container.productGateway.findBySpecificationId(productSpecId);
+			if (products.length > 0) {
+				const producers = products.map((p) => p.producer);
+				res.status(200).json({ producers });
+			} else {
+				res.status(404).json({ error: 'Product Spec not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -60,10 +73,14 @@ export class ProductsController {
 	}
 
 	@Get('/:productSpecId/categories')
-	public async productCategoriesBySpecificationId(@Response() res: Express.Response, @Params('id') id: number) {
+	public async productCategoriesBySpecificationId(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
 		try {
-			const categories = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(id);
-			res.json({ categories });
+			const categories = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId);
+			if (categories.length > 0) {
+				res.status(200).json({ categories });
+			} else {
+				res.status(404).json({ error: 'Product Spec not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -73,13 +90,17 @@ export class ProductsController {
 	@Get('/:productSpecId/categories/:categoryId')
 	public async productCategoryBySpecificationId(
 		@Response() res: Express.Response,
-		@Params('id') id: number,
+		@Params('productSpecId') productSpecId: number,
 		@Params('categoryId') categoryId: number
 	) {
 		try {
-			const category = await container.productSpecCategoryGateway.findCategoryBySpecificationId(id, categoryId);
-			const c: Category = category[0].category;
-			res.json({ c });
+			const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+			const { category } = c[0];
+			if (c) {
+				res.status(200).json({ category });
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });

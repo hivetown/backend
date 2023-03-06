@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, ManyToOne, Property } from '@mikro-orm/core';
 import { Order } from './Order';
 import { ProducerProduct } from './ProducerProduct';
 import { Shipment } from './Shipment';
