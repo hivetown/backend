@@ -1,25 +1,20 @@
 import { faker } from '@faker-js/faker';
-import { OrderItem, Shipment } from '../../entities';
-import { generateRandomCarrier } from './carrier';
-import { generateRandomOrderItem } from './orderItem';
+import { Carrier, OrderItem, Shipment } from '../../entities';
 import { generateRandomShipmentEvent } from './shipmentEvent';
 
-export const generateRandomShipment = (orderItems: OrderItem[]): Shipment => {
+export const generateRandomShipment = (orderItems: OrderItem[], carrier: Carrier): Shipment => {
 	const shipment = new Shipment();
-	shipment.carrier = generateRandomCarrier();
-
-	const orderQuantity = faker.datatype.number(3);
-	for (let i = 0; i < orderQuantity; i++) {
-		shipment.orders.add(generateRandomOrderItem());
-	}
+	// AVOID CIRCULAR DEPENDENCIES
+	// shipment.carrier = generateRandomCarrier();
+	shipment.carrier = carrier;
 
 	const eventQuantity = faker.datatype.number(3);
 	for (let i = 0; i < eventQuantity; i++) {
-		shipment.events.add(generateRandomShipmentEvent());
+		shipment.events.add(generateRandomShipmentEvent(shipment));
 	}
 
 	for (const orderItem of orderItems) {
-		shipment.products.add(orderItem);
+		shipment.orderItems.add(orderItem);
 	}
 
 	return shipment;

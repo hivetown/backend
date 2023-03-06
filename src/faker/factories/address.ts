@@ -7,7 +7,7 @@ export const generateRandomAddress = (): Address => {
 	address.door = Number(faker.random.numeric(2));
 	address.floor = Number(faker.random.numeric(2));
 	address.zipCode = faker.address.zipCode();
-	address.street = faker.address.streetName();
+	address.street = faker.address.street();
 	address.parish = faker.address.county(); // It's fine to use county as parish
 	address.county = faker.address.county();
 	address.city = faker.address.city();

@@ -11,7 +11,7 @@ export const generateRandomProducer = (): Producer => {
 
 	const productionUnitQuantity = faker.datatype.number(19);
 	for (let i = 0; i < productionUnitQuantity; i++) {
-		producer.productionUnits.add(generateRandomProductionUnit());
+		producer.productionUnits.add(generateRandomProductionUnit(producer));
 	}
 	return producer;
 };

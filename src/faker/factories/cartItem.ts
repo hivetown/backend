@@ -1,10 +1,12 @@
 import { faker } from '@faker-js/faker';
-import { Cart, CartItem } from '../../entities';
-import { generateRandomProducerProduct } from './producerProduct';
+import { Cart, CartItem, ProducerProduct } from '../../entities';
 
-export const generateRandomCartItem = (cart: Cart): CartItem => {
+export const generateRandomCartItem = (cart: Cart, producerProduct: ProducerProduct): CartItem => {
 	const cartItem = new CartItem();
-	cartItem.product = generateRandomProducerProduct();
+	// TODO: this
+	// AVOID CIRCULAR DEPENDENCIES
+	// cartItem.product = generateRandomProducerProduct();
+	cartItem.product = producerProduct;
 	// AVOID CIRCULAR DEPENDENCIES
 	// cartItem.cart = generateRandomCart();
 	cartItem.cart = cart;
