@@ -2,7 +2,6 @@ import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
-import type { Category } from '../entities/Category';
 import type { ProducerProduct } from '../entities/ProducerProduct';
 
 @Controller('/products')
