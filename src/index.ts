@@ -8,6 +8,7 @@ import { CategoryGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGa
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
+import { ServerErrorMiddleware } from './middlewares/error';
 
 export const container = {} as {
 	server: http.Server;
@@ -34,6 +35,9 @@ export const main = async () => {
 	app.use(express.json());
 	app.use(cors());
 	app.use((_req: Request, _res: Response, next: NextFunction) => RequestContext.create(container.orm.em, next));
+
+	const serverErrorMiddleware = new ServerErrorMiddleware();
+	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
 	await attachControllers(app, [ProductsController]);
