@@ -1,16 +1,17 @@
-import { faker } from '@faker-js/faker';
-import { ProductSpecCategory } from '../../entities';
-import { generateRandomProductSpec } from './productSpec';
+import { ProductSpec, ProductSpecCategory } from '../../entities';
 import { generateRandomCategory } from './category';
+import { generateRandomProductSpecField } from './productSpecField';
 
-export const generateRandomProductSpecCategory = (): ProductSpecCategory => {
-	const producerProduct = new ProductSpecCategory();
-	producerProduct.productSpec = generateRandomProductSpec();
-	producerProduct.category = generateRandomCategory();
+export const generateRandomProductSpecCategory = (productSpec: ProductSpec): ProductSpecCategory => {
+	const productSpecCategory = new ProductSpecCategory();
+	// AVOID CIRCULAR DEPENDENCIES
+	// producerProduct.productSpec = generateRandomProductSpec();
+	productSpecCategory.productSpec = productSpec;
+	productSpecCategory.category = generateRandomCategory();
 
-	const fieldQuantity = faker.datatype.number(10);
-	for (let i = 0; i < fieldQuantity; i++) {
-		producerProduct.fields.add(generateRandomProductSpecField());
+	const { fields } = productSpecCategory.category;
+	for (const field of fields) {
+		productSpecCategory.fields.add(generateRandomProductSpecField(productSpecCategory, field));
 	}
-	return producerProduct;
+	return productSpecCategory;
 };

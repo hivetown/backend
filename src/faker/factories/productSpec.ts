@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { ProductSpec } from '../../entities';
+import { generateRandomProductSpecCategory } from './productSpecCategory';
 
 export const generateRandomProductSpec = (): ProductSpec => {
 	const product = new ProductSpec();
@@ -7,14 +8,14 @@ export const generateRandomProductSpec = (): ProductSpec => {
 	product.description = faker.commerce.productDescription();
 
 	product.images = [];
-	const imageQuantity = Number(faker.random.numeric(1));
+	const imageQuantity = faker.datatype.number(10);
 	for (let i = 0; i < imageQuantity; i++) {
 		product.images.push(faker.image.imageUrl());
 	}
 
-	const categoryQuantity = Number(faker.random.numeric(1));
+	const categoryQuantity = faker.datatype.number(10);
 	for (let i = 0; i < categoryQuantity; i++) {
-		product.categories = generateRandomProductSpecCategory();
+		product.categories.add(generateRandomProductSpecCategory());
 	}
 
 	return product;

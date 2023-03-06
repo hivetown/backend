@@ -1,12 +1,14 @@
 import { faker } from '@faker-js/faker';
-import { ProductSpecField } from '../../entities';
-import { generateRandomField } from './field';
-import { generateRandomProductSpecCategory } from './productSpecCategory';
+import { Field, ProductSpecCategory, ProductSpecField } from '../../entities';
 
-export const generateRandomProductSpecField = (): ProductSpecField => {
+export const generateRandomProductSpecField = (productSpecCategory: ProductSpecCategory, field: Field): ProductSpecField => {
 	const productSpecField = new ProductSpecField();
-	productSpecField.productSpecCategory = generateRandomProductSpecCategory();
-	productSpecField.field = generateRandomField();
+	// AVOID CIRCULAR DEPENDENCIES
+	// productSpecField.productSpecCategory = generateRandomProductSpecCategory();
+	productSpecField.productSpecCategory = productSpecCategory;
+	// AVOID CIRCULAR DEPENDENCIES
+	// productSpecField.field = generateRandomField();
+	productSpecField.field = field;
 	productSpecField.value = faker.random.word();
 	return productSpecField;
 };

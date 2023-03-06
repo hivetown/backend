@@ -11,12 +11,12 @@ export const generateRandomProductionUnit = (): ProductionUnit => {
 	productionUnit.address = generateRandomAddress();
 	productionUnit.producer = generateRandomProducer();
 
-	const carrierQuantity = Number(faker.random.numeric(1));
+	const carrierQuantity = faker.datatype.number(7);
 	for (let i = 0; i < carrierQuantity; i++) {
-		productionUnit.carriers.add(generateRandomCarrier());
+		productionUnit.carriers.add(generateRandomCarrier(productionUnit));
 	}
 
-	const productsQuantity = Number(faker.random.numeric(1));
+	const productsQuantity = faker.datatype.number(70);
 	for (let i = 0; i < productsQuantity; i++) {
 		productionUnit.products.add(generateRandomProducerProduct());
 	}

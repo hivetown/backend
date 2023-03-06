@@ -1,11 +1,14 @@
 import { faker } from '@faker-js/faker';
-import { CartItem } from '../../entities';
-import { generateRandomCart } from './cart';
+import { Cart, CartItem } from '../../entities';
+import { generateRandomProducerProduct } from './producerProduct';
 
-export const generateRandomCartItem = (): CartItem => {
+export const generateRandomCartItem = (cart: Cart): CartItem => {
 	const cartItem = new CartItem();
 	cartItem.product = generateRandomProducerProduct();
-	cartItem.cart = generateRandomCart();
-	cartItem.quantity = Number(faker.random.numeric(2));
+	// AVOID CIRCULAR DEPENDENCIES
+	// cartItem.cart = generateRandomCart();
+	cartItem.cart = cart;
+
+	cartItem.quantity = faker.datatype.number(10);
 	return cartItem;
 };

@@ -1,12 +1,15 @@
 import { faker } from '@faker-js/faker';
-import { OrderItem } from '../../entities';
-import { generateRandomOrder } from './order';
+import { Order, OrderItem } from '../../entities';
+import { generateRandomProducerProduct } from './producerProduct';
+import { generateRandomShipment } from './shipment';
 
-export const generateRandomOrderItem = (): OrderItem => {
+export const generateRandomOrderItem = (order: Order): OrderItem => {
 	const orderItem = new OrderItem();
-	orderItem.order = generateRandomOrder();
+	// AVOID CIRCULAR DEPENDENCIES
+	// orderItem.order = generateRandomOrder();
+	orderItem.order = order;
 	orderItem.producerProduct = generateRandomProducerProduct();
-	orderItem.quantity = faker.datatype.number(2);
+	orderItem.quantity = faker.datatype.number(13);
 	orderItem.price = orderItem.producerProduct.currentPrice;
 	orderItem.shipment = generateRandomShipment();
 	return orderItem;

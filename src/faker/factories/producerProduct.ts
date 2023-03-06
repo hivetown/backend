@@ -1,15 +1,22 @@
 import { faker } from '@faker-js/faker';
-import { ProducerProduct } from '../../entities';
-import { generateRandomProducer } from './producer';
+import { Producer, ProducerProduct, ProductSpec, ProductionUnit } from '../../entities';
 import { ProducerProductStatus } from '../../enums';
 
-export const generateRandomProducerProduct = (): ProducerProduct => {
+export const generateRandomProducerProduct = (producer: Producer, productionUnit: ProductionUnit, productSpec: ProductSpec): ProducerProduct => {
 	const producerProduct = new ProducerProduct();
-	producerProduct.currentPrice = Number(faker.random.numeric(3));
+	producerProduct.currentPrice = faker.datatype.number(999);
 	producerProduct.productionDate = faker.date.past();
 	producerProduct.status = faker.helpers.arrayElement(Object.values(ProducerProductStatus));
-	producerProduct.producer = generateRandomProducer();
-	producerProduct.productionUnit = generateRandomProductionUnit();
-	producerProduct.productSpec = generateRandomProductSpec();
+	// AVOID CIRCULAR DEPENDENCIES
+	// producerProduct.producer = generateRandomProducer();
+	producerProduct.producer = producer;
+
+	// AVOID CIRCULAR DEPENDENCIES
+	// producerProduct.productionUnit = generateRandomProductionUnit();
+	producerProduct.productionUnit = productionUnit;
+
+	// AVOID CIRCULAR DEPENDENCIES
+	// producerProduct.productSpec = generateRandomProductSpec();
+	producerProduct.productSpec = productSpec;
 	return producerProduct;
 };

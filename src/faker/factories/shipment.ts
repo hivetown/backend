@@ -1,9 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { Shipment } from '../../entities';
+import { OrderItem, Shipment } from '../../entities';
 import { generateRandomCarrier } from './carrier';
 import { generateRandomOrderItem } from './orderItem';
+import { generateRandomShipmentEvent } from './shipmentEvent';
 
-export const generateRandomShipment = (): Shipment => {
+export const generateRandomShipment = (orderItems: OrderItem[]): Shipment => {
 	const shipment = new Shipment();
 	shipment.carrier = generateRandomCarrier();
 
@@ -17,9 +18,8 @@ export const generateRandomShipment = (): Shipment => {
 		shipment.events.add(generateRandomShipmentEvent());
 	}
 
-	const productQuantity = faker.datatype.number(7);
-	for (let i = 0; i < productQuantity; i++) {
-		shipment.products.add(generateRandomOrderItem());
+	for (const orderItem of orderItems) {
+		shipment.products.add(orderItem);
 	}
 
 	return shipment;
