@@ -22,4 +22,20 @@ export class CategoryGateway {
 		const category = await this.repository.findOne(id, { populate: ['parent', 'fields'] });
 		return category;
 	}
+
+	public async create(category: Category): Promise<Category> {
+		const cat = this.repository.create(category);
+		console.log(cat.fields);
+		await this.repository.persistAndFlush(cat);
+		return cat;
+	}
+
+	public async remove(category: Category): Promise<void> {
+		await this.repository.removeAndFlush(category);
+	}
+
+	public async update(category: Category): Promise<Category> {
+		await this.repository.persistAndFlush(category);
+		return category;
+	}
 }

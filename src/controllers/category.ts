@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Response } from '@decorators/express';
+import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
 
@@ -17,7 +17,16 @@ export class CategoryController {
 		}
 	}
 
-	// @Post('/')
+	@Post('/')
+	public async createCategory(@Response() res: Express.Response, @Request() req: Express.Request) {
+		try {
+			const category = await container.categoryGateway.create(req.body);
+			res.status(201).json({ category });
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	@Get('/:categoryId')
 	public async categoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
@@ -30,8 +39,39 @@ export class CategoryController {
 		}
 	}
 
-	// @Put('/{categoryId}')
-	// @Delete('/{categoryId}')
+	@Put('/:categoryId')
+	public async updateCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
+		try {
+			const category = await container.categoryGateway.findById(categoryId);
+			if (category) {
+				category.name = req.body.name;
+				category.parent = req.body.parent;
+				const categoryUpdated = await container.categoryGateway.update(category);
+				res.status(200).json({ categoryUpdated });
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Delete('/:categoryId')
+	public async deleteCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
+		try {
+			const categoryTBremoved = await container.categoryGateway.findById(categoryId);
+			if (categoryTBremoved) {
+				await container.categoryGateway.remove(categoryTBremoved);
+				res.status(204);
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	@Get('/:categoryId/fields')
 	public async allFieldsByCategoryId(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
@@ -63,5 +103,22 @@ export class CategoryController {
 		}
 	}
 
-	// @Put('/:categoryId/fields/:fieldId')
+	@Put('/:categoryId/fields/:fieldId')
+	public async addFieldToCategory(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Params('fieldId') fieldId: number) {
+		try {
+			const category = await container.categoryGateway.findById(categoryId);
+			const field = await container.fieldGateway.findById(fieldId);
+
+			if (category && field) {
+				category.addField(field);
+				await container.categoryGateway.update(category);
+				res.status(201).json({ category });
+			} else {
+				res.status(404).json({ error: 'Category or field not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 }
