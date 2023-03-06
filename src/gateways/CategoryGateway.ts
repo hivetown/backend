@@ -13,11 +13,6 @@ export class CategoryGateway {
 		return categories;
 	}
 
-	public async findAllByIds(ids: number[]): Promise<Category[]> {
-		const categories = await this.repository.find({ id: { $in: ids } });
-		return categories;
-	}
-
 	public async findById(id: number): Promise<Category | null> {
 		const category = await this.repository.findOne(id, { populate: ['parent'] });
 		return category;

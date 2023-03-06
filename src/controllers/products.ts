@@ -12,6 +12,7 @@ export class ProductsController {
 	public async allProducts(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
 			let products: ProducerProduct[] = new Array<ProducerProduct>();
+			console.log('ola');
 			if (!req) {
 				products = await container.productGateway.findAll();
 			} else if (req) {
