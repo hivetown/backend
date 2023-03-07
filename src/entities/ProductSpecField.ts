@@ -1,6 +1,5 @@
 import { Entity, ManyToOne, PrimaryKeyType, Property } from '@mikro-orm/core';
 import { Field } from './Field';
-import { ProductSpec } from './ProductSpec';
 import { ProductSpecCategory } from './ProductSpecCategory';
 
 @Entity()
@@ -14,5 +13,5 @@ export class ProductSpecField {
 	public [PrimaryKeyType]?: [number, number, number];
 
 	@Property()
-	public value!: unknown;
+	public value!: string;
 }

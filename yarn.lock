@@ -652,7 +652,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@faker-js/faker@npm:^7.6.0":
+"@faker-js/faker@npm:7.6.0":
   version: 7.6.0
   resolution: "@faker-js/faker@npm:7.6.0"
   checksum: 942af6221774e8c98a0eb6bc75265e05fb81a941170377666c3439aab9495dd321d6beedc5406f07e6ad44262b3e43c20961f666d116ad150b78e7437dd1bb2b
@@ -674,12 +674,12 @@ __metadata:
     "@commitlint/config-conventional": ^17.1.0
     "@decorators/di": ^2.0.0
     "@decorators/express": ^2.9.1
-    "@faker-js/faker": ^7.6.0
-    "@mikro-orm/cli": ^5.5.0
-    "@mikro-orm/core": ^5.6.11
-    "@mikro-orm/migrations": ^5.6.11
-    "@mikro-orm/mysql": ^5.6.11
-    "@mikro-orm/reflection": ^5.5.0
+    "@mikro-orm/cli": 5.6.13
+    "@mikro-orm/core": 5.6.13
+    "@mikro-orm/migrations": 5.6.13
+    "@mikro-orm/mysql": 5.6.13
+    "@mikro-orm/reflection": 5.6.13
+    "@mikro-orm/seeder": 5.6.13
     "@sapphire/eslint-config": ^4.3.8
     "@sapphire/prettier-config": ^1.4.4
     "@sapphire/ts-config": ^3.3.4
@@ -706,6 +706,7 @@ __metadata:
     pretty-quick: ^3.1.3
     standard-version: ^9.3.2
     ts-jest: ^29.0.3
+    ts-node: ^10.9.1
     tslib: ^2.4.0
     typedoc: ^0.23.17
     typedoc-plugin-mdn-links: ^2.0.0
@@ -1068,13 +1069,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mikro-orm/cli@npm:^5.5.0":
-  version: 5.6.11
-  resolution: "@mikro-orm/cli@npm:5.6.11"
+"@mikro-orm/cli@npm:5.6.13":
+  version: 5.6.13
+  resolution: "@mikro-orm/cli@npm:5.6.13"
   dependencies:
     "@jercle/yargonaut": 1.1.5
-    "@mikro-orm/core": ~5.6.11
-    "@mikro-orm/knex": ~5.6.11
+    "@mikro-orm/core": ~5.6.13
+    "@mikro-orm/knex": ~5.6.13
     fs-extra: 11.1.0
     tsconfig-paths: 4.1.2
     yargs: 15.4.1
@@ -1113,20 +1114,20 @@ __metadata:
   bin:
     mikro-orm: cli.js
     mikro-orm-esm: esm.js
-  checksum: 5f0e0240d976cbb64ac56fd61cb1531de0e6393bd28fc1203b0032fef414688ed2a4fdaa618cf80c2607e94f6b50c1204488b6683fd18d180cb7f01486001d08
+  checksum: 4227306742465eac9db9466590f65469b08a4debcf6fe98b9268639f7ea194811cfbc3f692c6c536905d5a171713d15fb103e56248f6ba866064e64649c753d9
   languageName: node
   linkType: hard
 
-"@mikro-orm/core@npm:^5.6.11, @mikro-orm/core@npm:~5.6.11":
-  version: 5.6.11
-  resolution: "@mikro-orm/core@npm:5.6.11"
+"@mikro-orm/core@npm:5.6.13, @mikro-orm/core@npm:~5.6.13":
+  version: 5.6.13
+  resolution: "@mikro-orm/core@npm:5.6.13"
   dependencies:
     acorn-loose: 8.3.0
     acorn-walk: 8.2.0
     dotenv: 16.0.3
     fs-extra: 11.1.0
     globby: 11.1.0
-    mikro-orm: ~5.6.11
+    mikro-orm: ~5.6.13
     reflect-metadata: 0.1.13
   peerDependencies:
     "@mikro-orm/better-sqlite": ^5.0.0
@@ -1160,13 +1161,13 @@ __metadata:
       optional: true
     "@mikro-orm/sqlite":
       optional: true
-  checksum: c207452597bd247d55ac18b7ba750692ecdabdf3ce7e06405adeefb9726b483dc49a78af4c9430258d46eadae21f67c8b43039cfa7e6064935ff8644a85e2dec
+  checksum: 3d8dadc2c511f4a540bc9fb794de09798da3c66d2d20693b0198bec4239a7f8ac032ff593f11e1f45971564751a3e91a9f73996a705c11904214fcfe43208a81
   languageName: node
   linkType: hard
 
-"@mikro-orm/knex@npm:~5.6.11":
-  version: 5.6.11
-  resolution: "@mikro-orm/knex@npm:5.6.11"
+"@mikro-orm/knex@npm:~5.6.13":
+  version: 5.6.13
+  resolution: "@mikro-orm/knex@npm:5.6.13"
   dependencies:
     fs-extra: 11.1.0
     knex: 2.4.2
@@ -1198,29 +1199,29 @@ __metadata:
       optional: true
     sqlite3:
       optional: true
-  checksum: f9f5f153ae6f728fcdffa14cb497e2a8965d9d47a33a1158d385e1599d35afecf600b8e3067041fc2fa5fc0f8b6619bad48b54f153e49c120a3ca8006ecd5109
+  checksum: 0c05f88d73aba3bd5c25099249fcb1583e45d82c9d4cf09635e91900500f56bcf3cd5f8f3f454157e2e82034553677f4af245849ae6345414fce6602cf62d818
   languageName: node
   linkType: hard
 
-"@mikro-orm/migrations@npm:^5.6.11":
-  version: 5.6.11
-  resolution: "@mikro-orm/migrations@npm:5.6.11"
+"@mikro-orm/migrations@npm:5.6.13":
+  version: 5.6.13
+  resolution: "@mikro-orm/migrations@npm:5.6.13"
   dependencies:
-    "@mikro-orm/knex": ~5.6.11
+    "@mikro-orm/knex": ~5.6.13
     fs-extra: 11.1.0
     knex: 2.4.2
     umzug: 3.2.1
   peerDependencies:
     "@mikro-orm/core": ^5.0.0
-  checksum: f3c98644b16047ef18e4d63aef15eae5937717552ddf941c128ec0d4c8ec71ae9973fcb60a2cba7419a2a4f9d56427efabebec82dc77348c3787595e75985f5d
+  checksum: bdc242725f8b75ab760096a00a45ea4f428aa641a63aa7494d41e6954c282cf6bfc41256830dedb4e2d095b21ce9cc9a46c338823faf376976c1fc06c5bc8e4a
   languageName: node
   linkType: hard
 
-"@mikro-orm/mysql@npm:^5.6.11":
-  version: 5.6.11
-  resolution: "@mikro-orm/mysql@npm:5.6.11"
+"@mikro-orm/mysql@npm:5.6.13":
+  version: 5.6.13
+  resolution: "@mikro-orm/mysql@npm:5.6.13"
   dependencies:
-    "@mikro-orm/knex": ~5.6.11
+    "@mikro-orm/knex": ~5.6.13
     mysql2: 2.3.3
   peerDependencies:
     "@mikro-orm/core": ^5.0.0
@@ -1234,19 +1235,32 @@ __metadata:
       optional: true
     "@mikro-orm/seeder":
       optional: true
-  checksum: c7e696b0c362110117ab5677fd8d9ddb7b4d2080c813b6a558c2a8aec3008f0b4c106b078544ffbf63e2a08d2e0e53ca490b88e0cd1f2a560325e96d3347285d
+  checksum: e4407cb2869dc370a461423545eda84a08ebe3b0b5e94a39b3e1e8c3c1174b0ce166e248139c4b77ea8beed04a4f30f57ed011a056e224e38718679a30a5a5db
   languageName: node
   linkType: hard
 
-"@mikro-orm/reflection@npm:^5.5.0":
-  version: 5.6.11
-  resolution: "@mikro-orm/reflection@npm:5.6.11"
+"@mikro-orm/reflection@npm:5.6.13":
+  version: 5.6.13
+  resolution: "@mikro-orm/reflection@npm:5.6.13"
   dependencies:
     globby: 11.1.0
     ts-morph: 17.0.1
   peerDependencies:
     "@mikro-orm/core": ^5.0.0
-  checksum: f0732405f1ab55b473a262bf08de38d50d02ad88e604ecf4a9eeebc0591cf9363ae3280d35c28d79c6efdc37025223c861ffdfe695afc77b71238c3b23dcb801
+  checksum: 9b1ccf5f62f64a97fe65146aa860c966e482ff767bae6753534f0e9e0d333b00ee98868abcd7dc76d9d484be279639888a7fd6db10705ca7df0ccbabb79059e4
+  languageName: node
+  linkType: hard
+
+"@mikro-orm/seeder@npm:5.6.13":
+  version: 5.6.13
+  resolution: "@mikro-orm/seeder@npm:5.6.13"
+  dependencies:
+    "@faker-js/faker": 7.6.0
+    fs-extra: 11.1.0
+    globby: 11.1.0
+  peerDependencies:
+    "@mikro-orm/core": ^5.0.0
+  checksum: 6d7a03c2c5209b22a23ad8856c3a3e254a27d21ea5e5bb17d182952f85285d9c0c8e3a8ffdd8176f3202ef940e35561a0ecee2e7a83b6e64163f953c5485b56e
   languageName: node
   linkType: hard
 
@@ -5849,10 +5863,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mikro-orm@npm:~5.6.11":
-  version: 5.6.11
-  resolution: "mikro-orm@npm:5.6.11"
-  checksum: 3e9b28b03bb4f70630e9c529d20c9669194d73fbcfcf513f8d5ac482ece3554c8b226d43796ed750a8116d6b1bf3aee372770289074fe9fa319dedf4a6483034
+"mikro-orm@npm:~5.6.13":
+  version: 5.6.13
+  resolution: "mikro-orm@npm:5.6.13"
+  checksum: 51b35ebb0e7a4876164bc1f43aad0625fc42651374bed76894ce63bacfab6c715635ae70681e1ade470d68b40f50f527822d8a2af5812fcc668789f278860b23
   languageName: node
   linkType: hard
 
@@ -7829,7 +7843,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-node@npm:^10.8.1":
+"ts-node@npm:^10.8.1, ts-node@npm:^10.9.1":
   version: 10.9.1
   resolution: "ts-node@npm:10.9.1"
   dependencies:
