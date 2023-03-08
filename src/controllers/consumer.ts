@@ -29,4 +29,10 @@ export class ConsumerController {
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
+
+	// @Post('/:consumerId/cart')
+
+	// @Delete('/:consumerId/cart')
+
+	// @Put('/:consumerId/cart/:producerProductId')
 }
