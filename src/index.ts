@@ -10,6 +10,7 @@ import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
 import { CategoryController } from './controllers/category';
 import { ServerErrorMiddleware } from './middlewares/error';
+import { ConsumerController } from './controllers/consumer';
 
 export const container = {} as {
 	server: http.Server;
@@ -43,8 +44,7 @@ export const main = async () => {
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
-	await attachControllers(app, [ProductsController]);
-	await attachControllers(app, [CategoryController]);
+	await attachControllers(app, [ProductsController, CategoryController, ConsumerController]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
