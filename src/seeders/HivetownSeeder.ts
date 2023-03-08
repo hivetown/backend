@@ -19,6 +19,7 @@ import { OrderItemFactory } from './factories/OrderItem';
 import { ShipmentEventFactory } from './factories/ShipmentEvent';
 import { ShipmentStatusFactory } from './factories/ShipmentStatus';
 import { ProducerFactory } from './factories/Producer';
+import { CarrierFactory } from './factories/Carrier';
 
 export class HivetownSeeder extends Seeder {
 	public async run(em: EntityManager): Promise<void> {
@@ -39,6 +40,7 @@ export class HivetownSeeder extends Seeder {
 		const shipmentFactory = new ShipmentFactory(em);
 		const shipmentEventFactory = new ShipmentEventFactory(em);
 		const shipmentStatusFactory = new ShipmentStatusFactory(em);
+		const carrierFactory = new CarrierFactory(em);
 
 		// We create some fields to use on the Categories
 		const fields = await fieldFactory
@@ -85,54 +87,41 @@ export class HivetownSeeder extends Seeder {
 			});
 		});
 
-		// // Generate some ProductSpecs (a separate graph)
-		// const productSpecs = await productSpecFactory
-		// 	.each((spec) => {
-		// 		spec.categories.set(
-		// 			productSpecCategoryFactory
-		// 				.each((specCategory) => {
-		// 					specCategory.category = categoryFactory
-		// 						.each((category) => {
-		// 							// We make some Fields for the Category
-		// 							// This is WRONG from the perspective of the business,
-		// 							// because we *may* end up having more Fields on the Category
-		// 							// than we will link to the ProductSpecCategory
-		// 							category.fields.add(
-		// 								fieldFactory
-		// 									.each((field) => {
-		// 										const amount = faker.datatype.number(5);
-		// 										if (amount) {
-		// 											field.type = FieldType.Enum;
-		// 											field.possibleValues.set(new FieldPossibleValueFactory(em).make(amount));
-		// 										}
-		// 									})
-		// 									.make(3)
-		// 							);
-		// 						})
-		// 						.makeOne();
+		// We create some producers
+		const producers = await producerFactory
+			.each((producer) => {
+				producer.productionUnits.set(
+					productionUnitFactory
+						.each((pUnit) => {
+							pUnit.address = addressFactory.makeOne();
+							pUnit.carriers.set(carrierFactory.make(10));
+							// pUnit.products.set(
+							// 	producerProductFactory
+							// 		.each((pProduct) => {
+							// 			pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
+							// 		})
+							// 		.make(30)
+							// );
+						})
+						.make(10)
+				);
+			})
+			.create(10);
 
-		// 					return specCategory;
-		// 				})
-		// 				.make(10)
-		// 		);
-		// 	})
-		// 	// We use create() instead of make() because we want to be able to access the actual
-		// 	// database ProductSpecs (and dependent entities) in the next step with their IDs populated
-		// 	.create(10);
+		// We wait for the production units to be created so we can create some producer products
+		producers.forEach((producer) => {
+			producer.productionUnits.getItems().forEach((pUnit) => {
+				pUnit.products.set(
+					producerProductFactory
+						.each((pProduct) => {
+							pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
+							pProduct.producer = producer;
+						})
+						.make(30)
+				);
+			});
+		});
 
-		// // Create ProductSpecFields. THIS IS THE CORRECT WAY TO DO IT BECAUSE IT DEPENDS ON IDS CREATED BEFOREHAND
-		// productSpecs.forEach((spec) => {
-		// 	spec.categories.getItems().forEach((specCategory) => {
-		// 		specCategory.category.fields.getItems().map((field) =>
-		// 			productSpecFieldFactory.makeOne({
-		// 				field: field.id,
-		// 				productSpecCategory: { category: specCategory.category.id, productSpec: spec.id }
-		// 			})
-		// 		);
-		// 	});
-		// });
-
-		// // Generate some Producers (a separate graph)
 		// const producers = await producerFactory
 		// 	.each((producer) => {
 		// 		producer.productionUnits.set(
