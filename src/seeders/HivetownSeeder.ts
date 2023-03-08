@@ -119,6 +119,16 @@ export class HivetownSeeder extends Seeder {
 		const consumers = await consumerFactory
 			.each((consumer) => {
 				consumer.addresses.set(addressFactory.make(10));
+				consumer.cartItems.set(
+					cartItemFactory
+						.each((cartItem) => {
+							const randomProducer = faker.helpers.arrayElement(producers);
+							const randomProductionUnit = faker.helpers.arrayElement(randomProducer.productionUnits.getItems());
+							const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
+							cartItem.product = randomProducerProduct;
+						})
+						.make(10)
+				);
 				// consumer.cart = cartFactory.makeOne();
 			})
 			.create(10);
