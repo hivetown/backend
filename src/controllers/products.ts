@@ -12,7 +12,7 @@ export class ProductsController {
 		try {
 			let products: ProducerProduct[] = new Array<ProducerProduct>();
 			if (req.query.categoryId) {
-				const categoryId = typeof req.query.categoryId === 'string' ? req.query.categoryId : '';
+				const categoryId = req.query.categoryId as string;
 				products = await container.productGateway.findByCategoryId(Number(categoryId));
 			} else {
 				products = await container.productGateway.findAll();
