@@ -8,7 +8,6 @@ import { CategoryGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGa
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
-import { initFaker } from './faker';
 
 export const container = {} as {
 	server: http.Server;
@@ -40,10 +39,6 @@ export const main = async () => {
 	await attachControllers(app, [ProductsController]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
-
-	if (process.env.FAKER === 'true') {
-		initFaker();
-	}
 };
 
 void main();
