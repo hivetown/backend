@@ -22,4 +22,12 @@ export class ConsumerGateway {
 		await this.repository.persistAndFlush(consumer);
 		return consumer;
 	}
+
+	public async deleteCart(consumer: Consumer): Promise<Consumer> {
+		for (const item of consumer.cartItems.getItems()) {
+			await this.repository.remove(item);
+		}
+		await this.repository.persistAndFlush(consumer);
+		return consumer;
+	}
 }

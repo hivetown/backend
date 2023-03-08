@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Put, Request, Response } from '@decorators/express';
+import { Controller, Delete, Get, Params, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
 // import { Consumer } from '../entities';
@@ -32,7 +32,22 @@ export class ConsumerController {
 
 	// @Post('/:consumerId/cart')
 
-	// @Delete('/:consumerId/cart')
+	@Delete('/:consumerId/cart')
+	public async deleteCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {
+		try {
+			const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
+
+			if (consumer) {
+				await container.consumerGateway.deleteCart(consumer);
+				res.status(200).json({ message: 'Cart cleared' });
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	@Put('/:consumerId/cart/:producerProductId')
 	public async updateQuantityCartItem(
