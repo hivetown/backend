@@ -1,7 +1,8 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Delete, Get, Params, Put, Request, Response } from '@decorators/express';
+import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
+import { CartItem } from '../entities';
 // import { Consumer } from '../entities';
 
 @Controller('/consumers')
@@ -30,7 +31,35 @@ export class ConsumerController {
 		}
 	}
 
-	// @Post('/:consumerId/cart')
+	@Post('/:consumerId/cart')
+	public async addCartItem(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('consumerId') consumerId: number
+	): Promise<void> {
+		try {
+			const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
+
+			if (consumer) {
+				const items = consumer.cartItems.getItems();
+				const item = items.find((item) => item.product.id === Number(req.body.product.id));
+				if (item) {
+					item.addQuantity(req.body.quantity);
+				} else {
+					const newItem = new CartItem(consumer, req.body.product, req.body.quantity);
+					consumer.cartItems.add(newItem);
+				}
+
+				await container.consumerGateway.updateCart(consumer);
+				res.status(201).json({ message: 'Item added to cart' });
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	@Delete('/:consumerId/cart')
 	public async deleteCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {

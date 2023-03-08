@@ -14,6 +14,12 @@ export class CartItem {
 	@Property({ type: 'int' })
 	public quantity!: number;
 
+	public constructor(consumer: Consumer, product: ProducerProduct, quantity: number) {
+		this.consumer = consumer;
+		this.product = product;
+		this.quantity = quantity;
+	}
+
 	public addQuantity(quantity: number): void {
 		this.quantity = quantity;
 	}
