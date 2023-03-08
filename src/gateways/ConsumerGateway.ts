@@ -17,4 +17,9 @@ export class ConsumerGateway {
 		const consumer = await this.repository.findOne(id, { populate: ['cartItems', 'cartItems.product', 'cartItems.product.productSpec'] });
 		return consumer;
 	}
+
+	public async updateCart(consumer: Consumer): Promise<Consumer> {
+		await this.repository.persistAndFlush(consumer);
+		return consumer;
+	}
 }

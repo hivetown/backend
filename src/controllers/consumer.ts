@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Response } from '@decorators/express';
+import { Controller, Get, Params, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
 // import { Consumer } from '../entities';
@@ -34,5 +34,33 @@ export class ConsumerController {
 
 	// @Delete('/:consumerId/cart')
 
-	// @Put('/:consumerId/cart/:producerProductId')
+	@Put('/:consumerId/cart/:producerProductId')
+	public async updateQuantityCartItem(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('consumerId') consumerId: number,
+		@Params('producerProductId') producerProductId: number
+	): Promise<void> {
+		try {
+			const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
+
+			if (consumer) {
+				const items = consumer.cartItems.getItems();
+				const item = items.find((item) => item.product.id === Number(producerProductId));
+
+				if (item) {
+					item.addQuantity(req.body.quantity);
+					await container.consumerGateway.updateCart(consumer);
+					res.status(200).json(consumer.cartItems.getItems());
+				} else {
+					res.status(404).json({ error: 'Item not found' });
+				}
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 }
