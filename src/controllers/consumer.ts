@@ -8,22 +8,8 @@ import { Consumer } from '../entities';
 @Injectable()
 export class ConsumerController {
 	@Get('/')
-	public async createConsumer(@Response() res: Express.Response) {
-		try {
-			await container.em.upsert(Consumer, {
-				id: 1,
-				email: 'teste',
-				name: 'ola',
-				phone: 123,
-				vat: 123
-			});
-
-			const consumer = await container.em.findOne(Consumer, 1, { populate: true });
-
-			res.json(consumer);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+	public async getConsumers(@Response() res: Express.Response): Promise<void> {
+		const consumers = await container.em.find(Consumer, {});
+		res.json(consumers);
 	}
 }
