@@ -4,14 +4,12 @@ import { RequestContext } from '@mikro-orm/core';
 import { EntityManager, MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import express, { NextFunction, Request, Response } from 'express';
 import { attachControllers } from '@decorators/express';
-import { ProducerGateway } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
-import { CategoryGateway } from './gateways/CategoryGateway';
-import { ProductGateway } from './gateways/ProductGateway';
-import { ProductSpecCategoryGateway } from './gateways/ProductSpecCategoryGateway';
 import { ConsumerController } from './controllers/consumer';
+import { CategoryGateway, FieldGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway } from './gateways';
+import { ServerErrorMiddleware } from './middlewares/error';
 
 export const container = {} as {
 	server: http.Server;
@@ -22,6 +20,7 @@ export const container = {} as {
 	productSpecCategoryGateway: ProductSpecCategoryGateway;
 	categoryGateway: CategoryGateway;
 	productSpecGatway: ProductSpecGateway;
+	fieldGateway: FieldGateway;
 };
 
 export const app = express();
@@ -34,10 +33,14 @@ export const main = async () => {
 	container.productSpecCategoryGateway = new ProductSpecCategoryGateway(container.orm);
 	container.categoryGateway = new CategoryGateway(container.orm);
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
+	container.fieldGateway = new FieldGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
 	app.use((_req: Request, _res: Response, next: NextFunction) => RequestContext.create(container.orm.em, next));
+
+	const serverErrorMiddleware = new ServerErrorMiddleware();
+	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
 	await attachControllers(app, [ProductsController, ConsumerController]);
