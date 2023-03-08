@@ -10,7 +10,11 @@ export class CategoryController {
 	public async allCategories(@Response() res: Express.Response) {
 		try {
 			const categories = await container.categoryGateway.findAll();
-			res.json({ categories });
+			if (categories.length > 0) {
+				res.status(200).json({ categories });
+			} else {
+				res.status(404).json({ error: 'Categories not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -32,7 +36,11 @@ export class CategoryController {
 	public async categoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
 		try {
 			const category = await container.categoryGateway.findById(categoryId);
-			res.json({ category });
+			if (category) {
+				res.status(200).json({ category });
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -47,7 +55,7 @@ export class CategoryController {
 				category.name = req.body.name;
 				category.parent = req.body.parent;
 				const categoryUpdated = await container.categoryGateway.update(category);
-				res.status(200).json({ categoryUpdated });
+				res.status(201).json({ categoryUpdated });
 			} else {
 				res.status(404).json({ error: 'Category not found' });
 			}
@@ -76,9 +84,13 @@ export class CategoryController {
 	@Get('/:categoryId/fields')
 	public async allFieldsByCategoryId(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
 		try {
-			const categories = await container.categoryGateway.findWithFieldsById(categoryId);
-			const fields = categories?.fields.getItems();
-			res.json({ fields });
+			const category = await container.categoryGateway.findWithFieldsById(categoryId);
+			if (category) {
+				const fields = category.fields.getItems();
+				res.status(200).json({ fields });
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -92,11 +104,19 @@ export class CategoryController {
 		@Params('fieldId') fieldId: number
 	) {
 		try {
-			const categories = await container.categoryGateway.findWithFieldsById(categoryId);
-			const fields = categories?.fields.getItems();
-			const field = fields?.find((field) => field.id === Number(fieldId));
+			const category = await container.categoryGateway.findWithFieldsById(categoryId);
 
-			res.json({ field });
+			if (category) {
+				const fields = category.fields.getItems();
+				const field = fields.find((field) => field.id === Number(fieldId));
+				if (field) {
+					res.status(200).json({ field });
+				} else {
+					res.status(404).json({ error: 'Field not found' });
+				}
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
