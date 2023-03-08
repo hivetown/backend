@@ -95,13 +95,6 @@ export class HivetownSeeder extends Seeder {
 						.each((pUnit) => {
 							pUnit.address = addressFactory.makeOne();
 							pUnit.carriers.set(carrierFactory.make(10));
-							// pUnit.products.set(
-							// 	producerProductFactory
-							// 		.each((pProduct) => {
-							// 			pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
-							// 		})
-							// 		.make(30)
-							// );
 						})
 						.make(10)
 				);
@@ -121,6 +114,32 @@ export class HivetownSeeder extends Seeder {
 				);
 			});
 		});
+
+		// We create some consumers
+		const consumers = await consumerFactory
+			.each((consumer) => {
+				consumer.addresses.set(addressFactory.make(10));
+				// consumer.cart = cartFactory.makeOne();
+			})
+			.create(10);
+
+		// We wait for the consumers to be created so we can create some carts
+		// consumers.forEach((consumer) => {
+		// 	consumer.cart = cartFactory
+		// 		.each((cart) => {
+		// 			// cart.items.set(
+		// 			// 	cartItemFactory
+		// 			// 		.each((cartItem) => {
+		// 			// 			const producer = faker.helpers.arrayElement(producers);
+		// 			// 			const productionUnit = faker.helpers.arrayElement(producer.productionUnits.getItems());
+		// 			// 			const producerProduct = faker.helpers.arrayElement(productionUnit.products.getItems());
+		// 			// 			cartItem.product = producerProduct;
+		// 			// 		})
+		// 			// 		.make(10)
+		// 			// );
+		// 		})
+		// 		.makeOne({ consumer: consumer.id });
+		// });
 
 		// const producers = await producerFactory
 		// 	.each((producer) => {
