@@ -1,5 +1,6 @@
 import type { EntityManager } from '@mikro-orm/core';
 import { faker, Seeder } from '@mikro-orm/seeder';
+import _ from 'lodash';
 import { ProductSpecFactory } from './factories/ProductSpec';
 import { ProductSpecCategoryFactory } from './factories/ProductSpecCategory';
 import { CategoryFactory } from './factories/Category';
@@ -12,7 +13,6 @@ import { ShipmentFactory } from './factories/Shipment';
 import { ProducerProductFactory } from './factories/ProducerProduct';
 import { AddressFactory } from './factories/Address';
 import { ConsumerFactory } from './factories/Consumer';
-import { CartFactory } from './factories/Cart';
 import { CartItemFactory } from './factories/CartItem';
 import { OrderFactory } from './factories/Order';
 import { OrderItemFactory } from './factories/OrderItem';
@@ -33,7 +33,6 @@ export class HivetownSeeder extends Seeder {
 		const producerProductFactory = new ProducerProductFactory(em);
 		const addressFactory = new AddressFactory(em);
 		const consumerFactory = new ConsumerFactory(em);
-		const cartFactory = new CartFactory(em);
 		const cartItemFactory = new CartItemFactory(em);
 		const orderFactory = new OrderFactory(em);
 		const orderItemFactory = new OrderItemFactory(em);
@@ -52,7 +51,7 @@ export class HivetownSeeder extends Seeder {
 					field.possibleValues.set(new FieldPossibleValueFactory(em).make(faker.datatype.number({ min: 2, max: 5 })));
 				}
 			})
-			.create(50);
+			.create(120);
 
 		// We create some Categories that use some of the Fields
 		const categories = await categoryFactory
@@ -60,7 +59,7 @@ export class HivetownSeeder extends Seeder {
 				// TODO category parents
 				category.fields.set(faker.helpers.arrayElements(fields, faker.datatype.number({ min: 3, max: 8 })));
 			})
-			.create(20);
+			.create(500);
 
 		// We create some productSpecs that use some of the Categories
 		const productSpecs = await productSpecFactory
@@ -73,7 +72,7 @@ export class HivetownSeeder extends Seeder {
 					)
 				);
 			})
-			.create(10);
+			.create(1500);
 
 		// We wait for the productSpecs to be created so we can link them to the Category fields (it's a 3 way relationship)
 		productSpecs.forEach((spec) => {
@@ -96,10 +95,10 @@ export class HivetownSeeder extends Seeder {
 							pUnit.address = addressFactory.makeOne();
 							pUnit.carriers.set(carrierFactory.make(10));
 						})
-						.make(10)
+						.make(7)
 				);
 			})
-			.create(10);
+			.create(300);
 
 		// We wait for the production units to be created so we can create some producer products
 		producers.forEach((producer) => {
@@ -110,7 +109,7 @@ export class HivetownSeeder extends Seeder {
 							pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
 							pProduct.producer = producer;
 						})
-						.make(30)
+						.make(70)
 				);
 			});
 		});
@@ -118,7 +117,7 @@ export class HivetownSeeder extends Seeder {
 		// We create some consumers
 		const consumers = await consumerFactory
 			.each((consumer) => {
-				consumer.addresses.set(addressFactory.make(10));
+				consumer.addresses.set(addressFactory.make(3));
 				consumer.cartItems.set(
 					cartItemFactory
 						.each((cartItem) => {
@@ -127,131 +126,74 @@ export class HivetownSeeder extends Seeder {
 							const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
 							cartItem.product = randomProducerProduct;
 						})
-						.make(10)
+						.make(13)
 				);
-				// consumer.cart = cartFactory.makeOne();
+				consumer.orders.set(
+					orderFactory
+						.each((order) => {
+							// 25% chance of address being different from consumer address
+							const amount = faker.datatype.number(100);
+							if (amount < 25) {
+								order.shippingAddress = addressFactory.makeOne();
+							} else {
+								// Otherwise we use one of the consumer addresses
+								order.shippingAddress = faker.helpers.arrayElement(consumer.addresses.getItems());
+							}
+						})
+						.make(13)
+				);
 			})
-			.create(10);
+			.create(600);
 
-		// We wait for the consumers to be created so we can create some carts
-		// consumers.forEach((consumer) => {
-		// 	consumer.cart = cartFactory
-		// 		.each((cart) => {
-		// 			// cart.items.set(
-		// 			// 	cartItemFactory
-		// 			// 		.each((cartItem) => {
-		// 			// 			const producer = faker.helpers.arrayElement(producers);
-		// 			// 			const productionUnit = faker.helpers.arrayElement(producer.productionUnits.getItems());
-		// 			// 			const producerProduct = faker.helpers.arrayElement(productionUnit.products.getItems());
-		// 			// 			cartItem.product = producerProduct;
-		// 			// 		})
-		// 			// 		.make(10)
-		// 			// );
-		// 		})
-		// 		.makeOne({ consumer: consumer.id });
-		// });
+		const shipmentStatuses = await shipmentStatusFactory.create(15);
 
-		// const producers = await producerFactory
-		// 	.each((producer) => {
-		// 		producer.productionUnits.set(
-		// 			productionUnitFactory
-		// 				.each((pUnit) => {
-		// 					pUnit.address = addressFactory.makeOne();
+		// We wait for the consumers to be created so we can add orderitems to the orders
+		consumers.forEach((consumer) => {
+			consumer.orders.getItems().forEach((order) => {
+				// For each order we create some order items.
+				order.items.set(
+					orderItemFactory
+						.each((orderItem) => {
+							const randomProducer = faker.helpers.arrayElement(producers);
+							const randomProductionUnit = faker.helpers.arrayElement(randomProducer.productionUnits.getItems());
+							const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
+							orderItem.producerProduct = randomProducerProduct;
+						})
+						.make(13)
+				);
 
-		// 					// pUnit.carriers.set(
-		// 					// 	new CarrierFactory(em)
-		// 					// 		.each((carrier) => {
-		// 					// 			// TODO: this
-		// 					// 			// carrier.shipments.set(new ShipmentFactory(em).make(10));
-		// 					// 		})
-		// 					// 		.make(10)
-		// 					// );
-		// 				})
-		// 				.make(10)
-		// 		);
-		// 	})
-		// 	// We use create() instead of make() for the same reason as above
-		// 	.create(10);
+				// We create shipments for each order item
+				_(order.items.getItems())
+					// We group the order items by production unit
+					.groupBy((orderItem) => orderItem.producerProduct.productionUnit.id)
+					// We iterate over the groups
+					.forEach((orderItems) => {
+						// Create a carrier for each group of order items from the same production unit
+						const { productionUnit } = orderItems[0].producerProduct;
+						const carrier = faker.helpers.arrayElement(productionUnit.carriers.getItems());
 
-		// producers.forEach((producer) => {
-		// 	// pUnit.products.set(
-		// 	// 	producerProductFactory
-		// 	// 		.each((producerProduct) => {
-		// 	// 			producerProduct.productSpec = faker.helpers.arrayElement(productSpecs);
-		// 	// 		})
-		// 	// 		.make(10)
-		// 	// );
-		// 	producer.productionUnits.getItems().forEach((pUnit) => {
-		// 		producerProductFactory
-		// 			.each((producerProduct) => {
-		// 				producerProduct.productionUnit = pUnit;
-		// 				producerProduct.productSpec = faker.helpers.arrayElement(productSpecs);
-		// 			})
-		// 			.make(10);
-		// 	});
-		// });
-
-		// const shipmentStatuses = await shipmentStatusFactory.create(10);
-
-		// const consumers = consumerFactory
-		// 	.each((consumer) => {
-		// 		consumer.cart = cartFactory
-		// 			.each((cart) => {
-		// 				const randomProducer = faker.helpers.arrayElement(producers);
-		// 				const randomProductionUnit = faker.helpers.arrayElement(randomProducer.productionUnits.getItems());
-
-		// 				cart.items.set(
-		// 					cartItemFactory
-		// 						.each((cartItem) => {
-		// 							cartItem.product = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
-		// 						})
-		// 						.make(10)
-		// 				);
-		// 			})
-		// 			.makeOne();
-
-		// 		consumer.orders.set(
-		// 			orderFactory
-		// 				.each((order) => {
-		// 					order.shippingAddress = addressFactory.makeOne();
-		// 					const randomProducer = faker.helpers.arrayElement(producers);
-		// 					const randomProductionUnit = faker.helpers.arrayElement(randomProducer.productionUnits.getItems());
-
-		// 					const shipment = shipmentFactory
-		// 						.each((shipment) => {
-		// 							shipment.carrier = faker.helpers.arrayElement(randomProductionUnit.carriers.getItems());
-		// 							shipment.events.set(
-		// 								shipmentEventFactory
-		// 									.each((shipmentEvent) => {
-		// 										shipmentEvent.address = addressFactory.makeOne();
-		// 										shipmentEvent.shipmentStatus = faker.helpers.arrayElement(shipmentStatuses);
-		// 									})
-		// 									.make(10)
-		// 							);
-		// 						})
-		// 						.makeOne();
-
-		// 					order.items.set(
-		// 						orderItemFactory
-		// 							.each((orderItem) => {
-		// 								orderItem.producerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
-		// 								orderItem.shipment = shipment;
-		// 							})
-		// 							.make(10)
-		// 					);
-		// 				})
-		// 				.make(10)
-		// 		);
-
-		// 		consumer.addresses.set(addressFactory.make(10));
-		// 	})
-		// 	.make(10);
+						// We iterate over each order item in the group
+						orderItems.forEach((orderItem) => {
+							// Create the shipment for each order item
+							orderItem.shipment = shipmentFactory
+								.each((shipment) => {
+									shipment.carrier = carrier;
+									shipment.events.set(
+										shipmentEventFactory
+											.each((event) => {
+												event.shipmentStatus = faker.helpers.arrayElement(shipmentStatuses);
+												event.address = addressFactory.makeOne();
+											})
+											.make(3)
+									);
+								})
+								.makeOne();
+						});
+					});
+			});
+		});
 
 		// Flush the changes to the database
 		await em.flush();
 	}
 }
-
-// if (field.type === FieldType.Enum) {
-// 	productSpecField.value = faker.random.arrayElement(field.possibleValues.getItems());
-// }
