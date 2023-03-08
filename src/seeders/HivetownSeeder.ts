@@ -40,42 +40,40 @@ export class HivetownSeeder extends Seeder {
 		const shipmentEventFactory = new ShipmentEventFactory(em);
 		const shipmentStatusFactory = new ShipmentStatusFactory(em);
 
-		// Generate some ProductSpecs (a separate graph)
+		// We create some fields to use on the Categories
+		const fields = await fieldFactory
+			.each((field) => {
+				// 5% chance of having possible values
+				const amount = faker.datatype.number(100);
+				if (amount < 5) {
+					field.type = FieldType.Enum;
+					field.possibleValues.set(new FieldPossibleValueFactory(em).make(faker.datatype.number({ min: 2, max: 5 })));
+				}
+			})
+			.create(50);
+
+		// We create some Categories that use some of the Fields
+		const categories = await categoryFactory
+			.each((category) => {
+				// TODO category parents
+				category.fields.set(faker.helpers.arrayElements(fields, faker.datatype.number({ min: 3, max: 8 })));
+			})
+			.create(20);
+
+		// We create some productSpecs that use some of the Categories
 		const productSpecs = await productSpecFactory
 			.each((spec) => {
 				spec.categories.set(
-					productSpecCategoryFactory
-						.each((specCategory) => {
-							specCategory.category = categoryFactory
-								.each((category) => {
-									// We make some Fields for the Category
-									// This is WRONG from the perspective of the business,
-									// because we *may* end up having more Fields on the Category
-									// than we will link to the ProductSpecCategory
-									category.fields.add(
-										fieldFactory
-											.each((field) => {
-												const amount = faker.datatype.number(5);
-												if (amount) {
-													field.type = FieldType.Enum;
-													field.possibleValues.set(new FieldPossibleValueFactory(em).make(amount));
-												}
-											})
-											.make(3)
-									);
-								})
-								.makeOne();
-
-							return specCategory;
+					faker.helpers.arrayElements(categories, faker.datatype.number({ min: 3, max: 8 })).map((category) =>
+						productSpecCategoryFactory.makeOne({
+							category: category.id
 						})
-						.make(10)
+					)
 				);
 			})
-			// We use create() instead of make() because we want to be able to access the actual
-			// database ProductSpecs (and dependent entities) in the next step with their IDs populated
 			.create(10);
 
-		// Create ProductSpecFields. THIS IS THE CORRECT WAY TO DO IT BECAUSE IT DEPENDS ON IDS CREATED BEFOREHAND
+		// We wait for the productSpecs to be created so we can link them to the Category fields (it's a 3 way relationship)
 		productSpecs.forEach((spec) => {
 			spec.categories.getItems().forEach((specCategory) => {
 				specCategory.category.fields.getItems().map((field) =>
@@ -87,28 +85,75 @@ export class HivetownSeeder extends Seeder {
 			});
 		});
 
-		// Generate some Producers (a separate graph)
-		const producers = await producerFactory
-			.each((producer) => {
-				producer.productionUnits.set(
-					productionUnitFactory
-						.each((pUnit) => {
-							pUnit.address = addressFactory.makeOne();
+		// // Generate some ProductSpecs (a separate graph)
+		// const productSpecs = await productSpecFactory
+		// 	.each((spec) => {
+		// 		spec.categories.set(
+		// 			productSpecCategoryFactory
+		// 				.each((specCategory) => {
+		// 					specCategory.category = categoryFactory
+		// 						.each((category) => {
+		// 							// We make some Fields for the Category
+		// 							// This is WRONG from the perspective of the business,
+		// 							// because we *may* end up having more Fields on the Category
+		// 							// than we will link to the ProductSpecCategory
+		// 							category.fields.add(
+		// 								fieldFactory
+		// 									.each((field) => {
+		// 										const amount = faker.datatype.number(5);
+		// 										if (amount) {
+		// 											field.type = FieldType.Enum;
+		// 											field.possibleValues.set(new FieldPossibleValueFactory(em).make(amount));
+		// 										}
+		// 									})
+		// 									.make(3)
+		// 							);
+		// 						})
+		// 						.makeOne();
 
-							// pUnit.carriers.set(
-							// 	new CarrierFactory(em)
-							// 		.each((carrier) => {
-							// 			// TODO: this
-							// 			// carrier.shipments.set(new ShipmentFactory(em).make(10));
-							// 		})
-							// 		.make(10)
-							// );
-						})
-						.make(10)
-				);
-			})
-			// We use create() instead of make() for the same reason as above
-			.create(10);
+		// 					return specCategory;
+		// 				})
+		// 				.make(10)
+		// 		);
+		// 	})
+		// 	// We use create() instead of make() because we want to be able to access the actual
+		// 	// database ProductSpecs (and dependent entities) in the next step with their IDs populated
+		// 	.create(10);
+
+		// // Create ProductSpecFields. THIS IS THE CORRECT WAY TO DO IT BECAUSE IT DEPENDS ON IDS CREATED BEFOREHAND
+		// productSpecs.forEach((spec) => {
+		// 	spec.categories.getItems().forEach((specCategory) => {
+		// 		specCategory.category.fields.getItems().map((field) =>
+		// 			productSpecFieldFactory.makeOne({
+		// 				field: field.id,
+		// 				productSpecCategory: { category: specCategory.category.id, productSpec: spec.id }
+		// 			})
+		// 		);
+		// 	});
+		// });
+
+		// // Generate some Producers (a separate graph)
+		// const producers = await producerFactory
+		// 	.each((producer) => {
+		// 		producer.productionUnits.set(
+		// 			productionUnitFactory
+		// 				.each((pUnit) => {
+		// 					pUnit.address = addressFactory.makeOne();
+
+		// 					// pUnit.carriers.set(
+		// 					// 	new CarrierFactory(em)
+		// 					// 		.each((carrier) => {
+		// 					// 			// TODO: this
+		// 					// 			// carrier.shipments.set(new ShipmentFactory(em).make(10));
+		// 					// 		})
+		// 					// 		.make(10)
+		// 					// );
+		// 				})
+		// 				.make(10)
+		// 		);
+		// 	})
+		// 	// We use create() instead of make() for the same reason as above
+		// 	.create(10);
 
 		// producers.forEach((producer) => {
 		// 	// pUnit.products.set(
