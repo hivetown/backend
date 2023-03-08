@@ -14,4 +14,8 @@ export class Category {
 
 	@ManyToMany()
 	public fields = new Collection<Field>(this);
+
+	public addField(field: Field): void {
+		this.fields.add(field);
+	}
 }
