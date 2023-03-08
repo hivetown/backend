@@ -9,7 +9,7 @@ export class CartGateway {
 	}
 
 	public async findByConsumerId(consumerId: number): Promise<Cart | null> {
-		const cart = await this.repository.findOne(consumerId);
+		const cart = await this.repository.findOne({ consumer: consumerId });
 		return cart;
 	}
 }
