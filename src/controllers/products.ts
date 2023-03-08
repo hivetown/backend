@@ -10,15 +10,15 @@ export class ProductsController {
 	@Get('/')
 	public async allProducts(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
-			let products: ProducerProduct[] = new Array<ProducerProduct>();
+			let items: ProducerProduct[] = new Array<ProducerProduct>();
 			if (req.query.categoryId) {
 				const categoryId = req.query.categoryId as string;
-				products = await container.productGateway.findByCategoryId(Number(categoryId));
+				items = await container.productGateway.findByCategoryId(Number(categoryId));
 			} else {
-				products = await container.productGateway.findAll();
+				items = await container.productGateway.findAll();
 			}
 
-			res.status(200).json({ products });
+			res.status(200).json({ items });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -30,7 +30,7 @@ export class ProductsController {
 		try {
 			const productSpec = await container.productSpecGatway.findById(productSpecId);
 			if (productSpec) {
-				res.status(200).json({ productSpec });
+				res.status(200).json(productSpec);
 			} else {
 				res.status(404).json({ error: 'Product Spec not found' });
 			}
@@ -43,9 +43,9 @@ export class ProductsController {
 	@Get('/:productSpecId/products')
 	public async productsBySpecificationId(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
 		try {
-			const products = await container.productGateway.findBySpecificationId(productSpecId);
-			if (products.length > 0) {
-				res.status(200).json({ products });
+			const items = await container.productGateway.findBySpecificationId(productSpecId);
+			if (items.length > 0) {
+				res.status(200).json({ items });
 			} else {
 				res.status(404).json({ error: 'Product Spec not found' });
 			}
@@ -60,8 +60,8 @@ export class ProductsController {
 		try {
 			const products = await container.productGateway.findBySpecificationId(productSpecId);
 			if (products.length > 0) {
-				const producers = products.map((p) => p.producer);
-				res.status(200).json({ producers });
+				const items = products.map((p) => p.producer);
+				res.status(200).json({ items });
 			} else {
 				res.status(404).json({ error: 'Product Spec not found' });
 			}
@@ -74,9 +74,9 @@ export class ProductsController {
 	@Get('/:productSpecId/categories')
 	public async productCategoriesBySpecificationId(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
 		try {
-			const categories = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId);
-			if (categories.length > 0) {
-				res.status(200).json({ categories });
+			const items = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId);
+			if (items.length > 0) {
+				res.status(200).json({ items });
 			} else {
 				res.status(404).json({ error: 'Product Spec not found' });
 			}
@@ -94,8 +94,9 @@ export class ProductsController {
 	) {
 		try {
 			const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
-			const { category } = c[0];
-			if (c) {
+			console.log(c);
+			if (c.length > 0) {
+				const { category } = c[0];
 				res.status(200).json({ category });
 			} else {
 				res.status(404).json({ error: 'Category not found' });
