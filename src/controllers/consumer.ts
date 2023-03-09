@@ -95,7 +95,7 @@ export class ConsumerController {
 				if (item) {
 					item.addQuantity(req.body.quantity);
 					await container.consumerGateway.updateCart(consumer);
-					res.status(200).json(consumer.cartItems.getItems());
+					res.status(200).json({ items: consumer.cartItems.getItems() });
 				} else {
 					res.status(404).json({ error: 'Item not found' });
 				}
