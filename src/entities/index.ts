@@ -1,6 +1,5 @@
 export * from './Address';
 export * from './Carrier';
-export * from './Cart';
 export * from './CartItem';
 export * from './Category';
 export * from './Consumer';

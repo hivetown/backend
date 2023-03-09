@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class Migration20230305225230 extends Migration {
+export class Migration20230308160859 extends Migration {
 	async up(): Promise<void> {
 		this.addSql(
 			'create table `address` (`id` int unsigned not null auto_increment primary key, `number` int not null, `door` int not null, `floor` int not null, `zip_code` varchar(255) not null, `street` varchar(255) not null, `parish` varchar(255) not null, `county` varchar(255) not null, `city` varchar(255) not null, `district` varchar(255) not null, `latitude` numeric(10,0) not null, `longitude` numeric(10,0) not null) default character set utf8mb4 engine = InnoDB;'
@@ -12,14 +12,9 @@ export class Migration20230305225230 extends Migration {
 		this.addSql('alter table `category` add index `category_parent_id_index`(`parent_id`);');
 
 		this.addSql(
-			'create table `consumer` (`id` int unsigned not null, `name` varchar(255) not null, `email` varchar(255) not null, `phone` numeric(10,0) not null, `vat` numeric(10,0) not null, primary key (`id`)) default character set utf8mb4 engine = InnoDB;'
+			'create table `consumer` (`id` int unsigned not null auto_increment primary key, `name` varchar(255) not null, `email` varchar(255) not null, `phone` numeric(10,0) not null, `vat` numeric(10,0) not null) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `consumer` add unique `consumer_vat_unique`(`vat`);');
-		this.addSql('alter table `consumer` add unique `consumer_id_unique`(`id`);');
-
-		this.addSql(
-			'create table `cart` (`consumer_id` int unsigned not null, primary key (`consumer_id`)) default character set utf8mb4 engine = InnoDB;'
-		);
 
 		this.addSql(
 			'create table `consumer_addresses` (`consumer_id` int unsigned not null, `address_id` int unsigned not null, primary key (`consumer_id`, `address_id`)) default character set utf8mb4 engine = InnoDB;'
@@ -76,10 +71,10 @@ export class Migration20230305225230 extends Migration {
 		this.addSql('alter table `producer_product` add index `producer_product_product_spec_id_index`(`product_spec_id`);');
 
 		this.addSql(
-			'create table `cart_item` (`product_id` int unsigned not null, `cart_consumer_id` int unsigned not null, `quantity` int not null, primary key (`product_id`, `cart_consumer_id`)) default character set utf8mb4 engine = InnoDB;'
+			'create table `cart_item` (`product_id` int unsigned not null, `consumer_id` int unsigned not null, `quantity` int not null, primary key (`product_id`, `consumer_id`)) default character set utf8mb4 engine = InnoDB;'
 		);
 		this.addSql('alter table `cart_item` add index `cart_item_product_id_index`(`product_id`);');
-		this.addSql('alter table `cart_item` add index `cart_item_cart_consumer_id_index`(`cart_consumer_id`);');
+		this.addSql('alter table `cart_item` add index `cart_item_consumer_id_index`(`consumer_id`);');
 
 		this.addSql(
 			'create table `product_spec_category` (`product_spec_id` int unsigned not null, `category_id` int unsigned not null, primary key (`product_spec_id`, `category_id`)) default character set utf8mb4 engine = InnoDB;'
@@ -120,14 +115,6 @@ export class Migration20230305225230 extends Migration {
 
 		this.addSql(
 			'alter table `category` add constraint `category_parent_id_foreign` foreign key (`parent_id`) references `category` (`id`) on update cascade on delete set null;'
-		);
-
-		this.addSql(
-			'alter table `consumer` add constraint `consumer_id_foreign` foreign key (`id`) references `cart` (`consumer_id`) on update cascade;'
-		);
-
-		this.addSql(
-			'alter table `cart` add constraint `cart_consumer_id_foreign` foreign key (`consumer_id`) references `consumer` (`id`) on update cascade on delete cascade;'
 		);
 
 		this.addSql(
@@ -180,7 +167,7 @@ export class Migration20230305225230 extends Migration {
 			'alter table `cart_item` add constraint `cart_item_product_id_foreign` foreign key (`product_id`) references `producer_product` (`id`) on update cascade;'
 		);
 		this.addSql(
-			'alter table `cart_item` add constraint `cart_item_cart_consumer_id_foreign` foreign key (`cart_consumer_id`) references `cart` (`consumer_id`) on update cascade;'
+			'alter table `cart_item` add constraint `cart_item_consumer_id_foreign` foreign key (`consumer_id`) references `consumer` (`id`) on update cascade;'
 		);
 
 		this.addSql(

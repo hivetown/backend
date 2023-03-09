@@ -4,12 +4,13 @@ import { RequestContext } from '@mikro-orm/core';
 import { EntityManager, MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import express, { NextFunction, Request, Response } from 'express';
 import { attachControllers } from '@decorators/express';
-import { CategoryGateway, FieldGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
-import { CategoryController } from './controllers/category';
+import { ConsumerController } from './controllers/consumer';
+import { CategoryGateway, FieldGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway } from './gateways';
 import { ServerErrorMiddleware } from './middlewares/error';
+import { ConsumerGateway } from './gateways/ConsumerGateway';
 
 export const container = {} as {
 	server: http.Server;
@@ -21,6 +22,7 @@ export const container = {} as {
 	categoryGateway: CategoryGateway;
 	productSpecGatway: ProductSpecGateway;
 	fieldGateway: FieldGateway;
+	consumerGateway: ConsumerGateway;
 };
 
 export const app = express();
@@ -34,6 +36,7 @@ export const main = async () => {
 	container.categoryGateway = new CategoryGateway(container.orm);
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
 	container.fieldGateway = new FieldGateway(container.orm);
+	container.consumerGateway = new ConsumerGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
@@ -43,8 +46,7 @@ export const main = async () => {
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
-	await attachControllers(app, [ProductsController]);
-	await attachControllers(app, [CategoryController]);
+	await attachControllers(app, [ProductsController, ConsumerController]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
