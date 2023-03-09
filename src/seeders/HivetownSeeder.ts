@@ -93,9 +93,9 @@ export class HivetownSeeder extends Seeder {
 					productionUnitFactory
 						.each((pUnit) => {
 							pUnit.address = addressFactory.makeOne();
-							pUnit.carriers.set(carrierFactory.make(10));
+							pUnit.carriers.set(carrierFactory.make(faker.datatype.number({ min: 0, max: 10 })));
 						})
-						.make(7)
+						.make(faker.datatype.number({ min: 0, max: 8 }))
 				);
 			})
 			.create(300);
@@ -109,7 +109,7 @@ export class HivetownSeeder extends Seeder {
 							pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
 							pProduct.producer = producer;
 						})
-						.make(70)
+						.make(faker.datatype.number({ min: 2, max: 70 }))
 				);
 			});
 		});
@@ -117,7 +117,7 @@ export class HivetownSeeder extends Seeder {
 		// We create some consumers
 		const consumers = await consumerFactory
 			.each((consumer) => {
-				consumer.addresses.set(addressFactory.make(3));
+				consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 0, max: 5 })));
 				consumer.cartItems.set(
 					cartItemFactory
 						.each((cartItem) => {
@@ -126,7 +126,7 @@ export class HivetownSeeder extends Seeder {
 							const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
 							cartItem.product = randomProducerProduct;
 						})
-						.make(13)
+						.make(faker.datatype.number({ min: 0, max: 17 }))
 				);
 				consumer.orders.set(
 					orderFactory
@@ -140,7 +140,7 @@ export class HivetownSeeder extends Seeder {
 								order.shippingAddress = faker.helpers.arrayElement(consumer.addresses.getItems());
 							}
 						})
-						.make(13)
+						.make(faker.datatype.number({ min: 0, max: 13 }))
 				);
 			})
 			.create(600);
@@ -159,7 +159,7 @@ export class HivetownSeeder extends Seeder {
 							const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
 							orderItem.producerProduct = randomProducerProduct;
 						})
-						.make(13)
+						.make(faker.datatype.number({ min: 1, max: 13 }))
 				);
 
 				// We create shipments for each order item
@@ -184,7 +184,7 @@ export class HivetownSeeder extends Seeder {
 												event.shipmentStatus = faker.helpers.arrayElement(shipmentStatuses);
 												event.address = addressFactory.makeOne();
 											})
-											.make(3)
+											.make(faker.datatype.number({ min: 0, max: 5 }))
 									);
 								})
 								.makeOne();
