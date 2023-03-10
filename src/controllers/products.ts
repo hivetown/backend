@@ -11,14 +11,27 @@ export class ProductsController {
 	public async allProducts(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
 			let items: ProducerProduct[] = new Array<ProducerProduct>();
-			if (req.query.categoryId) {
-				const categoryId = req.query.categoryId as string;
-				items = await container.productGateway.findByCategoryId(Number(categoryId));
+			let totalPages = 0;
+			let result = { products: new Array<ProducerProduct>(), totalResults: 0 };
+			let page = 1;
+			if (req.query.page) {
+				page = Number(req.query.page as string);
+				if (req.query.categoryId) {
+					console.log('category');
+					const categoryId = Number(req.query.categoryId as string);
+					result = await container.productGateway.findByCategoryId(categoryId, page);
+				} else {
+					result = await container.productGateway.findAll(page);
+				}
+			} else if (req.query.categoryId) {
+				const categoryId = Number(req.query.categoryId as string);
+				result = await container.productGateway.findByCategoryId(categoryId, 1);
 			} else {
-				items = await container.productGateway.findAll();
+				result = await container.productGateway.findAll(1);
 			}
-
-			res.status(200).json({ items });
+			items = result.products;
+			totalPages = Math.ceil(result.totalResults / 24);
+			res.status(200).json({ items, page, pageSize: items.length, totalResults: result.totalResults, totalPages });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
