@@ -7,19 +7,23 @@ export class ProductSpecCategoryGateway {
 		this.repository = orm.em.getRepository(ProductSpecCategory);
 	}
 
-	public async findCategoriesBySpecificationId(id: number): Promise<ProductSpecCategory[]> {
-		// const categories = this.repository.find({ productSpec: id }, { populate: ['category'] });
-		const categories = await this.repository
-			.createQueryBuilder('e')
-			.leftJoinAndSelect('e.category', 'category')
-			.where({ productSpec: id })
-			.getResult();
-		return categories;
+	public async findCategoriesBySpecificationId(id: number, page: number): Promise<{ categories: ProductSpecCategory[]; totalResults: number }> {
+		const [categories, totalResults] = await Promise.all([
+			this.repository
+				.createQueryBuilder('e')
+				.leftJoinAndSelect('e.category', 'category')
+				.where({ productSpec: id })
+				.limit(24)
+				.offset((page - 1) * 24)
+				.getResult(),
+			// this.repository.count({ productSpec: id })
+			this.repository.createQueryBuilder('e').leftJoinAndSelect('e.category', 'category').where({ productSpec: id }).count()
+		]);
+
+		return { categories, totalResults };
 	}
 
 	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory[]> {
-		// const category = this.repository.find({ productSpec: id, category: categoryId }, { populate: ['category'] });
-		// return category;
 		const category = await this.repository
 			.createQueryBuilder('e')
 			.leftJoinAndSelect('e.category', 'category')

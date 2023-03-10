@@ -2,7 +2,7 @@ import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
-import type { Producer } from '../entities';
+import type { Producer, ProductSpecCategory } from '../entities';
 import type { ProducerProduct } from '../entities/ProducerProduct';
 
 @Controller('/products')
@@ -120,11 +120,27 @@ export class ProductsController {
 	}
 
 	@Get('/:productSpecId/categories')
-	public async productCategoriesBySpecificationId(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
+	public async productCategoriesBySpecificationId(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Request() req: Express.Request
+	) {
 		try {
-			const items = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId);
+			let items: ProductSpecCategory[] = new Array<ProductSpecCategory>();
+			let totalPages = 0;
+			let result = { categories: new Array<ProductSpecCategory>(), totalResults: 0 };
+			let page = 1;
+
+			if (req.query.page) {
+				page = Number(req.query.page as string);
+				result = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, page);
+			} else {
+				result = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, 1);
+			}
+			items = result.categories;
 			if (items.length > 0) {
-				res.status(200).json({ items });
+				totalPages = Math.ceil(result.totalResults / 24);
+				res.status(200).json({ items, page, pageSize: items.length, totalResults: result.totalResults, totalPages });
 			} else {
 				res.status(404).json({ error: 'Product Spec not found' });
 			}
