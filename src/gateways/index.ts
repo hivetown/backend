@@ -5,3 +5,4 @@ export * from './CategoryGateway';
 export * from './ProductSpecCategoryGateway';
 export * from './FieldGateway';
 export * from './ConsumerGateway';
+export * from './ProductSpecFieldGateway';

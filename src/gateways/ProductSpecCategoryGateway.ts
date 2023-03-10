@@ -24,12 +24,14 @@ export class ProductSpecCategoryGateway {
 	}
 
 	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory[]> {
-		const category = await this.repository
-			.createQueryBuilder('e')
-			.leftJoinAndSelect('e.category', 'category')
-			.where({ productSpec: id, category: categoryId })
-			.getResult();
-		await this.repository.populate(category, ['productSpec', 'fields']);
+		// const category = await this.repository
+		// 	.createQueryBuilder('e')
+		// 	.leftJoinAndSelect('e.category', 'category')
+		// 	.select('e.field, e.value')
+		// 	.where({ productSpec: id, category: categoryId })
+		// 	.getResult();
+		// await this.repository.populate(category, ['fields.field']);
+		const category = await this.repository.find({ productSpec: id, category: categoryId }, { populate: ['category', 'fields'] });
 		return category;
 	}
 }

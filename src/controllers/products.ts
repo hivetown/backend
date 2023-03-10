@@ -158,12 +158,54 @@ export class ProductsController {
 	) {
 		try {
 			const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
-			console.log(c);
 			if (c.length > 0) {
-				const { category } = c[0];
-				res.status(200).json({ category });
+				const item = c[0].category;
+				res.status(200).json(item);
 			} else {
 				res.status(404).json({ error: 'Category not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Get('/:productSpecId/categories/:categoryId/fields')
+	public async productFieldsByCateogryOfSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number
+	) {
+		try {
+			const c = await container.productSpecFieldGateway.findFieldsBySpecAndCategory(Number(productSpecId), Number(categoryId));
+			if (c.length > 0) {
+				res.status(200).json({ items: c });
+			} else {
+				res.status(404).json({ error: 'Category or Specification not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Get('/:productSpecId/categories/:categoryId/fields/:fieldId')
+	public async productFieldByCateogryOfSpecificationAndField(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number,
+		@Params('fieldId') fieldId: number
+	) {
+		try {
+			const c = await container.productSpecFieldGateway.findFieldsBySpecAndCategoryWithField(
+				Number(productSpecId),
+				Number(categoryId),
+				Number(fieldId)
+			);
+			if (c.length > 0) {
+				res.status(200).json(c[0]);
+			} else {
+				res.status(404).json({ error: 'Category or Specification not found' });
 			}
 		} catch (error) {
 			console.error(error);

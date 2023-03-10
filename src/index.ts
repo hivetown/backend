@@ -8,7 +8,7 @@ import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
 import { ConsumerController } from './controllers/consumer';
-import { CategoryGateway, FieldGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway } from './gateways';
+import { CategoryGateway, FieldGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway, ProductSpecFieldGateway } from './gateways';
 import { ServerErrorMiddleware } from './middlewares/error';
 import { ConsumerGateway } from './gateways/ConsumerGateway';
 
@@ -23,6 +23,7 @@ export const container = {} as {
 	productSpecGatway: ProductSpecGateway;
 	fieldGateway: FieldGateway;
 	consumerGateway: ConsumerGateway;
+	productSpecFieldGateway: ProductSpecFieldGateway;
 };
 
 export const app = express();
@@ -37,6 +38,7 @@ export const main = async () => {
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
 	container.fieldGateway = new FieldGateway(container.orm);
 	container.consumerGateway = new ConsumerGateway(container.orm);
+	container.productSpecFieldGateway = new ProductSpecFieldGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
