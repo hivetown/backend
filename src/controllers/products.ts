@@ -2,6 +2,7 @@ import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
+import type { Producer } from '../entities';
 import type { ProducerProduct } from '../entities/ProducerProduct';
 
 @Controller('/products')
@@ -54,11 +55,28 @@ export class ProductsController {
 	}
 
 	@Get('/:productSpecId/products')
-	public async productsBySpecificationId(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
+	public async productsBySpecificationId(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Request() req: Express.Request
+	) {
 		try {
-			const items = await container.productGateway.findBySpecificationId(productSpecId);
+			let items: ProducerProduct[] = new Array<ProducerProduct>();
+			let totalPages = 0;
+			let result = { products: new Array<ProducerProduct>(), totalResults: 0 };
+			let page = 1;
+
+			if (req.query.page) {
+				page = Number(req.query.page as string);
+				result = await container.productGateway.findBySpecificationId(productSpecId, page);
+			} else {
+				result = await container.productGateway.findBySpecificationId(productSpecId, 1);
+			}
+
+			items = result.products;
 			if (items.length > 0) {
-				res.status(200).json({ items });
+				totalPages = Math.ceil(result.totalResults / 24);
+				res.status(200).json({ items, page, pageSize: items.length, totalResults: result.totalResults, totalPages });
 			} else {
 				res.status(404).json({ error: 'Product Spec not found' });
 			}
@@ -69,12 +87,29 @@ export class ProductsController {
 	}
 
 	@Get('/:productSpecId/producers')
-	public async producerByProductSpec(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
+	public async producerByProductSpec(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Request() req: Express.Request
+	) {
 		try {
-			const products = await container.productGateway.findBySpecificationId(productSpecId);
+			let items: Producer[] = new Array<Producer>();
+			let products: ProducerProduct[] = new Array<ProducerProduct>();
+			let totalPages = 0;
+			let result = { products: new Array<ProducerProduct>(), totalResults: 0 };
+			let page = 1;
+
+			if (req.query.page) {
+				page = Number(req.query.page as string);
+				result = await container.productGateway.findBySpecificationId(productSpecId, page);
+			} else {
+				result = await container.productGateway.findBySpecificationId(productSpecId, 1);
+			}
+			products = result.products;
 			if (products.length > 0) {
-				const items = products.map((p) => p.producer);
-				res.status(200).json({ items });
+				items = products.map((p) => p.producer);
+				totalPages = Math.ceil(result.totalResults / 24);
+				res.status(200).json({ items, page, pageSize: items.length, totalResults: result.totalResults, totalPages });
 			} else {
 				res.status(404).json({ error: 'Product Spec not found' });
 			}

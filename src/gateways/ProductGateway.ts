@@ -10,8 +10,6 @@ export class ProductGateway {
 
 	// Pesquisa todos os produtos populacionando o produtor, a unidade de produção e a especificação do produto
 	public async findAll(page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
-		// const products = await this.repository.findAll({ populate: ['producer', 'productionUnit', 'productSpec'], limit: 24, offset: page * 24 });
-
 		const [products, totalResults] = await Promise.all([
 			this.repository.findAll({ populate: ['producer', 'productionUnit', 'productSpec'], limit: 24, offset: (page - 1) * 24 }),
 			this.repository.count()
@@ -20,10 +18,12 @@ export class ProductGateway {
 	}
 
 	// Pesquisa todos os produtos populacionando o produtor
-	public async findAllWithProducer(): Promise<ProducerProduct[]> {
-		// colocar ainda o size de respostas
-		const products = await this.repository.findAll({ populate: ['producer'] });
-		return products;
+	public async findAllWithProducer(page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
+		const [products, totalResults] = await Promise.all([
+			this.repository.findAll({ populate: ['producer'], limit: 24, offset: (page - 1) * 24 }),
+			this.repository.count()
+		]);
+		return { products, totalResults };
 	}
 
 	// Pesquisa o produto pelo id dele mesmo
@@ -33,9 +33,16 @@ export class ProductGateway {
 	}
 
 	// Pesquisa produtos por id de uma ProductSpec
-	public async findBySpecificationId(id: number): Promise<ProducerProduct[]> {
-		const products = await this.repository.find({ productSpec: id }, { populate: ['producer', 'productionUnit', 'productSpec'] });
-		return products;
+	public async findBySpecificationId(id: number, page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
+		// const products = await this.repository.find({ productSpec: id }, { populate: ['producer', 'productionUnit', 'productSpec'] });
+		const [products, totalResults] = await Promise.all([
+			this.repository.find(
+				{ productSpec: id },
+				{ populate: ['producer', 'productionUnit', 'productSpec'], limit: 24, offset: (page - 1) * 24 }
+			),
+			this.repository.count({ productSpec: id })
+		]);
+		return { products, totalResults };
 	}
 
 	// Pesquisa produtos pelo id de uma categoria
