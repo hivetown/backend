@@ -109,7 +109,7 @@ export class HivetownSeeder extends Seeder {
 							pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
 							pProduct.producer = producer;
 						})
-						.make(faker.datatype.number({ min: 2, max: 70 }))
+						.make(faker.datatype.number({ min: 0, max: 70 }))
 				);
 			});
 		});
@@ -121,10 +121,17 @@ export class HivetownSeeder extends Seeder {
 				consumer.cartItems.set(
 					cartItemFactory
 						.each((cartItem) => {
-							const randomProducer = faker.helpers.arrayElement(producers);
-							const randomProductionUnit = faker.helpers.arrayElement(randomProducer.productionUnits.getItems());
-							const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
-							cartItem.product = randomProducerProduct;
+							// We need a do while loop because we need to make sure we have a product
+							// Sometimes the random producer doesn't have any production unit
+							// and sometimes the random production unit doesn't have any products
+							do {
+								const randomProducer = faker.helpers.arrayElement(producers);
+								const randomProductionUnit = faker.helpers.arrayElement(randomProducer.productionUnits.getItems());
+								if (!randomProductionUnit) continue;
+								const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
+								if (!randomProducerProduct) continue;
+								cartItem.product = randomProducerProduct;
+							} while (cartItem.product !== undefined);
 						})
 						.make(faker.datatype.number({ min: 0, max: 17 }))
 				);
@@ -154,10 +161,17 @@ export class HivetownSeeder extends Seeder {
 				order.items.set(
 					orderItemFactory
 						.each((orderItem) => {
-							const randomProducer = faker.helpers.arrayElement(producers);
-							const randomProductionUnit = faker.helpers.arrayElement(randomProducer.productionUnits.getItems());
-							const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
-							orderItem.producerProduct = randomProducerProduct;
+							// We need a do while loop because we need to make sure we have a product
+							// Sometimes the random producer doesn't have any production unit
+							// and sometimes the random production unit doesn't have any products
+							do {
+								const randomProducer = faker.helpers.arrayElement(producers);
+								const randomProductionUnit = faker.helpers.arrayElement(randomProducer.productionUnits.getItems());
+								if (!randomProductionUnit) continue;
+								const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
+								if (!randomProducerProduct) continue;
+								orderItem.producerProduct = randomProducerProduct;
+							} while (orderItem.producerProduct !== undefined);
 						})
 						.make(faker.datatype.number({ min: 1, max: 13 }))
 				);
