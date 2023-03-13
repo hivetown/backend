@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, ManyToOne, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import type { Category } from './Category';
 import type { ProductionUnit } from './ProductionUnit';
 import type { ProductSpec } from './ProductSpec';
