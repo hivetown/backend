@@ -33,6 +33,9 @@ export class Image {
 	public producerImage?: Producer;
 
 	@ManyToOne()
+	public producerImages?: Producer;
+
+	@ManyToOne()
 	public productionUnit?: ProductionUnit;
 
 	@ManyToOne()
