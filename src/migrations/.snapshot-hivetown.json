@@ -990,8 +990,8 @@
 		},
 		{
 			"columns": {
-				"product_id": {
-					"name": "product_id",
+				"producer_product_id": {
+					"name": "producer_product_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1021,9 +1021,9 @@
 			"name": "cart_item",
 			"indexes": [
 				{
-					"columnNames": ["product_id"],
+					"columnNames": ["producer_product_id"],
 					"composite": false,
-					"keyName": "cart_item_product_id_index",
+					"keyName": "cart_item_producer_product_id_index",
 					"primary": false,
 					"unique": false
 				},
@@ -1036,7 +1036,7 @@
 				},
 				{
 					"keyName": "PRIMARY",
-					"columnNames": ["product_id", "consumer_id"],
+					"columnNames": ["producer_product_id", "consumer_id"],
 					"composite": true,
 					"primary": true,
 					"unique": true
@@ -1044,9 +1044,9 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"cart_item_product_id_foreign": {
-					"constraintName": "cart_item_product_id_foreign",
-					"columnNames": ["product_id"],
+				"cart_item_producer_product_id_foreign": {
+					"constraintName": "cart_item_producer_product_id_foreign",
+					"columnNames": ["producer_product_id"],
 					"localTableName": "cart_item",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "producer_product",
@@ -1451,8 +1451,8 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"shipment_status_id": {
-					"name": "shipment_status_id",
+				"status_id": {
+					"name": "status_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1478,9 +1478,9 @@
 					"unique": false
 				},
 				{
-					"columnNames": ["shipment_status_id"],
+					"columnNames": ["status_id"],
 					"composite": false,
-					"keyName": "shipment_event_shipment_status_id_index",
+					"keyName": "shipment_event_status_id_index",
 					"primary": false,
 					"unique": false
 				},
@@ -1510,9 +1510,9 @@
 					"referencedTableName": "address",
 					"updateRule": "cascade"
 				},
-				"shipment_event_shipment_status_id_foreign": {
-					"constraintName": "shipment_event_shipment_status_id_foreign",
-					"columnNames": ["shipment_status_id"],
+				"shipment_event_status_id_foreign": {
+					"constraintName": "shipment_event_status_id_foreign",
+					"columnNames": ["status_id"],
 					"localTableName": "shipment_event",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "shipment_status",
