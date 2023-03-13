@@ -14,36 +14,30 @@
 				},
 				"number": {
 					"name": "number",
-					"type": "numeric(10,0)",
+					"type": "int",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"precision": 10,
-					"scale": 0,
-					"mappedType": "decimal"
+					"mappedType": "integer"
 				},
 				"door": {
 					"name": "door",
-					"type": "numeric(10,0)",
+					"type": "int",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"precision": 10,
-					"scale": 0,
-					"mappedType": "decimal"
+					"mappedType": "integer"
 				},
 				"floor": {
 					"name": "floor",
-					"type": "numeric(10,0)",
+					"type": "int",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"precision": 10,
-					"scale": 0,
-					"mappedType": "decimal"
+					"mappedType": "integer"
 				},
 				"zip_code": {
 					"name": "zip_code",
@@ -245,15 +239,6 @@
 					"precision": 10,
 					"scale": 0,
 					"mappedType": "decimal"
-				},
-				"cart_consumer_id": {
-					"name": "cart_consumer_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
 				}
 			},
 			"name": "consumer",
@@ -266,13 +251,6 @@
 					"unique": true
 				},
 				{
-					"columnNames": ["cart_consumer_id"],
-					"composite": false,
-					"keyName": "consumer_cart_consumer_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
 					"keyName": "PRIMARY",
 					"columnNames": ["id"],
 					"composite": false,
@@ -281,51 +259,7 @@
 				}
 			],
 			"checks": [],
-			"foreignKeys": {
-				"consumer_cart_consumer_id_foreign": {
-					"constraintName": "consumer_cart_consumer_id_foreign",
-					"columnNames": ["cart_consumer_id"],
-					"localTableName": "consumer",
-					"referencedColumnNames": ["consumer_id"],
-					"referencedTableName": "cart",
-					"updateRule": "cascade"
-				}
-			}
-		},
-		{
-			"columns": {
-				"consumer_id": {
-					"name": "consumer_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				}
-			},
-			"name": "cart",
-			"indexes": [
-				{
-					"keyName": "PRIMARY",
-					"columnNames": ["consumer_id"],
-					"composite": false,
-					"primary": true,
-					"unique": true
-				}
-			],
-			"checks": [],
-			"foreignKeys": {
-				"cart_consumer_id_foreign": {
-					"constraintName": "cart_consumer_id_foreign",
-					"columnNames": ["consumer_id"],
-					"localTableName": "cart",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "consumer",
-					"deleteRule": "cascade",
-					"updateRule": "cascade"
-				}
-			}
+			"foreignKeys": {}
 		},
 		{
 			"columns": {
@@ -1065,8 +999,8 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"cart_consumer_id": {
-					"name": "cart_consumer_id",
+				"consumer_id": {
+					"name": "consumer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1094,15 +1028,15 @@
 					"unique": false
 				},
 				{
-					"columnNames": ["cart_consumer_id"],
+					"columnNames": ["consumer_id"],
 					"composite": false,
-					"keyName": "cart_item_cart_consumer_id_index",
+					"keyName": "cart_item_consumer_id_index",
 					"primary": false,
 					"unique": false
 				},
 				{
 					"keyName": "PRIMARY",
-					"columnNames": ["product_id", "cart_consumer_id"],
+					"columnNames": ["product_id", "consumer_id"],
 					"composite": true,
 					"primary": true,
 					"unique": true
@@ -1118,12 +1052,12 @@
 					"referencedTableName": "producer_product",
 					"updateRule": "cascade"
 				},
-				"cart_item_cart_consumer_id_foreign": {
-					"constraintName": "cart_item_cart_consumer_id_foreign",
-					"columnNames": ["cart_consumer_id"],
+				"cart_item_consumer_id_foreign": {
+					"constraintName": "cart_item_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
 					"localTableName": "cart_item",
-					"referencedColumnNames": ["consumer_id"],
-					"referencedTableName": "cart",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "consumer",
 					"updateRule": "cascade"
 				}
 			}
@@ -1195,8 +1129,8 @@
 		},
 		{
 			"columns": {
-				"spec_id": {
-					"name": "spec_id",
+				"product_spec_category_product_spec_id": {
+					"name": "product_spec_category_product_spec_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1204,17 +1138,8 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"category_product_spec_id": {
-					"name": "category_product_spec_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"category_category_id": {
-					"name": "category_category_id",
+				"product_spec_category_category_id": {
+					"name": "product_spec_category_category_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1244,13 +1169,6 @@
 			"name": "product_spec_field",
 			"indexes": [
 				{
-					"columnNames": ["spec_id"],
-					"composite": false,
-					"keyName": "product_spec_field_spec_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
 					"columnNames": ["field_id"],
 					"composite": false,
 					"keyName": "product_spec_field_field_id_index",
@@ -1258,15 +1176,15 @@
 					"unique": false
 				},
 				{
-					"keyName": "product_spec_field_category_product_spec_id_categor_ba7e3_index",
-					"columnNames": ["category_product_spec_id", "category_category_id"],
+					"keyName": "product_spec_field_product_spec_category_product_sp_46c3a_index",
+					"columnNames": ["product_spec_category_product_spec_id", "product_spec_category_category_id"],
 					"composite": true,
 					"primary": false,
 					"unique": false
 				},
 				{
 					"keyName": "PRIMARY",
-					"columnNames": ["spec_id", "category_product_spec_id", "category_category_id", "field_id"],
+					"columnNames": ["product_spec_category_product_spec_id", "product_spec_category_category_id", "field_id"],
 					"composite": true,
 					"primary": true,
 					"unique": true
@@ -1274,17 +1192,9 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"product_spec_field_spec_id_foreign": {
-					"constraintName": "product_spec_field_spec_id_foreign",
-					"columnNames": ["spec_id"],
-					"localTableName": "product_spec_field",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "product_spec",
-					"updateRule": "cascade"
-				},
-				"product_spec_field_category_product_spec_id_categ_e530e_foreign": {
-					"constraintName": "product_spec_field_category_product_spec_id_categ_e530e_foreign",
-					"columnNames": ["category_product_spec_id", "category_category_id"],
+				"product_spec_field_product_spec_category_product__c0575_foreign": {
+					"constraintName": "product_spec_field_product_spec_category_product__c0575_foreign",
+					"columnNames": ["product_spec_category_product_spec_id", "product_spec_category_category_id"],
 					"localTableName": "product_spec_field",
 					"referencedColumnNames": ["product_spec_id", "category_id"],
 					"referencedTableName": "product_spec_category",
