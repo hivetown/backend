@@ -2,7 +2,6 @@ import type { FilterQuery, FindOptions, ObjectQuery } from '@mikro-orm/core';
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { isEmpty } from 'lodash';
 import { ProductSpec, ProductSpecCategory } from '../entities';
-import type { PaginatedOptions as PaginationOptions } from '../interfaces/PaginationOptions';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import { paginate } from '../utils/paginate';
@@ -15,14 +14,29 @@ export class ProductSpecGateway {
 		this.repository = orm.em.getRepository(ProductSpec);
 	}
 
-	public async findAll(filter?: ProductSpecFilters, options?: ProductSpecOptions): Promise<ProductSpec[]> {
-		const actualFilter: FilterQuery<ProductSpec> = { categories: {} };
+	public async findAll(
+		filter?: ProductSpecFilters,
+		options?: ProductSpecOptions
+	): Promise<{ items: ProductSpec[]; totalItems: number; page: number; pageSize: number }> {
+		const actualFilter: FilterQuery<ProductSpec> = {};
+		const actualOptions: FindOptions<ProductSpec> = {
+			...paginate(options)
+		};
+
 		if (filter && !isEmpty(filter)) {
-			if (filter.name) actualFilter.name = stringSearchType(filter.name);
-			if (filter.description) actualFilter.description = stringSearchType(filter.description);
+			// console.log(filter);
+			if (filter.name) {
+				actualFilter.name = stringSearchType(filter.name);
+			}
+			if (filter.description) {
+				actualFilter.description = stringSearchType(filter.description);
+			}
 
 			const categories: ObjectQuery<ProductSpecCategory> = {};
-			if (filter.categoryId) categories.category = { id: filter.categoryId };
+			if (filter.categoryId) {
+				actualFilter.categories = { category: { id: filter.categoryId } };
+			}
+			console.log(filter.fields);
 			if (filter.fields) {
 				const mappedFields = Object.values(filter.fields).map((fieldValues, fieldId) => ({
 					field: {
@@ -31,50 +45,30 @@ export class ProductSpecGateway {
 					}
 				}));
 
+				console.log(mappedFields);
+
 				categories.fields = {
 					$and: mappedFields
 				};
 			}
-
-			actualFilter.categories = categories;
+			if (!isEmpty(categories)) {
+				actualFilter.categories = categories;
+			}
+		}
+		console.log('actualFilter e options');
+		console.log(actualFilter);
+		console.log(actualOptions);
+		const productSpecs = await this.repository.find(actualFilter, actualOptions);
+		const totalItems = await this.repository.count(actualFilter);
+		const pageSize = productSpecs.length;
+		let page;
+		if (actualOptions.offset !== undefined && actualOptions.limit !== undefined) {
+			page = actualOptions.offset / actualOptions.limit + 1;
+		} else {
+			page = 1;
 		}
 
-		const actualOptions: FindOptions<ProductSpec> = {
-			// Add pagination
-			...paginate(options)
-		};
-
-		const productSpecs = await this.repository.find(actualFilter, actualOptions);
-		// const productSpecs = await this.repo~sitory.find({
-		// 	categories: {
-		// 		category: { id: 1 },
-		// 		fields: {
-		// 			$and: [
-		// 				{
-		// 					field: {
-		// 						id: 14
-		// 					},
-		// 					$or: [
-		// 						{
-		// 							value: 'female'
-		// 						},
-		// 						{
-		// 							value: 'male'
-		// 						}
-		// 					]
-		// 				},
-		// 				{
-		// 					field: {
-		// 						id: 15
-		// 					},
-		// 					value: 'female'
-		// 				}
-		// 			]
-		// 		}
-		// 	}
-		// });
-		// const productSpecs = await this.repository.findAll({ populate: ['categories'] });
-		return productSpecs;
+		return { items: productSpecs, totalItems, page, pageSize };
 	}
 
 	public async findById(id: number): Promise<ProductSpec | null> {

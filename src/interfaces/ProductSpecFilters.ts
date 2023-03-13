@@ -1,5 +1,4 @@
 import type { FieldType } from '../enums';
-import type { PaginatedOptions } from './PaginationOptions';
 import type { StringSearch } from './StringSearch';
 
 export interface ProductSpecFilters {
@@ -8,7 +7,7 @@ export interface ProductSpecFilters {
 	 * @example
 	 * { 14: ['female', 'male'] }
 	 */
-	fields?: { [key: string]: FieldType[] };
+	fields?: { [key: string]: [FieldType[]] };
 	name?: StringSearch;
 	description?: StringSearch;
 }

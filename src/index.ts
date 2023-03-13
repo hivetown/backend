@@ -23,6 +23,7 @@ export const container = {} as {
 	productSpecGatway: ProductSpecGateway;
 	fieldGateway: FieldGateway;
 	consumerGateway: ConsumerGateway;
+	productSpecGateway: ProductSpecGateway;
 };
 
 export const app = express();
@@ -37,6 +38,7 @@ export const main = async () => {
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
 	container.fieldGateway = new FieldGateway(container.orm);
 	container.consumerGateway = new ConsumerGateway(container.orm);
+	container.productSpecGateway = new ProductSpecGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
