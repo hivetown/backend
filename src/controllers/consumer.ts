@@ -42,7 +42,7 @@ export class ConsumerController {
 
 			if (consumer) {
 				const items = consumer.cartItems.getItems();
-				const item = items.find((item) => item.product.id === Number(req.body.product.id));
+				const item = items.find((item) => item.producerProduct.id === Number(req.body.product.id));
 				if (item) {
 					item.addQuantity(req.body.quantity);
 				} else {
@@ -90,7 +90,7 @@ export class ConsumerController {
 
 			if (consumer) {
 				const items = consumer.cartItems.getItems();
-				const item = items.find((item) => item.product.id === Number(producerProductId));
+				const item = items.find((item) => item.producerProduct.id === Number(producerProductId));
 
 				if (item) {
 					item.addQuantity(req.body.quantity);
