@@ -18,7 +18,7 @@ export class Producer extends User {
 	@OneToOne()
 	public image?: Image;
 
-	@OneToMany('Image', 'producer')
+	@OneToMany('Image', 'producerImages')
 	public images = new Collection<Image>(this);
 
 	public getId(): number {
