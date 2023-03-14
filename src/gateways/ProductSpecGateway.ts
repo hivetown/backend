@@ -1,7 +1,6 @@
-import type { FilterQuery, FindOptions, ObjectQuery } from '@mikro-orm/core';
-import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
+import type { EntityRepository, MikroORM, QueryBuilder } from '@mikro-orm/mysql';
 import { isEmpty } from 'lodash';
-import { ProductSpec, ProductSpecCategory } from '../entities';
+import { ProductSpec } from '../entities';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import { paginate } from '../utils/paginate';
@@ -17,53 +16,62 @@ export class ProductSpecGateway {
 	public async findAll(
 		filter?: ProductSpecFilters,
 		options?: ProductSpecOptions
-	): Promise<{ items: ProductSpec[]; totalItems: number; page: number; pageSize: number }> {
-		const actualFilter: FilterQuery<ProductSpec> = {};
-		const actualOptions: FindOptions<ProductSpec> = {
-			...paginate(options)
-			// populate: ['categories', 'categories.fields'] as any
-		};
+	): Promise<{ items: ProductSpec[]; totalItems: number; totalPages: number; page: number; pageSize: number }> {
+		const pagination = paginate(options);
+		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');
 
-		if (filter && !isEmpty(filter)) {
-			if (filter.name) {
-				actualFilter.name = stringSearchType(filter.name);
-			}
+		if (filter?.categoryId) {
+			void qb.leftJoin('spec.categories', 'specCategory').andWhere({ 'specCategory.category_id': filter.categoryId });
+		}
 
-			if (filter.description) {
-				actualFilter.description = stringSearchType(filter.description);
-			}
+		if (filter?.search) {
+			void qb.andWhere({
+				$or: [
+					{ 'lower(spec.name)': { $like: stringSearchType(filter.search) } },
+					{ 'lower(spec.description)': { $like: stringSearchType(filter.search) } }
+				]
+			});
+		}
 
-			const categories: ObjectQuery<ProductSpecCategory> = {};
-			if (filter.categoryId) {
-				actualFilter.categories = { category: { id: filter.categoryId } };
-			}
+		if (filter?.fields && !isEmpty(filter.fields)) {
+			void qb.leftJoin('spec.categories', 'specCategory').leftJoin('specCategory.fields', 'specField');
 
-			if (!isEmpty(filter.fields)) {
-				// PS: Object entries internally transforms the key into a string
-				// this isn't exactly a problem, because the ORM eats it
-				const mappedProductSpecField = Object.entries(filter.fields).map(([fieldId, fieldValues]) => ({
-					field: {
-						id: fieldId
-					},
-					$or: fieldValues.map((value) => ({ value }))
-				}));
-
-				categories.fields = {
-					$and: mappedProductSpecField
-				};
-			}
-
-			if (!isEmpty(categories)) {
-				actualFilter.categories = categories;
+			for (const [fieldId, values] of Object.entries(filter.fields)) {
+				void qb.andWhere({ 'specField.value': { $in: values }, 'specField.field_id': fieldId });
 			}
 		}
 
-		const productSpecs = await this.repository.find(actualFilter, actualOptions);
-		const totalItems = await this.repository.count(actualFilter);
-		// We add +1 so it starts at 1 instead of 0
-		const page = Math.ceil((actualOptions.offset || 0) / (actualOptions.limit || 1)) + 1;
+		// Calculate items count before grouping and paginating
+		const totalItems = await qb.clone().getCount();
 
-		return { items: productSpecs, totalItems, page, pageSize: actualOptions.limit || 0 };
+		// Add producers count, min and max price
+		void qb
+			.leftJoin('spec.producerProducts', 'producerProduct')
+			.groupBy('spec.id')
+			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
+			.addSelect('MIN(producerProduct.current_price) as minPrice')
+			.addSelect('MAX(producerProduct.current_price) as maxPrice');
+
+		// Paginate
+		void qb.offset(pagination.offset).limit(pagination.limit);
+
+		// Fetch results and map them
+		const productSpecs = (await qb.execute()).map((raw: any) => {
+			const spec: any = { ...this.repository.map(raw) };
+			spec.producersCount = raw.producersCount;
+			spec.minPrice = raw.minPrice || -1;
+			spec.maxPrice = raw.maxPrice || -1;
+
+			// Remove unnecessary fields
+			delete spec.categories;
+			delete spec.producerProducts;
+
+			return spec;
+		});
+
+		const totalPages = Math.ceil(totalItems / pagination.limit);
+		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
+		return { items: productSpecs, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
 
 	public async findById(id: number): Promise<ProductSpec | null> {

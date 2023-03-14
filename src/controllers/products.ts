@@ -17,7 +17,7 @@ export class ProductsController {
 	public async allProducts(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
 			const queryFields = Object.entries((req.query.field as Record<string, string[]>) || {});
-			const fields: { [key: number]: [FieldTypeType[]] } = {};
+			const fields: { [key: number]: FieldTypeType[] } = {};
 			// Remove field key string and get only the number part
 			for (const [rawKey, rawValues] of queryFields) {
 				// get only the number part of the key
@@ -25,8 +25,8 @@ export class ProductsController {
 				if (!key) continue;
 
 				// add the value to the new object
-				if (fields[key]) fields[key].push(rawValues);
-				else fields[key] = [rawValues];
+				if (fields[key]) fields[key].push(...rawValues);
+				else fields[key] = [...rawValues];
 			}
 
 			const filters: ProductSpecFilters = {
@@ -35,11 +35,8 @@ export class ProductsController {
 			};
 
 			if ('search' in req.query) {
-				filters.name = { value: req.query.search as string, type: StringSearchType.CONTAINS };
-				filters.description = filters.name;
+				filters.search = { value: req.query.search as string, type: StringSearchType.CONTAINS };
 			}
-
-			const actualFilters = filters; // Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== undefined));
 
 			const options: ProductSpecOptions = {
 				page: Number(req.query.page) || -1,
@@ -48,7 +45,8 @@ export class ProductsController {
 			};
 
 			// const optionsFiltrados = Object.fromEntries(Object.entries(options).filter(([_, v]) => v !== undefined));
-			const productsSpec = await container.productSpecGateway.findAll(actualFilters, options);
+			const productsSpec = await container.productSpecGateway.findAll(filters, options);
+			console.log(productsSpec);
 			res.json(productsSpec);
 		} catch (error) {
 			console.error(error);

@@ -7,7 +7,6 @@ export interface ProductSpecFilters {
 	 * @example
 	 * { 14: ['female', 'male'], 15: ['red'] }
 	 */
-	fields?: { [key: number]: [FieldTypeType[]] };
-	name?: StringSearch;
-	description?: StringSearch;
+	fields?: { [key: number]: FieldTypeType[] };
+	search?: StringSearch;
 }
