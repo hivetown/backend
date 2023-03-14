@@ -1,13 +1,13 @@
-import type { FieldType } from '../enums';
+import type { FieldTypeType } from '../types/FieldType';
 import type { StringSearch } from './StringSearch';
 
 export interface ProductSpecFilters {
 	categoryId?: number;
 	/**
 	 * @example
-	 * { 14: ['female', 'male'] }
+	 * { 14: ['female', 'male'], 15: ['red'] }
 	 */
-	fields?: { [key: string]: [FieldType[]] };
+	fields?: { [key: number]: [FieldTypeType[]] };
 	name?: StringSearch;
 	description?: StringSearch;
 }

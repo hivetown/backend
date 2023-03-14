@@ -21,13 +21,14 @@ export class ProductSpecGateway {
 		const actualFilter: FilterQuery<ProductSpec> = {};
 		const actualOptions: FindOptions<ProductSpec> = {
 			...paginate(options)
+			// populate: ['categories', 'categories.fields'] as any
 		};
 
 		if (filter && !isEmpty(filter)) {
-			// console.log(filter);
 			if (filter.name) {
 				actualFilter.name = stringSearchType(filter.name);
 			}
+
 			if (filter.description) {
 				actualFilter.description = stringSearchType(filter.description);
 			}
@@ -36,39 +37,33 @@ export class ProductSpecGateway {
 			if (filter.categoryId) {
 				actualFilter.categories = { category: { id: filter.categoryId } };
 			}
-			console.log(filter.fields);
-			if (filter.fields) {
-				const mappedFields = Object.values(filter.fields).map((fieldValues, fieldId) => ({
+
+			if (!isEmpty(filter.fields)) {
+				// PS: Object entries internally transforms the key into a string
+				// this isn't exactly a problem, because the ORM eats it
+				const mappedProductSpecField = Object.entries(filter.fields).map(([fieldId, fieldValues]) => ({
 					field: {
-						id: fieldId,
-						$or: fieldValues.map((value) => ({ value }))
-					}
+						id: fieldId
+					},
+					$or: fieldValues.map((value) => ({ value }))
 				}));
 
-				console.log(mappedFields);
-
 				categories.fields = {
-					$and: mappedFields
+					$and: mappedProductSpecField
 				};
 			}
+
 			if (!isEmpty(categories)) {
 				actualFilter.categories = categories;
 			}
 		}
-		console.log('actualFilter e options');
-		console.log(actualFilter);
-		console.log(actualOptions);
+
 		const productSpecs = await this.repository.find(actualFilter, actualOptions);
 		const totalItems = await this.repository.count(actualFilter);
-		const pageSize = productSpecs.length;
-		let page;
-		if (actualOptions.offset !== undefined && actualOptions.limit !== undefined) {
-			page = actualOptions.offset / actualOptions.limit + 1;
-		} else {
-			page = 1;
-		}
+		// We add +1 so it starts at 1 instead of 0
+		const page = Math.ceil((actualOptions.offset || 0) / (actualOptions.limit || 1)) + 1;
 
-		return { items: productSpecs, totalItems, page, pageSize };
+		return { items: productSpecs, totalItems, page, pageSize: actualOptions.limit || 0 };
 	}
 
 	public async findById(id: number): Promise<ProductSpec | null> {
