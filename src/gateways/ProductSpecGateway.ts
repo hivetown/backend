@@ -55,6 +55,7 @@ export class ProductSpecGateway {
 				actualFilter.categories = categories;
 			}
 		}
+		// 	COLOCAR O TOTAL PAGES
 		console.log('actualFilter e options');
 		console.log(actualFilter);
 		console.log(actualOptions);
@@ -72,7 +73,7 @@ export class ProductSpecGateway {
 	}
 
 	public async findById(id: number): Promise<ProductSpec | null> {
-		const productSpec = await this.repository.findOne(id);
+		const productSpec = await this.repository.findOne(id, { fields: ['id', 'name', 'description', 'images', 'producerProducts.producer'] });
 		return productSpec;
 	}
 }
