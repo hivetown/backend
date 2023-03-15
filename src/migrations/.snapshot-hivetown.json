@@ -872,14 +872,12 @@
 				},
 				"current_price": {
 					"name": "current_price",
-					"type": "numeric(10,0)",
+					"type": "double",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"precision": 10,
-					"scale": 0,
-					"mappedType": "decimal"
+					"mappedType": "double"
 				},
 				"production_date": {
 					"name": "production_date",
