@@ -1,5 +1,6 @@
 import { Collection, Entity, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
 import type { ProductSpecCategory } from './ProductSpecCategory';
+import type { Image } from './Image';
 
 @Entity()
 export class ProductSpec {
@@ -12,8 +13,8 @@ export class ProductSpec {
 	@Property()
 	public description!: string;
 
-	@Property({ type: 'array' })
-	public images!: string[];
+	@OneToMany('Image', 'productSpec')
+	public images = new Collection<Image>(this);
 
 	@OneToMany('ProductSpecCategory', 'productSpec')
 	public categories = new Collection<ProductSpecCategory>(this);

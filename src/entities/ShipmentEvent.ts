@@ -18,5 +18,5 @@ export class ShipmentEvent {
 	public address!: Address;
 
 	@ManyToOne()
-	public shipmentStatus!: ShipmentStatus;
+	public status!: ShipmentStatus;
 }

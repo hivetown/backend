@@ -3,6 +3,7 @@ import { Address } from './Address';
 import { Producer } from './Producer';
 import type { ProducerProduct } from './ProducerProduct';
 import type { Carrier } from './Carrier';
+import type { Image } from './Image';
 
 @Entity()
 export class ProductionUnit {
@@ -23,4 +24,7 @@ export class ProductionUnit {
 
 	@OneToMany('ProducerProduct', 'productionUnit')
 	public products = new Collection<ProducerProduct>(this);
+
+	@OneToMany('Image', 'productionUnit')
+	public images = new Collection<Image>(this);
 }

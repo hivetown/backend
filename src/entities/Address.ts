@@ -32,9 +32,9 @@ export class Address {
 	@Property()
 	public district!: string;
 
-	@Property({ type: 'numeric' })
+	@Property({ type: 'double' })
 	public latitude!: number;
 
-	@Property({ type: 'numeric' })
+	@Property({ type: 'double' })
 	public longitude!: number;
 }
