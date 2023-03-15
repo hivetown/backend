@@ -1,5 +1,9 @@
-import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
+import type { EntityRepository, MikroORM, QueryBuilder } from '@mikro-orm/mysql';
 import { ProducerProduct } from '../entities';
+import type { ProducerProductFilters } from '../interfaces/ProducerProductFilters';
+import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
+import { paginate } from '../utils/paginate';
+import { stringSearchType } from '../utils/stringSearchType';
 
 export class ProductGateway {
 	private repository: EntityRepository<ProducerProduct>;
@@ -8,14 +12,65 @@ export class ProductGateway {
 		this.repository = orm.em.getRepository(ProducerProduct);
 	}
 
-	// Pesquisa todos os produtos populacionando o produtor, a unidade de produção e a especificação do produto
-	public async findAll(page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
-		const [products, totalResults] = await Promise.all([
-			this.repository.findAll({ populate: ['producer', 'productionUnit', 'productSpec'], limit: 24, offset: (page - 1) * 24 }),
-			this.repository.count()
-		]);
-		return { products, totalResults };
+	public async findAll(
+		filter?: ProducerProductFilters,
+		options?: ProducerProductOptions
+	): Promise<{ items: ProducerProduct[]; totalItems: number; totalPages: number; page: number; pageSize: number }> {
+		const pagination = paginate(options);
+		const qb: QueryBuilder<ProducerProduct> = this.repository.createQueryBuilder('producerProduct').select('*');
+
+		if (filter?.producerId) {
+			void qb.leftJoin('producerProduct.producer', 'producer').andWhere({ 'producer.id': filter.producerId });
+		}
+
+		if (filter?.productionUnitId) {
+			void qb.leftJoin('producerProduct.productionUnit', 'productionUnit').andWhere({ 'productionUnit.id': filter.productionUnitId });
+		}
+
+		if (filter?.search) {
+			void qb.leftJoin('producerProduct.specification', 'spec').andWhere({
+				$or: [
+					{ 'lower(spec.name)': { $like: stringSearchType(filter.search) } },
+					{ 'lower(spec.description)': { $like: stringSearchType(filter.search) } }
+				]
+			});
+		}
+
+		// Calculate items count before grouping and paginating
+		const totalItems = await qb.clone().getCount();
+
+		// Paginate
+		void qb.offset(pagination.offset).limit(pagination.limit);
+
+		// Populate
+		if (options?.populate) {
+			options.populate.forEach((field) => {
+				void qb.leftJoinAndSelect(`producerProduct.${field}`, field);
+			});
+		}
+
+		// Fetch results and map them
+		const producerProducts = (await qb.execute()).map((raw: any) => {
+			const product: any = { ...this.repository.map(raw) };
+
+			// Remove unnecessary fields
+			// delete product.categories;
+			// delete product.producerProducts;
+
+			return product;
+		});
+
+		const totalPages = Math.ceil(totalItems / pagination.limit);
+		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
+		return { items: producerProducts, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
+	// public async findAll(page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
+	// 	const [products, totalResults] = await Promise.all([
+	// 		this.repository.findAll({ populate: ['producer', 'productionUnit', 'productSpec'], limit: 24, offset: (page - 1) * 24 }),
+	// 		this.repository.count()
+	// 	]);
+	// 	return { products, totalResults };
+	// }
 
 	// Pesquisa todos os produtos populacionando o produtor
 	public async findAllWithProducer(page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
