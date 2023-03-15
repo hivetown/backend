@@ -18,8 +18,4 @@ export class Category {
 
 	@OneToOne()
 	public image?: Image;
-
-	public addField(field: Field): void {
-		this.fields.add(field);
-	}
 }
