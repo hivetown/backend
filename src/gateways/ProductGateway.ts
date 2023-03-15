@@ -50,27 +50,12 @@ export class ProductGateway {
 		}
 
 		// Fetch results and map them
-		const producerProducts = (await qb.execute()).map((raw: any) => {
-			const product: any = { ...this.repository.map(raw) };
-
-			// Remove unnecessary fields
-			// delete product.categories;
-			// delete product.producerProducts;
-
-			return product;
-		});
+		const producerProducts = (await qb.execute()).map((raw: any) => ({ ...this.repository.map(raw) }));
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
 		return { items: producerProducts, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
-	// public async findAll(page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
-	// 	const [products, totalResults] = await Promise.all([
-	// 		this.repository.findAll({ populate: ['producer', 'productionUnit', 'productSpec'], limit: 24, offset: (page - 1) * 24 }),
-	// 		this.repository.count()
-	// 	]);
-	// 	return { products, totalResults };
-	// }
 
 	// Pesquisa todos os produtos populacionando o produtor
 	public async findAllWithProducer(page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {

@@ -1,13 +1,22 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Request, Response } from '@decorators/express';
 import * as Express from 'express';
+import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
+
+const producerIdParam = Joi.number().min(1).required();
 
 @Controller('/producers')
 @Injectable()
 export class ProducersController {
-	@Get('/:producerId/products')
+	@Get('/:producerId/products', [
+		validate({
+			params: Joi.object({
+				producerId: producerIdParam
+			})
+		})
+	])
 	public async producerProducts(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		try {
 			const options: ProducerProductOptions = {
