@@ -4,7 +4,7 @@ import { Consumer, ProducerProduct } from '../entities';
 @Entity()
 export class CartItem {
 	@ManyToOne({ primary: true })
-	public product!: ProducerProduct;
+	public producerProduct!: ProducerProduct;
 
 	@ManyToOne({ primary: true })
 	public consumer!: Consumer;
@@ -14,11 +14,9 @@ export class CartItem {
 	@Property({ type: 'int' })
 	public quantity!: number;
 
-	public addQuantity(quantity: number): void {
+	public constructor(consumer: Consumer, product: ProducerProduct, quantity: number) {
+		this.consumer = consumer;
+		this.producerProduct = product;
 		this.quantity = quantity;
-	}
-
-	public getTotalPrice(): number {
-		return this.product.currentPrice * this.quantity;
 	}
 }

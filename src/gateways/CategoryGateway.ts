@@ -36,6 +36,7 @@ export class CategoryGateway {
 
 	public async update(category: Category): Promise<Category> {
 		await this.repository.persistAndFlush(category);
+		await this.repository.populate(category, ['parent']);
 		return category;
 	}
 }

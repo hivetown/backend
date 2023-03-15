@@ -11,6 +11,7 @@ import { ProductSpecGateway } from './gateways/ProductSpecGateway';
 import { CategoryController } from './controllers/category';
 import { ServerErrorMiddleware } from './middlewares/error';
 import { ConsumerController } from './controllers/consumer';
+import { ConsumerGateway } from './gateways/ConsumerGateway';
 
 export const container = {} as {
 	server: http.Server;
@@ -22,6 +23,7 @@ export const container = {} as {
 	categoryGateway: CategoryGateway;
 	productSpecGatway: ProductSpecGateway;
 	fieldGateway: FieldGateway;
+	consumerGateway: ConsumerGateway;
 };
 
 export const app = express();
@@ -35,6 +37,7 @@ export const main = async () => {
 	container.categoryGateway = new CategoryGateway(container.orm);
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
 	container.fieldGateway = new FieldGateway(container.orm);
+	container.consumerGateway = new ConsumerGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());

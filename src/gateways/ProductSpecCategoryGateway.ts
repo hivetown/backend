@@ -25,7 +25,7 @@ export class ProductSpecCategoryGateway {
 			.leftJoinAndSelect('e.category', 'category')
 			.where({ productSpec: id, category: categoryId })
 			.getResult();
-
+		await this.repository.populate(category, ['productSpec', 'fields']);
 		return category;
 	}
 }

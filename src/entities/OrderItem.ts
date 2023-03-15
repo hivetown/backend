@@ -14,7 +14,7 @@ export class OrderItem {
 	@Property({ type: 'int' })
 	public quantity!: number;
 
-	@Property({ type: 'numeric' })
+	@Property({ type: 'double' })
 	public price!: number;
 
 	@ManyToOne()
