@@ -19,12 +19,4 @@ export class CartItem {
 		this.producerProduct = product;
 		this.quantity = quantity;
 	}
-
-	public addQuantity(quantity: number): void {
-		this.quantity = quantity;
-	}
-
-	public getTotalPrice(): number {
-		return this.producerProduct.currentPrice * this.quantity;
-	}
 }

@@ -20,20 +20,4 @@ export class Producer extends User {
 
 	@OneToMany('Image', 'producerImages')
 	public images = new Collection<Image>(this);
-
-	public getId(): number {
-		return this.id;
-	}
-
-	public getType(): UserType {
-		return this.type;
-	}
-
-	public getProductionUnits(): Collection<ProductionUnit> {
-		return this.productionUnits;
-	}
-
-	public toString(): string {
-		return `Producer ${this.name} (id=${this.getId()}, type=${this.getType()})`;
-	}
 }

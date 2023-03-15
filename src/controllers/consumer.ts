@@ -44,7 +44,7 @@ export class ConsumerController {
 				const items = consumer.cartItems.getItems();
 				const item = items.find((item) => item.producerProduct.id === Number(req.body.product.id));
 				if (item) {
-					item.addQuantity(req.body.quantity);
+					item.quantity = req.body.quantity;
 				} else {
 					const newItem = new CartItem(consumer, req.body.product, req.body.quantity);
 					consumer.cartItems.add(newItem);
@@ -93,7 +93,7 @@ export class ConsumerController {
 				const item = items.find((item) => item.producerProduct.id === Number(producerProductId));
 
 				if (item) {
-					item.addQuantity(req.body.quantity);
+					item.quantity = req.body.quantity;
 					await container.consumerGateway.updateCart(consumer);
 					res.status(200).json({ items: consumer.cartItems.getItems() });
 				} else {
