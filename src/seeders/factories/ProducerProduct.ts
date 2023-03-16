@@ -8,7 +8,7 @@ export class ProducerProductFactory extends Factory<ProducerProduct> {
 
 	protected definition(faker: Faker): EntityData<ProducerProduct> {
 		return {
-			currentPrice: faker.datatype.number(999),
+			currentPrice: faker.datatype.number({ min: 1, max: 999 }),
 			productionDate: faker.date.past(),
 			status: faker.helpers.arrayElement(Object.values(ProducerProductStatus))
 		};

@@ -7,7 +7,7 @@ export class CartItemFactory extends Factory<CartItem> {
 
 	protected definition(faker: Faker): EntityData<CartItem> {
 		return {
-			quantity: faker.datatype.number(10)
+			quantity: faker.datatype.number({ min: 1, max: 10 })
 		};
 	}
 }

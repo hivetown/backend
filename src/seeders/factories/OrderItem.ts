@@ -7,8 +7,8 @@ export class OrderItemFactory extends Factory<OrderItem> {
 
 	protected definition(faker: Faker): EntityData<OrderItem> {
 		return {
-			quantity: faker.datatype.number(13),
-			price: faker.datatype.number(13)
+			quantity: faker.datatype.number({ min: 1, max: 10 }),
+			price: faker.datatype.number({ min: 1, max: 999 })
 		};
 	}
 }

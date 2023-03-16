@@ -27,7 +27,7 @@ export class Image {
 	public category?: Category;
 
 	@OneToOne()
-	public consumerImage?: Consumer;
+	public consumer?: Consumer;
 
 	@OneToOne()
 	public producerImage?: Producer;
