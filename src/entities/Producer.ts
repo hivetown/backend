@@ -1,7 +1,8 @@
-import { Entity, PrimaryKey, OneToMany, Enum, Collection } from '@mikro-orm/core';
+import { Entity, PrimaryKey, OneToMany, Enum, Collection, OneToOne } from '@mikro-orm/core';
 import { User } from './User';
 import { UserType } from '../enums/UserType';
 import type { ProductionUnit } from './ProductionUnit';
+import type { Image } from './Image';
 
 @Entity()
 export class Producer extends User {
@@ -14,19 +15,9 @@ export class Producer extends User {
 	@OneToMany('ProductionUnit', 'producer')
 	public productionUnits = new Collection<ProductionUnit>(this);
 
-	public getId(): number {
-		return this.id;
-	}
+	@OneToOne()
+	public image?: Image;
 
-	public getType(): UserType {
-		return this.type;
-	}
-
-	public getProductionUnits(): Collection<ProductionUnit> {
-		return this.productionUnits;
-	}
-
-	public toString(): string {
-		return `Producer ${this.name} (id=${this.getId()}, type=${this.getType()})`;
-	}
+	@OneToMany('Image', 'producerImages')
+	public images = new Collection<Image>(this);
 }
