@@ -5,6 +5,7 @@ export * from './Category';
 export * from './Consumer';
 export * from './Field';
 export * from './FieldPossibleValue';
+export * from './Image';
 export * from './Order';
 export * from './OrderItem';
 export * from './Producer';

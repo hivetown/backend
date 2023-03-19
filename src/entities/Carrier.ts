@@ -1,6 +1,7 @@
-import { Entity, Enum, ManyToOne, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import { ProductionUnit } from './ProductionUnit';
 import { CarrierStatus } from '../enums/CarrierStatus';
+import { Shipment } from './Shipment';
 import type { Image } from './Image';
 
 @Entity()
@@ -16,6 +17,9 @@ export class Carrier {
 
 	@Enum()
 	public status!: CarrierStatus;
+
+	@OneToMany(() => Shipment, (shipment) => shipment.carrier)
+	public shipments = new Collection<Shipment>(this);
 
 	@OneToOne()
 	public image?: Image;
