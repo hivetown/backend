@@ -21,7 +21,7 @@ import { ShipmentStatusFactory } from './factories/ShipmentStatus';
 import { ProducerFactory } from './factories/Producer';
 import { CarrierFactory } from './factories/Carrier';
 import { ImageFactory } from './factories/Image';
-import type { Producer } from '../entities';
+import type { ProducerProduct } from '../entities';
 
 export class HivetownSeeder extends Seeder {
 	public async run(em: EntityManager): Promise<void> {
@@ -198,33 +198,13 @@ export class HivetownSeeder extends Seeder {
 				consumer.image = imageFactory.makeOne();
 
 				// Keep track of the cart items so we don't have collisions
-				const cartItems = new Set();
-				consumer.cartItems.set(
-					cartItemFactory
-						.each((cartItem) => {
-							// We need a do while loop because we need to make sure we have a product
-							// that is not already in the cart
-							do {
-								const randomProducer = faker.helpers.arrayElement(producersWithProducts);
-								const randomProductionUnit = faker.helpers.arrayElement(randomProducer.validProductionUnits);
-								const randomProducerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
+				console.log(`Generating cart items for ${consumer.name}`);
 
-								// We check if the cart item already exists
-								if (!cartItems.has(randomProducerProduct.id)) {
-									if (!randomProducerProduct.currentPrice) {
-										console.log('NO PRICE', randomProducerProduct);
-									}
-									cartItem.producerProduct = randomProducerProduct;
-									cartItems.add(randomProducerProduct.id);
-								}
-							} while (!cartItem.producerProduct);
-						})
-						.make(faker.datatype.number({ min: 0, max: 17 }))
-				);
-
+				console.log(`Generating orders for ${consumer.name}`);
 				consumer.orders.set(
 					orderFactory
 						.each((order) => {
+							console.log(`Adding order`);
 							// 25% chance of address being different from consumer address
 							const amount = faker.datatype.number(100);
 							if (amount < 25) {
@@ -238,6 +218,30 @@ export class HivetownSeeder extends Seeder {
 				);
 			})
 			.create(600);
+
+		console.log('Generating cart items for consumers...');
+		consumers.forEach((consumer) => {
+			const cartItems = new Set();
+			consumer.cartItems.set(
+				cartItemFactory
+					.each((cartItem) => {
+						// We need a do while loop because we need to make sure we have a product
+						// that is not already in the cart
+
+						let producerProduct: ProducerProduct;
+						do {
+							const randomProducer = faker.helpers.arrayElement(producersWithProducts);
+							const randomProductionUnit = faker.helpers.arrayElement(randomProducer.validProductionUnits);
+							producerProduct = faker.helpers.arrayElement(randomProductionUnit.products.getItems());
+						} while (cartItems.has(producerProduct.id));
+
+						cartItem.producerProduct = producerProduct;
+						cartItems.add(producerProduct.id);
+					})
+					.make(faker.datatype.number({ min: 0, max: 17 }))
+			);
+		});
+		await em.persistAndFlush(consumers);
 
 		console.log('Generating shipment statuses...');
 		const shipmentStatuses = await shipmentStatusFactory.create(15);
