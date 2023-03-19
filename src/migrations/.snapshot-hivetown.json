@@ -336,8 +336,8 @@
 					"nullable": true,
 					"mappedType": "integer"
 				},
-				"consumer_image_id": {
-					"name": "consumer_image_id",
+				"consumer_id": {
+					"name": "consumer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -399,9 +399,9 @@
 					"unique": true
 				},
 				{
-					"columnNames": ["consumer_image_id"],
+					"columnNames": ["consumer_id"],
 					"composite": false,
-					"keyName": "image_consumer_image_id_unique",
+					"keyName": "image_consumer_id_unique",
 					"primary": false,
 					"unique": true
 				},
@@ -461,9 +461,9 @@
 					"deleteRule": "set null",
 					"updateRule": "cascade"
 				},
-				"image_consumer_image_id_foreign": {
-					"constraintName": "image_consumer_image_id_foreign",
-					"columnNames": ["consumer_image_id"],
+				"image_consumer_id_foreign": {
+					"constraintName": "image_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
 					"localTableName": "image",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "consumer",

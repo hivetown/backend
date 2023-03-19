@@ -130,7 +130,7 @@ export class CategoryController {
 			const field = await container.fieldGateway.findById(fieldId);
 
 			if (category && field) {
-				category.addField(field);
+				category.fields.add(field);
 				await container.categoryGateway.update(category);
 				res.status(201).json(field);
 			} else {
