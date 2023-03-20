@@ -13,5 +13,5 @@ export class ProductSpecField {
 	public [PrimaryKeyType]?: [number, number, number];
 
 	@Property()
-	public value!: unknown;
+	public value!: string;
 }

@@ -5,7 +5,10 @@ const config: Options = {
 	entities: ['./dist/entities/**'],
 	entitiesTs: ['./src/entities/**'],
 	type: 'mysql',
-	metadataProvider: TsMorphMetadataProvider
+	metadataProvider: TsMorphMetadataProvider,
+	seeder: {
+		defaultSeeder: 'HivetownSeeder'
+	}
 };
 
 export default config;

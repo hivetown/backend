@@ -9,7 +9,7 @@ export class ProducerProduct {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'numeric' })
+	@Property({ type: 'double' })
 	public currentPrice!: number;
 
 	@Property({ type: 'date' })

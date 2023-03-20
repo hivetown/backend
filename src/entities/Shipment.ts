@@ -12,11 +12,8 @@ export class Shipment {
 	public carrier!: Carrier;
 
 	@OneToMany('OrderItem', 'shipment')
-	public orders = new Collection<OrderItem>(this);
+	public orderItems = new Collection<OrderItem>(this);
 
 	@OneToMany('ShipmentEvent', 'shipment')
 	public events = new Collection<ShipmentEvent>(this);
-
-	@OneToMany('OrderItem', 'shipment')
-	public products = new Collection<OrderItem>(this);
 }
