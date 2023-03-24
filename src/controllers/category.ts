@@ -1,6 +1,7 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
+import { Joi, validate } from 'express-validation';
 import { container } from '..';
 
 @Controller('/categories')
@@ -74,6 +75,27 @@ export class CategoryController {
 				res.status(204);
 			} else {
 				res.status(404).json({ error: 'Category not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Get('/:categoryId/categories', [
+		validate({
+			query: Joi.object({
+				categoryId: Joi.number().min(1).required()
+			})
+		})
+	])
+	public async categoryCategories(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
+		try {
+			const items = await container.categoryGateway.findAllChildrenOfCategory(categoryId);
+			if (items.length > 0) {
+				res.status(200).json({ items });
+			} else {
+				res.status(404).json({ error: 'Categories not found' });
 			}
 		} catch (error) {
 			console.error(error);
