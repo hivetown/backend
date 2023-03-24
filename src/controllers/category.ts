@@ -84,7 +84,7 @@ export class CategoryController {
 
 	@Get('/:categoryId/categories', [
 		validate({
-			query: Joi.object({
+			params: Joi.object({
 				categoryId: Joi.number().min(1).required()
 			})
 		})
