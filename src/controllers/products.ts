@@ -123,36 +123,30 @@ export class ProductsController {
 		}
 	}
 
-	// 	@Get('/:productSpecId/categories')
-	// 	public async productCategoriesBySpecificationId(
-	// 		@Response() res: Express.Response,
-	// 		@Params('productSpecId') productSpecId: number,
-	// 		@Request() req: Express.Request
-	// 	) {
-	// 		try {
-	// 			let items: ProductSpecCategory[] = new Array<ProductSpecCategory>();
-	// 			let totalPages = 0;
-	// 			let result = { categories: new Array<ProductSpecCategory>(), totalResults: 0 };
-	// 			let page = 1;
+	@Get('/:productSpecId/categories')
+	public async productCategoriesBySpecificationId(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Request() req: Express.Request
+	) {
+		try {
+			const options: ProductSpecOptions = {
+				page: Number(req.query.page) || -1,
+				size: Number(req.query.pageSize) || -1
+			};
 
-	// 			if (req.query.page) {
-	// 				page = Number(req.query.page as string);
-	// 				result = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, page);
-	// 			} else {
-	// 				result = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, 1);
-	// 			}
-	// 			items = result.categories;
-	// 			if (items.length > 0) {
-	// 				totalPages = Math.ceil(result.totalResults / 24);
-	// 				res.status(200).json({ items, page, pageSize: items.length, totalResults: result.totalResults, totalPages });
-	// 			} else {
-	// 				res.status(404).json({ error: 'Product Spec not found' });
-	// 			}
-	// 		} catch (error) {
-	// 			console.error(error);
-	// 			res.status(500).json({ error: (error as any).message });
-	// 		}
-	// 	}
+			const results = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, options);
+
+			if (results.totalItems > 0) {
+				res.status(200).json(results);
+			} else {
+				res.status(404).json({ error: 'No categories were found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	// 	@Get('/:productSpecId/categories/:categoryId')
 	// 	public async productCategoryBySpecificationId(
