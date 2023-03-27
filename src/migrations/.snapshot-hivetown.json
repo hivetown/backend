@@ -539,12 +539,12 @@
 				},
 				"phone": {
 					"name": "phone",
-					"type": "double",
+					"type": "varchar(255)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "double"
+					"mappedType": "string"
 				},
 				"vat": {
 					"name": "vat",
@@ -554,6 +554,15 @@
 					"primary": false,
 					"nullable": false,
 					"mappedType": "double"
+				},
+				"auth_id": {
+					"name": "auth_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
 				},
 				"image_id": {
 					"name": "image_id",
@@ -571,6 +580,13 @@
 					"columnNames": ["vat"],
 					"composite": false,
 					"keyName": "producer_vat_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["auth_id"],
+					"composite": false,
+					"keyName": "producer_auth_id_unique",
 					"primary": false,
 					"unique": true
 				},
@@ -843,12 +859,12 @@
 				},
 				"phone": {
 					"name": "phone",
-					"type": "double",
+					"type": "varchar(255)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "double"
+					"mappedType": "string"
 				},
 				"vat": {
 					"name": "vat",
@@ -858,6 +874,15 @@
 					"primary": false,
 					"nullable": false,
 					"mappedType": "double"
+				},
+				"auth_id": {
+					"name": "auth_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
 				},
 				"image_id": {
 					"name": "image_id",
@@ -875,6 +900,13 @@
 					"columnNames": ["vat"],
 					"composite": false,
 					"keyName": "consumer_vat_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["auth_id"],
+					"composite": false,
+					"keyName": "consumer_auth_id_unique",
 					"primary": false,
 					"unique": true
 				},
