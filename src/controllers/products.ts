@@ -148,44 +148,49 @@ export class ProductsController {
 		}
 	}
 
-	// 	@Get('/:productSpecId/categories/:categoryId')
-	// 	public async productCategoryBySpecificationId(
-	// 		@Response() res: Express.Response,
-	// 		@Params('productSpecId') productSpecId: number,
-	// 		@Params('categoryId') categoryId: number
-	// 	) {
-	// 		try {
-	// 			const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
-	// 			if (c.length > 0) {
-	// 				const item = c[0].category;
-	// 				res.status(200).json(item);
-	// 			} else {
-	// 				res.status(404).json({ error: 'Category not found' });
-	// 			}
-	// 		} catch (error) {
-	// 			console.error(error);
-	// 			res.status(500).json({ error: (error as any).message });
-	// 		}
-	// 	}
+	@Get('/:productSpecId/categories/:categoryId')
+	public async productCategoryBySpecificationId(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number
+	) {
+		try {
+			const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+			if (c.length > 0) {
+				const item = c[0];
+				res.status(200).json({ category: item });
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
-	// 	@Get('/:productSpecId/categories/:categoryId/fields')
-	// 	public async productFieldsByCateogryOfSpecification(
-	// 		@Response() res: Express.Response,
-	// 		@Params('productSpecId') productSpecId: number,
-	// 		@Params('categoryId') categoryId: number
-	// 	) {
-	// 		try {
-	// 			const c = await container.productSpecFieldGateway.findFieldsBySpecAndCategory(Number(productSpecId), Number(categoryId));
-	// 			if (c.length > 0) {
-	// 				res.status(200).json({ items: c });
-	// 			} else {
-	// 				res.status(404).json({ error: 'Category or Specification not found' });
-	// 			}
-	// 		} catch (error) {
-	// 			console.error(error);
-	// 			res.status(500).json({ error: (error as any).message });
-	// 		}
-	// 	}
+	@Get('/:productSpecId/categories/:categoryId/fields')
+	public async productFieldsByCateogryOfSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number,
+		@Request() req: Express.Request
+	) {
+		try {
+			const options: ProductSpecOptions = {
+				page: Number(req.query.page) || -1,
+				size: Number(req.query.pageSize) || -1
+			};
+			const f = await container.productSpecFieldGateway.findByProductSpecIdAndCategoryId(productSpecId, categoryId, options);
+			if (f.totalItems > 0) {
+				res.status(200).json(f);
+			} else {
+				res.status(404).json({ error: 'Category or Specification not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	// 	@Get('/:productSpecId/categories/:categoryId/fields/:fieldId')
 	// 	public async productFieldByCateogryOfSpecificationAndField(
