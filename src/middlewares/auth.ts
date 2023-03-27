@@ -23,8 +23,7 @@ export class AuthMiddleware implements Middleware {
 
 		try {
 			const user = await Authentication.getInstance().userFromIdToken(token);
-			// req.user = user;
-			console.log(user);
+			req.authUser = user;
 		} catch (error) {
 			throw new UnauthorizedError('Authorization token is invalid');
 		}

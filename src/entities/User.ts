@@ -8,9 +8,12 @@ export abstract class User {
 	@Property()
 	public email!: string;
 
-	@Property({ type: 'double' })
-	public phone!: number;
+	@Property()
+	public phone!: string;
 
 	@Property({ type: 'double', unique: true })
 	public vat!: number;
+
+	@Property({ unique: true })
+	public authId!: string;
 }

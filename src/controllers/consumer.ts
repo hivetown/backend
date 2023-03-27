@@ -1,8 +1,12 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import * as Express from 'express';
+import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { CartItem } from '../entities';
+import { CartItem, Consumer } from '../entities';
+import { ApiError } from '../errors/ApiError';
+import { ConflictError } from '../errors/ConflictError';
 import { AuthMiddleware } from '../middlewares/auth';
 // import { Consumer } from '../entities';
 
@@ -13,6 +17,33 @@ export class ConsumerController {
 	public async getConsumers(@Response() res: Express.Response): Promise<void> {
 		const consumers = await container.consumerGateway.findAll();
 		res.json(consumers);
+	}
+
+	@Post('/', [
+		validate({
+			body: Joi.object({
+				name: Joi.string().required(),
+				phone: Joi.string().required(),
+				vat: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async createConsumer(@Response() res: Express.Response, @Request() req: Express.Request): Promise<void> {
+		try {
+			const data: Consumer = req.body;
+			data.authId = req.authUser!.uid;
+			data.email = req.authUser!.email!;
+
+			const consumer = await container.consumerGateway.create(data);
+			res.status(201).json(consumer);
+		} catch (error) {
+			if (error instanceof UniqueConstraintViolationException) {
+				throw new ConflictError('Consumer already exists');
+			}
+
+			throw new ApiError((error as any).message, 500);
+		}
 	}
 
 	@Get('/:consumerId/cart', [AuthMiddleware])
