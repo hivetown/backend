@@ -180,7 +180,7 @@ export class ProductsController {
 				page: Number(req.query.page) || -1,
 				size: Number(req.query.pageSize) || -1
 			};
-			const f = await container.productSpecFieldGateway.findByProductSpecIdAndCategoryId(productSpecId, categoryId, options);
+			const f = await container.productSpecFieldGateway.findAllFieldsByProductSpecIdAndCategoryId(productSpecId, categoryId, options);
 			if (f.totalItems > 0) {
 				res.status(200).json(f);
 			} else {
@@ -192,27 +192,23 @@ export class ProductsController {
 		}
 	}
 
-	// 	@Get('/:productSpecId/categories/:categoryId/fields/:fieldId')
-	// 	public async productFieldByCateogryOfSpecificationAndField(
-	// 		@Response() res: Express.Response,
-	// 		@Params('productSpecId') productSpecId: number,
-	// 		@Params('categoryId') categoryId: number,
-	// 		@Params('fieldId') fieldId: number
-	// 	) {
-	// 		try {
-	// 			const c = await container.productSpecFieldGateway.findFieldsBySpecAndCategoryWithField(
-	// 				Number(productSpecId),
-	// 				Number(categoryId),
-	// 				Number(fieldId)
-	// 			);
-	// 			if (c.length > 0) {
-	// 				res.status(200).json(c[0]);
-	// 			} else {
-	// 				res.status(404).json({ error: 'Category or Specification not found' });
-	// 			}
-	// 		} catch (error) {
-	// 			console.error(error);
-	// 			res.status(500).json({ error: (error as any).message });
-	// 		}
-	// 	}
+	@Get('/:productSpecId/categories/:categoryId/fields/:fieldId')
+	public async productFieldByCateogryOfSpecificationAndField(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number,
+		@Params('fieldId') fieldId: number
+	) {
+		try {
+			const c = await container.productSpecFieldGateway.findFieldBySpecAndCategory(productSpecId, categoryId, fieldId);
+			if (c) {
+				res.status(200).json(c);
+			} else {
+				res.status(404).json({ error: 'Category or Specification not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 }
