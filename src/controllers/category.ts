@@ -11,11 +11,7 @@ export class CategoryController {
 	public async allCategories(@Response() res: Express.Response) {
 		try {
 			const items = await container.categoryGateway.findAll();
-			if (items.length > 0) {
-				res.status(200).json({ items });
-			} else {
-				res.status(404).json({ error: 'Categories not found' });
-			}
+			res.status(200).json({ items });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -92,11 +88,7 @@ export class CategoryController {
 	public async categoryCategories(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
 		try {
 			const items = await container.categoryGateway.findAllChildrenOfCategory(categoryId);
-			if (items.length > 0) {
-				res.status(200).json({ items });
-			} else {
-				res.status(404).json({ error: 'Categories not found' });
-			}
+			res.status(200).json({ items });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
