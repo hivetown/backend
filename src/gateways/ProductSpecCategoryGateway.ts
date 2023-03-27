@@ -12,7 +12,7 @@ export class ProductSpecCategoryGateway {
 	public async findCategoriesBySpecificationId(
 		id: number,
 		options: PaginatedOptions
-	): Promise<{ items: any; page: number; pageSize: number; totalItems: number; totalPages: number }> {
+	): Promise<{ items: Category[]; page: number; pageSize: number; totalItems: number; totalPages: number }> {
 		const pagination = paginate(options);
 		const [productSpecCategories, totalResults] = await Promise.all([
 			this.repository
@@ -24,7 +24,7 @@ export class ProductSpecCategoryGateway {
 				.getResult(),
 			this.repository.createQueryBuilder('e').leftJoinAndSelect('e.category', 'category').where({ productSpec: id }).count()
 		]);
-		const c = productSpecCategories.map(({ category }) => ({ category }));
+		const c = productSpecCategories.map(({ category }) => category);
 		return {
 			items: c,
 			totalItems: totalResults,
