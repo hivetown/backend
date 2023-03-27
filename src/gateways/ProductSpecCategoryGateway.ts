@@ -1,5 +1,6 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { Category, ProductSpecCategory } from '../entities';
+import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
 export class ProductSpecCategoryGateway {
@@ -9,10 +10,7 @@ export class ProductSpecCategoryGateway {
 		this.repository = orm.em.getRepository(ProductSpecCategory);
 	}
 
-	public async findCategoriesBySpecificationId(
-		id: number,
-		options: PaginatedOptions
-	): Promise<{ items: Category[]; page: number; pageSize: number; totalItems: number; totalPages: number }> {
+	public async findCategoriesBySpecificationId(id: number, options: PaginatedOptions): Promise<BaseItems<Category>> {
 		const pagination = paginate(options);
 		const [productSpecCategories, totalResults] = await Promise.all([
 			this.repository
@@ -35,13 +33,6 @@ export class ProductSpecCategoryGateway {
 	}
 
 	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<Category[]> {
-		// const category = await this.repository
-		// 	.createQueryBuilder('e')
-		// 	.leftJoinAndSelect('e.category', 'category')
-		// 	.select('e.field, e.value')
-		// 	.where({ productSpec: id, category: categoryId })
-		// 	.getResult();
-		// await this.repository.populate(category, ['fields.field']);
 		const category = await this.repository.find({ productSpec: id, category: categoryId }, { populate: ['category'] });
 		const c = category.map(({ category }) => category);
 		return c;

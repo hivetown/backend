@@ -1,5 +1,6 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { Producer } from '../entities';
+import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
 
@@ -15,10 +16,7 @@ export class ProducerGateway {
 		return producers;
 	}
 
-	public async findFromProductSpecId(
-		id: number,
-		options: PaginatedOptions
-	): Promise<{ items: Producer[]; page: number; pageSize: number; totalItems: number; totalPages: number }> {
+	public async findFromProductSpecId(id: number, options: PaginatedOptions): Promise<BaseItems<Producer>> {
 		const pagination = paginate(options);
 		const [producers, totalResults] = await Promise.all([
 			await this.repository

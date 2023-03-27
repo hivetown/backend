@@ -1,6 +1,7 @@
 import type { EntityRepository, MikroORM, QueryBuilder } from '@mikro-orm/mysql';
 import { isEmpty } from 'lodash';
 import { ProductSpec } from '../entities';
+import type { BaseItems } from '../interfaces/BaseItems';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import { paginate } from '../utils/paginate';
@@ -13,10 +14,7 @@ export class ProductSpecGateway {
 		this.repository = orm.em.getRepository(ProductSpec);
 	}
 
-	public async findAll(
-		filter?: ProductSpecFilters,
-		options?: ProductSpecOptions
-	): Promise<{ items: ProductSpec[]; totalItems: number; totalPages: number; page: number; pageSize: number }> {
+	public async findAll(filter?: ProductSpecFilters, options?: ProductSpecOptions): Promise<BaseItems<ProductSpec>> {
 		const pagination = paginate(options);
 		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');
 

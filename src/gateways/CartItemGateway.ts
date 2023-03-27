@@ -1,5 +1,6 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { CartItem } from '../entities';
+import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
 
@@ -10,10 +11,7 @@ export class CartItemGateway {
 		this.repository = orm.em.getRepository(CartItem);
 	}
 
-	public async findAllItemsByConsumerId(
-		consumerId: number,
-		options: PaginatedOptions
-	): Promise<{ items: CartItem[]; page: number; pageSize: number; totalItems: number; totalPages: number }> {
+	public async findAllItemsByConsumerId(consumerId: number, options: PaginatedOptions): Promise<BaseItems<CartItem>> {
 		const pagination = paginate(options);
 		const [cartItems, totalResults] = await Promise.all([
 			await this.repository.find(

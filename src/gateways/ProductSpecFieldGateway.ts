@@ -1,5 +1,6 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { ProductSpecField } from '../entities';
+import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
 
@@ -14,7 +15,7 @@ export class ProductSpecFieldGateway {
 		productSpecId: number,
 		categoryId: number,
 		options: PaginatedOptions
-	): Promise<{ items: ProductSpecField[]; page: number; pageSize: number; totalItems: number; totalPages: number }> {
+	): Promise<BaseItems<ProductSpecField>> {
 		const pagination = paginate(options);
 		const [productSpecField, totalResults] = await Promise.all([
 			await this.repository.find(
