@@ -12,6 +12,7 @@ import { CategoryController } from './controllers/category';
 import { ServerErrorMiddleware } from './middlewares/error';
 import { ConsumerController } from './controllers/consumer';
 import { ConsumerGateway } from './gateways/ConsumerGateway';
+import cookieParser from 'cookie-parser';
 
 export const container = {} as {
 	server: http.Server;
@@ -45,6 +46,9 @@ export const main = async () => {
 
 	app.use(express.json());
 	app.use(cors());
+	// Cookies
+	app.use(cookieParser());
+
 	app.use((_req: Request, _res: Response, next: NextFunction) => RequestContext.create(container.orm.em, next));
 
 	const serverErrorMiddleware = new ServerErrorMiddleware();
