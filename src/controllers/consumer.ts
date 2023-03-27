@@ -3,18 +3,19 @@ import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@
 import * as Express from 'express';
 import { container } from '..';
 import { CartItem } from '../entities';
+import { AuthMiddleware } from '../middlewares/auth';
 // import { Consumer } from '../entities';
 
 @Controller('/consumers')
 @Injectable()
 export class ConsumerController {
-	@Get('/')
+	@Get('/', [AuthMiddleware])
 	public async getConsumers(@Response() res: Express.Response): Promise<void> {
 		const consumers = await container.consumerGateway.findAll();
 		res.json(consumers);
 	}
 
-	@Get('/:consumerId/cart')
+	@Get('/:consumerId/cart', [AuthMiddleware])
 	public async getCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {
 		try {
 			const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -31,7 +32,7 @@ export class ConsumerController {
 		}
 	}
 
-	@Post('/:consumerId/cart')
+	@Post('/:consumerId/cart', [AuthMiddleware])
 	public async addCartItem(
 		@Response() res: Express.Response,
 		@Request() req: Express.Request,
@@ -61,7 +62,7 @@ export class ConsumerController {
 		}
 	}
 
-	@Delete('/:consumerId/cart')
+	@Delete('/:consumerId/cart', [AuthMiddleware])
 	public async deleteCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {
 		try {
 			const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -78,7 +79,7 @@ export class ConsumerController {
 		}
 	}
 
-	@Put('/:consumerId/cart/:producerProductId')
+	@Put('/:consumerId/cart/:producerProductId', [AuthMiddleware])
 	public async updateQuantityCartItem(
 		@Response() res: Express.Response,
 		@Request() req: Express.Request,

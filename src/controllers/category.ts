@@ -2,6 +2,7 @@ import { Injectable } from '@decorators/di';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
+import { AuthMiddleware } from '../middlewares/auth';
 
 @Controller('/categories')
 @Injectable()
@@ -47,7 +48,7 @@ export class CategoryController {
 		}
 	}
 
-	@Put('/:categoryId')
+	@Put('/:categoryId', [AuthMiddleware])
 	public async updateCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
 		try {
 			const category = await container.categoryGateway.findById(categoryId);
@@ -65,7 +66,7 @@ export class CategoryController {
 		}
 	}
 
-	@Delete('/:categoryId')
+	@Delete('/:categoryId', [AuthMiddleware])
 	public async deleteCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
 		try {
 			const categoryTBremoved = await container.categoryGateway.findById(categoryId);
@@ -123,7 +124,7 @@ export class CategoryController {
 		}
 	}
 
-	@Put('/:categoryId/fields/:fieldId')
+	@Put('/:categoryId/fields/:fieldId', [AuthMiddleware])
 	public async addFieldToCategory(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Params('fieldId') fieldId: number) {
 		try {
 			const category = await container.categoryGateway.findById(categoryId);
