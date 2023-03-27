@@ -71,7 +71,7 @@ export class ProductSpecGateway {
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
-		return { items: productSpecs, totalItems, totalPages, page, pageSize: pagination.limit };
+		return { items: productSpecs, totalItems, totalPages, page, pageSize: productSpecs.length };
 	}
 
 	public async findById(id: number): Promise<ProductSpec | null> {

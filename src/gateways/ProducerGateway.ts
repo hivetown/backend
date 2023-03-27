@@ -42,7 +42,7 @@ export class ProducerGateway {
 			totalItems: totalResults,
 			totalPages: Math.ceil(totalResults / pagination.limit),
 			page: Math.ceil(pagination.offset / pagination.limit) + 1,
-			pageSize: pagination.limit
+			pageSize: producers.length
 		};
 	}
 }
