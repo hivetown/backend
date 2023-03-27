@@ -5596,13 +5596,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loadash@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "loadash@npm:1.0.0"
-  checksum: 05a105fa9773a7c15963ea783507daa4d488a7a5b782ba77d84dbfaa40b01eb6a3a6cb1a160e67c4af339c7aa9209f9bfb8ef35eefffe98838930f05752ea550
-  languageName: node
-  linkType: hard
-
 "locate-path@npm:^2.0.0":
   version: 2.0.0
   resolution: "locate-path@npm:2.0.0"

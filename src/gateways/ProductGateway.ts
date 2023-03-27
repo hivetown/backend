@@ -1,5 +1,7 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { ProducerProduct } from '../entities';
+import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { paginate } from '../utils/paginate';
 
 export class ProductGateway {
 	private repository: EntityRepository<ProducerProduct>;
@@ -33,16 +35,26 @@ export class ProductGateway {
 	}
 
 	// Pesquisa produtos por id de uma ProductSpec
-	public async findBySpecificationId(id: number, page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
-		// const products = await this.repository.find({ productSpec: id }, { populate: ['producer', 'productionUnit', 'productSpec'] });
+	public async findBySpecificationId(
+		id: number,
+		options: PaginatedOptions
+	): Promise<{ items: ProducerProduct[]; page: number; pageSize: number; totalItems: number; totalPages: number }> {
+		const pagination = paginate(options);
 		const [products, totalResults] = await Promise.all([
 			this.repository.find(
 				{ productSpec: id },
-				{ populate: ['producer', 'productionUnit', 'productSpec'], limit: 24, offset: (page - 1) * 24 }
+				{ populate: ['producer', 'productionUnit', 'productSpec'], limit: pagination.limit, offset: pagination.offset }
 			),
 			this.repository.count({ productSpec: id })
 		]);
-		return { products, totalResults };
+		return {
+			items: products,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: pagination.limit
+		};
+		// { items: productSpecs, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
 
 	// Pesquisa produtos pelo id de uma categoria
