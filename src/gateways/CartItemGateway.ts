@@ -33,7 +33,7 @@ export class CartItemGateway {
 		};
 	}
 
-	public async findProcutById(cartItemId: number, producerProductId: number): Promise<CartItem | null> {
+	public async findProductById(cartItemId: number, producerProductId: number): Promise<CartItem | null> {
 		const cartItem = await this.repository.findOne(
 			{ consumer: cartItemId, producerProduct: producerProductId },
 			{ fields: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'quantity'] }
