@@ -30,7 +30,15 @@ export class ProductionUnitGateway {
 		void qb.offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
-		const [totalItems, productionUnits] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
+		const [totalItems, productionUnits] = await Promise.all([
+			totalItemsQb.getCount(),
+			qb.execute().then((rs) =>
+				rs.map((r) => {
+					delete r.address.consumer;
+					return r;
+				})
+			)
+		]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
