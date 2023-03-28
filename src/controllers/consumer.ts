@@ -1,10 +1,10 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { UniqueConstraintViolationException } from '@mikro-orm/core';
+import { NotFoundError, UniqueConstraintViolationException } from '@mikro-orm/core';
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { CartItem, Consumer } from '../entities';
+import { Address, CartItem, Consumer } from '../entities';
 import { ApiError } from '../errors/ApiError';
 import { ConflictError } from '../errors/ConflictError';
 import { AuthMiddleware } from '../middlewares/auth';
@@ -137,6 +137,64 @@ export class ConsumerController {
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Get('/:consumerId/addresses', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async getAddresses(@Request() req: Express.Request, @Response() res: Express.Response): Promise<void> {
+		const consumer = await container.consumerGateway.findByAuthId(req.authUser!.uid);
+
+		if (!consumer) {
+			throw new NotFoundError('Consumer not found');
+		}
+
+		await consumer.addresses.loadItems();
+		res.json(consumer.addresses.getItems());
+	}
+
+	@Post('/:consumerId/addresses', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				number: Joi.number().required(),
+				door: Joi.string().required(),
+				floor: Joi.number().required(),
+				zipCode: Joi.string().required(),
+				street: Joi.string().required(),
+				parish: Joi.string().required(),
+				county: Joi.string().required(),
+				city: Joi.string().required(),
+				district: Joi.string().required(),
+				latitude: Joi.number().required(),
+				longitude: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async addAddress(@Request() req: Express.Request, @Response() res: Express.Response): Promise<void> {
+		const consumer = await container.consumerGateway.findByAuthId(req.authUser!.uid);
+
+		if (!consumer) {
+			throw new NotFoundError('Consumer not found');
+		}
+
+		const address: Address = req.body;
+		address.consumer = consumer;
+
+		try {
+			const createdAddress = await container.addressGateway.create(address);
+			res.status(201).json(createdAddress);
+		} catch (error) {
+			throw new ApiError((error as any).message, 500);
 		}
 	}
 }
