@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, ManyToMany, OneToMany, OneToOne, PrimaryKey } from '@mikro-orm/core';
+import { Collection, Entity, Enum, OneToMany, OneToOne, PrimaryKey } from '@mikro-orm/core';
 import { UserType } from '../enums/UserType';
 import { User } from './User';
 import type { Address } from './Address';
@@ -20,7 +20,7 @@ export class Consumer extends User {
 	@OneToMany('Order', 'consumer')
 	public orders = new Collection<Order>(this);
 
-	@ManyToMany()
+	@OneToMany('Address', 'consumer')
 	public addresses = new Collection<Address>(this);
 
 	@OneToOne()
