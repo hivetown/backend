@@ -85,7 +85,7 @@ export class ProductsController {
 				size: Number(req.query.pageSize) || -1
 			};
 
-			const results = await container.productGateway.findBySpecificationId(productSpecId, options);
+			const results = await container.producerProductGateway.findBySpecificationId(productSpecId, options);
 
 			if (results.totalItems > 0) {
 				res.status(200).json(results);

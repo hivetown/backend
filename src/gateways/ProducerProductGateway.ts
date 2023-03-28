@@ -1,10 +1,10 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
-import { ProducerProduct } from '../entities';
+import { Image, ProducerProduct } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
 
-export class ProductGateway {
+export class ProducerProductGateway {
 	private repository: EntityRepository<ProducerProduct>;
 
 	public constructor(orm: MikroORM) {
@@ -35,5 +35,46 @@ export class ProductGateway {
 			pageSize: products.length
 		};
 		// { items: productSpecs, totalItems, totalPages, page, pageSize: pagination.limit };
+	}
+
+	public async findFromProductionUnit(productionUnitId: number, options: PaginatedOptions): Promise<BaseItems<ProducerProduct> | null> {
+		const pagination = paginate(options);
+
+		const qb = this.repository
+			.createQueryBuilder('pp')
+			.select('*')
+			.where({ productionUnit: { id: productionUnitId } });
+
+		const totalItemsQb = qb.clone();
+
+		// Paginate
+		void qb.offset(pagination.offset).limit(pagination.limit).leftJoinAndSelect('pp.productSpec', 'ps').leftJoinAndSelect('ps.images', 'i');
+
+		// Fetch results and map them
+		const [totalItems, productionUnits] = await Promise.all([
+			totalItemsQb.getCount(),
+			qb.execute().then((rs) =>
+				rs.map((r) => {
+					const images = r.productSpec.images as any as Image[];
+					r.productSpec.images = images.map((i) => ({
+						id: i.id,
+						name: i.name,
+						url: i.url,
+						alt: i.alt
+					})) as any;
+					return r;
+				})
+			)
+		]);
+
+		const totalPages = Math.ceil(totalItems / pagination.limit);
+		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
+		return {
+			totalItems,
+			items: productionUnits,
+			totalPages,
+			page,
+			pageSize: pagination.limit
+		};
 	}
 }

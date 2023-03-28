@@ -4,7 +4,14 @@ import { RequestContext } from '@mikro-orm/core';
 import { EntityManager, MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import express, { NextFunction, Request, Response } from 'express';
 import { attachControllers } from '@decorators/express';
-import { CategoryGateway, FieldGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway, ProductSpecFieldGateway } from './gateways';
+import {
+	CategoryGateway,
+	FieldGateway,
+	ProducerGateway,
+	ProducerProductGateway,
+	ProductSpecCategoryGateway,
+	ProductSpecFieldGateway
+} from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
@@ -24,7 +31,7 @@ export const container = {} as {
 	em: EntityManager;
 	addressGateway: AddressGateway;
 	producerGateway: ProducerGateway;
-	productGateway: ProductGateway;
+	producerProductGateway: ProducerProductGateway;
 	productSpecCategoryGateway: ProductSpecCategoryGateway;
 	categoryGateway: CategoryGateway;
 	productSpecGatway: ProductSpecGateway;
@@ -43,7 +50,7 @@ export const main = async () => {
 	container.em = container.orm.em;
 	container.addressGateway = new AddressGateway(container.orm);
 	container.producerGateway = new ProducerGateway(container.orm);
-	container.productGateway = new ProductGateway(container.orm);
+	container.producerProductGateway = new ProducerProductGateway(container.orm);
 	container.productSpecCategoryGateway = new ProductSpecCategoryGateway(container.orm);
 	container.categoryGateway = new CategoryGateway(container.orm);
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
