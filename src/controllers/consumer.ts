@@ -9,6 +9,7 @@ import { ApiError } from '../errors/ApiError';
 import { ConflictError } from '../errors/ConflictError';
 import { AuthMiddleware } from '../middlewares/auth';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
+import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 
 @Controller('/consumers')
 @Injectable()
@@ -151,6 +152,10 @@ export class ConsumerController {
 		validate({
 			params: Joi.object({
 				consumerId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1),
+				pageSize: Joi.number().min(1)
 			})
 		}),
 		AuthMiddleware
@@ -162,8 +167,12 @@ export class ConsumerController {
 			throw new NotFoundError('Consumer not found');
 		}
 
-		await consumer.addresses.loadItems();
-		res.json(consumer.addresses.getItems());
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		res.json(await container.addressGateway.findFromConsumer(consumer.id, options));
 	}
 
 	@Post('/:consumerId/addresses', [
