@@ -1,6 +1,6 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { NotFoundError, UniqueConstraintViolationException } from '@mikro-orm/core';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
@@ -10,6 +10,7 @@ import { ConflictError } from '../errors/ConflictError';
 import { AuthMiddleware } from '../middlewares/auth';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { NotFoundError } from '../errors/NotFoundError';
 
 @Controller('/consumers')
 @Injectable()
