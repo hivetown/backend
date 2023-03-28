@@ -65,19 +65,22 @@ export class ConsumerController {
 		try {
 			const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
 			const product = await container.productGateway.findById(Number(req.body.producerProduct));
-			console.log(product);
 			if (consumer) {
 				if (product) {
 					const items = consumer.cartItems.getItems();
 					const item = items.find((item) => item.producerProduct.id === Number(req.body.producerProduct));
-					if (item) {
-						item.quantity = req.body.quantity;
+					if (req.body.quantity <= product.stock) {
+						if (item) {
+							item.quantity = req.body.quantity;
+						} else {
+							const newItem = new CartItem(consumer, product, req.body.quantity);
+							consumer.cartItems.add(newItem);
+						}
+						await container.consumerGateway.updateCart(consumer);
+						res.status(201).json({ message: 'Item added to cart' });
 					} else {
-						const newItem = new CartItem(consumer, product, req.body.quantity);
-						consumer.cartItems.add(newItem);
+						res.status(400).json({ error: 'Product out of stock' });
 					}
-					await container.consumerGateway.updateCart(consumer);
-					res.status(201).json({ message: 'Item added to cart' });
 				} else {
 					res.status(404).json({ error: 'Product not found' });
 				}
@@ -133,16 +136,26 @@ export class ConsumerController {
 			const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
 
 			if (consumer) {
-				const items = consumer.cartItems.getItems();
-				const item = items.find((item) => item.producerProduct.id === Number(producerProductId));
+				const product = await container.productGateway.findById(Number(producerProductId));
 
-				if (item) {
-					item.quantity = req.body.quantity;
-					await container.consumerGateway.updateCart(consumer);
-					const updatedItem = await container.cartItemGateway.findProductById(consumerId, producerProductId);
-					res.status(200).json(updatedItem);
+				if (product) {
+					const items = consumer.cartItems.getItems();
+					const item = items.find((item) => item.producerProduct.id === Number(producerProductId));
+
+					if (item) {
+						if (req.body.quantity <= product.stock) {
+							item.quantity = req.body.quantity;
+							await container.consumerGateway.updateCart(consumer);
+							const updatedItem = await container.cartItemGateway.findProductById(consumerId, producerProductId);
+							res.status(200).json(updatedItem);
+						} else {
+							res.status(400).json({ error: 'Not enough stock' });
+						}
+					} else {
+						res.status(404).json({ error: 'Item not found' });
+					}
 				} else {
-					res.status(404).json({ error: 'Item not found' });
+					res.status(404).json({ error: 'Product not found' });
 				}
 			} else {
 				res.status(404).json({ error: 'Consumer not found' });
