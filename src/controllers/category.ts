@@ -1,6 +1,7 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
+import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import { AuthMiddleware } from '../middlewares/auth';
 
@@ -11,11 +12,7 @@ export class CategoryController {
 	public async allCategories(@Response() res: Express.Response) {
 		try {
 			const items = await container.categoryGateway.findAll();
-			if (items.length > 0) {
-				res.status(200).json({ items });
-			} else {
-				res.status(404).json({ error: 'Categories not found' });
-			}
+			res.status(200).json({ items });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -76,6 +73,23 @@ export class CategoryController {
 			} else {
 				res.status(404).json({ error: 'Category not found' });
 			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Get('/:categoryId/categories', [
+		validate({
+			params: Joi.object({
+				categoryId: Joi.number().min(1).required()
+			})
+		})
+	])
+	public async categoryCategories(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
+		try {
+			const items = await container.categoryGateway.findAllChildrenOfCategory(categoryId);
+			res.status(200).json({ items });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });

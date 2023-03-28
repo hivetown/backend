@@ -3,8 +3,8 @@ import { Controller, Get, Params, Request, Response } from '@decorators/express'
 import * as Express from 'express';
 import { isEmpty } from 'lodash';
 import { container } from '..';
-import type { Producer, ProductSpecCategory } from '../entities';
-import type { ProducerProduct } from '../entities/ProducerProduct';
+// import type { Producer, ProductSpecCategory } from '../entities';
+// import type { ProducerProduct } from '../entities/ProducerProduct';
 import { StringSearchType } from '../enums/StringSearchType';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
@@ -46,8 +46,12 @@ export class ProductsController {
 
 			// const optionsFiltrados = Object.fromEntries(Object.entries(options).filter(([_, v]) => v !== undefined));
 			const productsSpec = await container.productSpecGateway.findAll(filters, options);
-			console.log(productsSpec);
-			res.json(productsSpec);
+			// console.log(productsSpec);
+			if (productsSpec.totalItems > 0) {
+				res.status(200).json(productsSpec);
+			} else {
+				res.status(404).json({ error: 'No Products Specifications were found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -76,24 +80,17 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			let items: ProducerProduct[] = new Array<ProducerProduct>();
-			let totalPages = 0;
-			let result = { products: new Array<ProducerProduct>(), totalResults: 0 };
-			let page = 1;
+			const options: ProductSpecOptions = {
+				page: Number(req.query.page) || -1,
+				size: Number(req.query.pageSize) || -1
+			};
 
-			if (req.query.page) {
-				page = Number(req.query.page as string);
-				result = await container.productGateway.findBySpecificationId(productSpecId, page);
-			} else {
-				result = await container.productGateway.findBySpecificationId(productSpecId, 1);
-			}
+			const results = await container.productGateway.findBySpecificationId(productSpecId, options);
 
-			items = result.products;
-			if (items.length > 0) {
-				totalPages = Math.ceil(result.totalResults / 24);
-				res.status(200).json({ items, page, pageSize: items.length, totalResults: result.totalResults, totalPages });
+			if (results.totalItems > 0) {
+				res.status(200).json(results);
 			} else {
-				res.status(404).json({ error: 'Product Spec not found' });
+				res.status(404).json({ error: 'No products were found' });
 			}
 		} catch (error) {
 			console.error(error);
@@ -108,25 +105,17 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			let items: Producer[] = new Array<Producer>();
-			let products: ProducerProduct[] = new Array<ProducerProduct>();
-			let totalPages = 0;
-			let result = { products: new Array<ProducerProduct>(), totalResults: 0 };
-			let page = 1;
+			const options: ProductSpecOptions = {
+				page: Number(req.query.page) || -1,
+				size: Number(req.query.pageSize) || -1
+			};
 
-			if (req.query.page) {
-				page = Number(req.query.page as string);
-				result = await container.productGateway.findBySpecificationId(productSpecId, page);
+			const results = await container.producerGateway.findFromProductSpecId(productSpecId, options);
+
+			if (results.totalItems > 0) {
+				res.status(200).json(results);
 			} else {
-				result = await container.productGateway.findBySpecificationId(productSpecId, 1);
-			}
-			products = result.products;
-			if (products.length > 0) {
-				items = products.map((p) => p.producer);
-				totalPages = Math.ceil(result.totalResults / 24);
-				res.status(200).json({ items, page, pageSize: items.length, totalResults: result.totalResults, totalPages });
-			} else {
-				res.status(404).json({ error: 'Product Spec not found' });
+				res.status(404).json({ error: 'No producers were found' });
 			}
 		} catch (error) {
 			console.error(error);
@@ -141,23 +130,17 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			let items: ProductSpecCategory[] = new Array<ProductSpecCategory>();
-			let totalPages = 0;
-			let result = { categories: new Array<ProductSpecCategory>(), totalResults: 0 };
-			let page = 1;
+			const options: ProductSpecOptions = {
+				page: Number(req.query.page) || -1,
+				size: Number(req.query.pageSize) || -1
+			};
 
-			if (req.query.page) {
-				page = Number(req.query.page as string);
-				result = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, page);
+			const results = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, options);
+
+			if (results.totalItems > 0) {
+				res.status(200).json(results);
 			} else {
-				result = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, 1);
-			}
-			items = result.categories;
-			if (items.length > 0) {
-				totalPages = Math.ceil(result.totalResults / 24);
-				res.status(200).json({ items, page, pageSize: items.length, totalResults: result.totalResults, totalPages });
-			} else {
-				res.status(404).json({ error: 'Product Spec not found' });
+				res.status(404).json({ error: 'No categories were found' });
 			}
 		} catch (error) {
 			console.error(error);
@@ -174,8 +157,8 @@ export class ProductsController {
 		try {
 			const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
 			if (c.length > 0) {
-				const item = c[0].category;
-				res.status(200).json(item);
+				const item = c[0];
+				res.status(200).json({ category: item });
 			} else {
 				res.status(404).json({ error: 'Category not found' });
 			}
@@ -189,12 +172,17 @@ export class ProductsController {
 	public async productFieldsByCateogryOfSpecification(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
-		@Params('categoryId') categoryId: number
+		@Params('categoryId') categoryId: number,
+		@Request() req: Express.Request
 	) {
 		try {
-			const c = await container.productSpecFieldGateway.findFieldsBySpecAndCategory(Number(productSpecId), Number(categoryId));
-			if (c.length > 0) {
-				res.status(200).json({ items: c });
+			const options: ProductSpecOptions = {
+				page: Number(req.query.page) || -1,
+				size: Number(req.query.pageSize) || -1
+			};
+			const f = await container.productSpecFieldGateway.findAllFieldsByProductSpecIdAndCategoryId(productSpecId, categoryId, options);
+			if (f.totalItems > 0) {
+				res.status(200).json(f);
 			} else {
 				res.status(404).json({ error: 'Category or Specification not found' });
 			}
@@ -212,13 +200,9 @@ export class ProductsController {
 		@Params('fieldId') fieldId: number
 	) {
 		try {
-			const c = await container.productSpecFieldGateway.findFieldsBySpecAndCategoryWithField(
-				Number(productSpecId),
-				Number(categoryId),
-				Number(fieldId)
-			);
-			if (c.length > 0) {
-				res.status(200).json(c[0]);
+			const c = await container.productSpecFieldGateway.findFieldBySpecAndCategory(productSpecId, categoryId, fieldId);
+			if (c) {
+				res.status(200).json(c);
 			} else {
 				res.status(404).json({ error: 'Category or Specification not found' });
 			}
