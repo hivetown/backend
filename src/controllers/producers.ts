@@ -5,10 +5,11 @@ import * as Express from 'express';
 import type { Producer } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { container } from '..';
-import { NotFoundError, UniqueConstraintViolationException } from '@mikro-orm/core';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { ApiError } from '../errors/ApiError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { NotFoundError } from '../errors/NotFoundError';
 
 @Controller('/producers')
 @Injectable()
@@ -71,5 +72,71 @@ export class ProducersController {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
 		}
+	}
+
+	@Get('/:producerId/units/:unitId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			})
+		})
+	])
+	public async getUnit(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number
+	): Promise<void> {
+		const producer = await container.producerGateway.findById(producerId);
+
+		if (!producer) {
+			throw new NotFoundError('Producer not found');
+		}
+
+		const productionUnit = await container.productionUnitGateway.findById(unitId);
+
+		if (!productionUnit || productionUnit.producer.id !== producer.id) {
+			throw new NotFoundError('Production unit not found');
+		}
+
+		res.json(productionUnit);
+	}
+
+	@Get('/:producerId/units/:unitId/products', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1),
+				pageSize: Joi.number().min(1)
+			})
+		})
+	])
+	public async getProductionUnitProducts(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number,
+		@Request() req: Express.Request
+	): Promise<void> {
+		const producer = await container.producerGateway.findById(producerId);
+
+		if (!producer) {
+			throw new NotFoundError('Producer not found');
+		}
+
+		const productionUnit = await container.productionUnitGateway.findById(unitId);
+
+		if (!productionUnit || productionUnit.producer.id !== producer.id) {
+			throw new NotFoundError('Production unit not found');
+		}
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		res.json(await container.producerProductGateway.findFromProductionUnit(productionUnit.id, options));
 	}
 }
