@@ -8,7 +8,14 @@ import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 @Controller('/categories')
 @Injectable()
 export class CategoryController {
-	@Get('/')
+	@Get('/', [
+		validate({
+			query: Joi.object({
+				page: Joi.number().min(1),
+				pageSize: Joi.number().min(1)
+			})
+		})
+	])
 	public async allParentCategories(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
 			const options: PaginatedOptions = {
@@ -24,7 +31,15 @@ export class CategoryController {
 		}
 	}
 
-	@Post('/')
+	@Post('/', [
+		validate({
+			body: Joi.object({
+				name: Joi.string().required(),
+				parent: Joi.number().min(1),
+				image: Joi.string().required()
+			})
+		})
+	])
 	public async createCategory(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
 			const category = await container.categoryGateway.create(req.body);
@@ -35,7 +50,13 @@ export class CategoryController {
 		}
 	}
 
-	@Get('/:categoryId')
+	@Get('/:categoryId', [
+		validate({
+			params: Joi.object({
+				categoryId: Joi.number().min(1).required()
+			})
+		})
+	])
 	public async categoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
 		try {
 			const category = await container.categoryGateway.findById(categoryId);
@@ -50,7 +71,18 @@ export class CategoryController {
 		}
 	}
 
-	@Put('/:categoryId')
+	@Put('/:categoryId', [
+		validate({
+			params: Joi.object({
+				categoryId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				parent: Joi.number().min(1),
+				image: Joi.string().required()
+			})
+		})
+	])
 	public async updateCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
 		try {
 			const category = await container.categoryGateway.findById(categoryId);
@@ -69,13 +101,19 @@ export class CategoryController {
 		}
 	}
 
-	@Delete('/:categoryId')
+	@Delete('/:categoryId', [
+		validate({
+			params: Joi.object({
+				categoryId: Joi.number().min(1).required()
+			})
+		})
+	])
 	public async deleteCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
 		try {
 			const categoryTBremoved = await container.categoryGateway.findById(categoryId);
 			if (categoryTBremoved) {
 				await container.categoryGateway.remove(categoryTBremoved);
-				res.status(204);
+				res.status(204).json({ message: 'Category removed' });
 			} else {
 				res.status(404).json({ error: 'Category not found' });
 			}
@@ -89,6 +127,10 @@ export class CategoryController {
 		validate({
 			params: Joi.object({
 				categoryId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1),
+				pageSize: Joi.number().min(1)
 			})
 		})
 	])
@@ -106,7 +148,17 @@ export class CategoryController {
 		}
 	}
 
-	@Get('/:categoryId/fields')
+	@Get('/:categoryId/fields', [
+		validate({
+			params: Joi.object({
+				categoryId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1),
+				pageSize: Joi.number().min(1)
+			})
+		})
+	])
 	public async allFieldsByCategoryId(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
 		try {
 			const options: PaginatedOptions = {
@@ -114,18 +166,22 @@ export class CategoryController {
 				size: Number(req.query.pageSize) || -1
 			};
 			const items = await container.fieldGateway.findFieldsByCategoryId(categoryId, options);
-			if (items.totalItems > 0) {
-				res.status(200).json(items);
-			} else {
-				res.status(404).json({ error: 'Category not found' });
-			}
+
+			res.status(200).json(items);
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
 
-	@Get('/:categoryId/fields/:fieldId')
+	@Get('/:categoryId/fields/:fieldId', [
+		validate({
+			params: Joi.object({
+				categoryId: Joi.number().min(1).required(),
+				fieldId: Joi.number().min(1).required()
+			})
+		})
+	])
 	public async fieldByCategoryIdAndFieldId(
 		@Response() res: Express.Response,
 		@Params('categoryId') categoryId: number,
@@ -144,7 +200,14 @@ export class CategoryController {
 		}
 	}
 
-	@Put('/:categoryId/fields/:fieldId')
+	@Put('/:categoryId/fields/:fieldId', [
+		validate({
+			params: Joi.object({
+				categoryId: Joi.number().min(1).required(),
+				fieldId: Joi.number().min(1).required()
+			})
+		})
+	])
 	public async addFieldToCategory(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Params('fieldId') fieldId: number) {
 		try {
 			const category = await container.categoryGateway.findById(categoryId);
