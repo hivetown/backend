@@ -8,11 +8,22 @@ import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import type { FieldTypeType } from '../types/FieldType';
+import { Joi, validate } from 'express-validation';
 
 @Controller('/products')
 @Injectable()
 export class ProductsController {
-	@Get('/')
+	@Get('/', [
+		validate({
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1),
+				search: Joi.string().min(3),
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1),
+				field: Joi.object().pattern(/^'\d+'$/, Joi.array())
+			})
+		})
+	])
 	public async allProducts(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
 			const queryFields = Object.entries((req.query.field as Record<string, string[]>) || {});
@@ -46,18 +57,21 @@ export class ProductsController {
 			// const optionsFiltrados = Object.fromEntries(Object.entries(options).filter(([_, v]) => v !== undefined));
 			const productsSpec = await container.productSpecGateway.findAll(filters, options);
 			// console.log(productsSpec);
-			if (productsSpec.totalItems > 0) {
-				res.status(200).json(productsSpec);
-			} else {
-				res.status(404).json({ error: 'No Products Specifications were found' });
-			}
+
+			res.status(200).json(productsSpec);
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
 
-	@Get('/:productSpecId')
+	@Get('/:productSpecId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
 	public async productSpecById(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
 		try {
 			const productSpec = await container.productSpecGatway.findById(productSpecId);
@@ -72,7 +86,17 @@ export class ProductsController {
 		}
 	}
 
-	@Get('/:productSpecId/products')
+	@Get('/:productSpecId/products', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1)
+			})
+		})
+	])
 	public async productsBySpecificationId(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
@@ -86,18 +110,24 @@ export class ProductsController {
 
 			const results = await container.productGateway.findBySpecificationId(productSpecId, options);
 
-			if (results.totalItems > 0) {
-				res.status(200).json(results);
-			} else {
-				res.status(404).json({ error: 'No products were found' });
-			}
+			res.status(200).json(results);
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
 
-	@Get('/:productSpecId/producers')
+	@Get('/:productSpecId/producers', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1)
+			})
+		})
+	])
 	public async producerByProductSpec(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
@@ -111,18 +141,24 @@ export class ProductsController {
 
 			const results = await container.producerGateway.findFromProductSpecId(productSpecId, options);
 
-			if (results.totalItems > 0) {
-				res.status(200).json(results);
-			} else {
-				res.status(404).json({ error: 'No producers were found' });
-			}
+			res.status(200).json(results);
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
 
-	@Get('/:productSpecId/categories')
+	@Get('/:productSpecId/categories', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1)
+			})
+		})
+	])
 	public async productCategoriesBySpecificationId(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
@@ -136,18 +172,21 @@ export class ProductsController {
 
 			const results = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, options);
 
-			if (results.totalItems > 0) {
-				res.status(200).json(results);
-			} else {
-				res.status(404).json({ error: 'No categories were found' });
-			}
+			res.status(200).json(results);
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
 
-	@Get('/:productSpecId/categories/:categoryId')
+	@Get('/:productSpecId/categories/:categoryId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
 	public async productCategoryBySpecificationId(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
@@ -157,7 +196,7 @@ export class ProductsController {
 			const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
 			if (c.length > 0) {
 				const item = c[0];
-				res.status(200).json({ category: item });
+				res.status(200).json(item);
 			} else {
 				res.status(404).json({ error: 'Category not found' });
 			}
@@ -167,7 +206,18 @@ export class ProductsController {
 		}
 	}
 
-	@Get('/:productSpecId/categories/:categoryId/fields')
+	@Get('/:productSpecId/categories/:categoryId/fields', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1)
+			})
+		})
+	])
 	public async productFieldsByCateogryOfSpecification(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
@@ -180,18 +230,23 @@ export class ProductsController {
 				size: Number(req.query.pageSize) || -1
 			};
 			const f = await container.productSpecFieldGateway.findAllFieldsByProductSpecIdAndCategoryId(productSpecId, categoryId, options);
-			if (f.totalItems > 0) {
-				res.status(200).json(f);
-			} else {
-				res.status(404).json({ error: 'Category or Specification not found' });
-			}
+
+			res.status(200).json(f);
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
 
-	@Get('/:productSpecId/categories/:categoryId/fields/:fieldId')
+	@Get('/:productSpecId/categories/:categoryId/fields/:fieldId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required(),
+				fieldId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
 	public async productFieldByCateogryOfSpecificationAndField(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
@@ -203,7 +258,7 @@ export class ProductsController {
 			if (c) {
 				res.status(200).json(c);
 			} else {
-				res.status(404).json({ error: 'Category or Specification not found' });
+				res.status(404).json({ error: 'Category, Specification or Field not found' });
 			}
 		} catch (error) {
 			console.error(error);
