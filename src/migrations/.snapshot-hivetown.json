@@ -12,130 +12,6 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"number": {
-					"name": "number",
-					"type": "int",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"door": {
-					"name": "door",
-					"type": "int",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"floor": {
-					"name": "floor",
-					"type": "int",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"zip_code": {
-					"name": "zip_code",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"street": {
-					"name": "street",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"parish": {
-					"name": "parish",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"county": {
-					"name": "county",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"city": {
-					"name": "city",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"district": {
-					"name": "district",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"latitude": {
-					"name": "latitude",
-					"type": "double",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "double"
-				},
-				"longitude": {
-					"name": "longitude",
-					"type": "double",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "double"
-				}
-			},
-			"name": "address",
-			"indexes": [
-				{
-					"keyName": "PRIMARY",
-					"columnNames": ["id"],
-					"composite": false,
-					"primary": true,
-					"unique": true
-				}
-			],
-			"checks": [],
-			"foreignKeys": {}
-		},
-		{
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": true,
-					"primary": true,
-					"nullable": false,
-					"mappedType": "integer"
-				},
 				"name": {
 					"name": "name",
 					"type": "varchar(255)",
@@ -638,6 +514,266 @@
 					"nullable": false,
 					"mappedType": "string"
 				},
+				"email": {
+					"name": "email",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"phone": {
+					"name": "phone",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"vat": {
+					"name": "vat",
+					"type": "double",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "double"
+				},
+				"auth_id": {
+					"name": "auth_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"image_id": {
+					"name": "image_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				}
+			},
+			"name": "consumer",
+			"indexes": [
+				{
+					"columnNames": ["vat"],
+					"composite": false,
+					"keyName": "consumer_vat_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["auth_id"],
+					"composite": false,
+					"keyName": "consumer_auth_id_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["image_id"],
+					"composite": false,
+					"keyName": "consumer_image_id_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"consumer_image_id_foreign": {
+					"constraintName": "consumer_image_id_foreign",
+					"columnNames": ["image_id"],
+					"localTableName": "consumer",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "image",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				}
+			}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": true,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"number": {
+					"name": "number",
+					"type": "int",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"door": {
+					"name": "door",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"floor": {
+					"name": "floor",
+					"type": "int",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"zip_code": {
+					"name": "zip_code",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"street": {
+					"name": "street",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"parish": {
+					"name": "parish",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"county": {
+					"name": "county",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"city": {
+					"name": "city",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"district": {
+					"name": "district",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"latitude": {
+					"name": "latitude",
+					"type": "double",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "double"
+				},
+				"longitude": {
+					"name": "longitude",
+					"type": "double",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "double"
+				},
+				"consumer_id": {
+					"name": "consumer_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				}
+			},
+			"name": "address",
+			"indexes": [
+				{
+					"columnNames": ["consumer_id"],
+					"composite": false,
+					"keyName": "address_consumer_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"address_consumer_id_foreign": {
+					"constraintName": "address_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
+					"localTableName": "address",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "consumer",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				}
+			}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": true,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
 				"address_id": {
 					"name": "address_id",
 					"type": "int",
@@ -830,110 +966,74 @@
 		},
 		{
 			"columns": {
-				"id": {
-					"name": "id",
+				"producer_product_id": {
+					"name": "producer_product_id",
 					"type": "int",
 					"unsigned": true,
-					"autoincrement": true,
-					"primary": true,
+					"autoincrement": false,
+					"primary": false,
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"name": {
-					"name": "name",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"email": {
-					"name": "email",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"phone": {
-					"name": "phone",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"vat": {
-					"name": "vat",
-					"type": "double",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "double"
-				},
-				"auth_id": {
-					"name": "auth_id",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"image_id": {
-					"name": "image_id",
+				"consumer_id": {
+					"name": "consumer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": true,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"quantity": {
+					"name": "quantity",
+					"type": "int",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
 					"mappedType": "integer"
 				}
 			},
-			"name": "consumer",
+			"name": "cart_item",
 			"indexes": [
 				{
-					"columnNames": ["vat"],
+					"columnNames": ["producer_product_id"],
 					"composite": false,
-					"keyName": "consumer_vat_unique",
+					"keyName": "cart_item_producer_product_id_index",
 					"primary": false,
-					"unique": true
+					"unique": false
 				},
 				{
-					"columnNames": ["auth_id"],
+					"columnNames": ["consumer_id"],
 					"composite": false,
-					"keyName": "consumer_auth_id_unique",
+					"keyName": "cart_item_consumer_id_index",
 					"primary": false,
-					"unique": true
-				},
-				{
-					"columnNames": ["image_id"],
-					"composite": false,
-					"keyName": "consumer_image_id_unique",
-					"primary": false,
-					"unique": true
+					"unique": false
 				},
 				{
 					"keyName": "PRIMARY",
-					"columnNames": ["id"],
-					"composite": false,
+					"columnNames": ["producer_product_id", "consumer_id"],
+					"composite": true,
 					"primary": true,
 					"unique": true
 				}
 			],
 			"checks": [],
 			"foreignKeys": {
-				"consumer_image_id_foreign": {
-					"constraintName": "consumer_image_id_foreign",
-					"columnNames": ["image_id"],
-					"localTableName": "consumer",
+				"cart_item_producer_product_id_foreign": {
+					"constraintName": "cart_item_producer_product_id_foreign",
+					"columnNames": ["producer_product_id"],
+					"localTableName": "cart_item",
 					"referencedColumnNames": ["id"],
-					"referencedTableName": "image",
-					"deleteRule": "set null",
+					"referencedTableName": "producer_product",
+					"updateRule": "cascade"
+				},
+				"cart_item_consumer_id_foreign": {
+					"constraintName": "cart_item_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
+					"localTableName": "cart_item",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "consumer",
 					"updateRule": "cascade"
 				}
 			}
@@ -1010,147 +1110,6 @@
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "address",
 					"deleteRule": "set null",
-					"updateRule": "cascade"
-				}
-			}
-		},
-		{
-			"columns": {
-				"consumer_id": {
-					"name": "consumer_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"address_id": {
-					"name": "address_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				}
-			},
-			"name": "consumer_addresses",
-			"indexes": [
-				{
-					"columnNames": ["consumer_id"],
-					"composite": false,
-					"keyName": "consumer_addresses_consumer_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["address_id"],
-					"composite": false,
-					"keyName": "consumer_addresses_address_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"keyName": "PRIMARY",
-					"columnNames": ["consumer_id", "address_id"],
-					"composite": true,
-					"primary": true,
-					"unique": true
-				}
-			],
-			"checks": [],
-			"foreignKeys": {
-				"consumer_addresses_consumer_id_foreign": {
-					"constraintName": "consumer_addresses_consumer_id_foreign",
-					"columnNames": ["consumer_id"],
-					"localTableName": "consumer_addresses",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "consumer",
-					"deleteRule": "cascade",
-					"updateRule": "cascade"
-				},
-				"consumer_addresses_address_id_foreign": {
-					"constraintName": "consumer_addresses_address_id_foreign",
-					"columnNames": ["address_id"],
-					"localTableName": "consumer_addresses",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "address",
-					"deleteRule": "cascade",
-					"updateRule": "cascade"
-				}
-			}
-		},
-		{
-			"columns": {
-				"producer_product_id": {
-					"name": "producer_product_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"consumer_id": {
-					"name": "consumer_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"quantity": {
-					"name": "quantity",
-					"type": "int",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				}
-			},
-			"name": "cart_item",
-			"indexes": [
-				{
-					"columnNames": ["producer_product_id"],
-					"composite": false,
-					"keyName": "cart_item_producer_product_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["consumer_id"],
-					"composite": false,
-					"keyName": "cart_item_consumer_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"keyName": "PRIMARY",
-					"columnNames": ["producer_product_id", "consumer_id"],
-					"composite": true,
-					"primary": true,
-					"unique": true
-				}
-			],
-			"checks": [],
-			"foreignKeys": {
-				"cart_item_producer_product_id_foreign": {
-					"constraintName": "cart_item_producer_product_id_foreign",
-					"columnNames": ["producer_product_id"],
-					"localTableName": "cart_item",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "producer_product",
-					"updateRule": "cascade"
-				},
-				"cart_item_consumer_id_foreign": {
-					"constraintName": "cart_item_consumer_id_foreign",
-					"columnNames": ["consumer_id"],
-					"localTableName": "cart_item",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "consumer",
 					"updateRule": "cascade"
 				}
 			}
