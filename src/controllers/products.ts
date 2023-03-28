@@ -3,9 +3,8 @@ import { Controller, Get, Params, Request, Response } from '@decorators/express'
 import * as Express from 'express';
 import { isEmpty } from 'lodash';
 import { container } from '..';
-// import type { Producer, ProductSpecCategory } from '../entities';
-// import type { ProducerProduct } from '../entities/ProducerProduct';
 import { StringSearchType } from '../enums/StringSearchType';
+import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import type { FieldTypeType } from '../types/FieldType';
@@ -105,7 +104,7 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			const options: ProductSpecOptions = {
+			const options: PaginatedOptions = {
 				page: Number(req.query.page) || -1,
 				size: Number(req.query.pageSize) || -1
 			};
@@ -130,7 +129,7 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			const options: ProductSpecOptions = {
+			const options: PaginatedOptions = {
 				page: Number(req.query.page) || -1,
 				size: Number(req.query.pageSize) || -1
 			};
@@ -176,7 +175,7 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			const options: ProductSpecOptions = {
+			const options: PaginatedOptions = {
 				page: Number(req.query.page) || -1,
 				size: Number(req.query.pageSize) || -1
 			};

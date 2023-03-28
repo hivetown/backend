@@ -3,9 +3,7 @@ import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@
 import * as Express from 'express';
 import { container } from '..';
 import { CartItem } from '../entities';
-import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
-// import { CartItem } from '../entities';
-// import { Consumer } from '../entities';
+import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 
 @Controller('/consumers')
 @Injectable()
@@ -23,7 +21,7 @@ export class ConsumerController {
 		@Request() req: Express.Request
 	): Promise<void> {
 		try {
-			const options: ProductSpecOptions = {
+			const options: PaginatedOptions = {
 				page: Number(req.query.page) || -1,
 				size: Number(req.query.pageSize) || -1
 			};
