@@ -1,13 +1,14 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Post, Request, Response } from '@decorators/express';
+import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
 import { Joi, validate } from 'express-validation';
 import * as Express from 'express';
 import type { Producer } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { container } from '..';
-import { UniqueConstraintViolationException } from '@mikro-orm/core';
+import { NotFoundError, UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { ApiError } from '../errors/ApiError';
+import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 
 @Controller('/producers')
 @Injectable()
@@ -36,6 +37,39 @@ export class ProducersController {
 			}
 
 			throw new ApiError((error as any).message, 500);
+		}
+	}
+
+	@Get('/:producerId/units', [
+		validate({
+			params: Joi.object({ producerId: Joi.number().required() }),
+			query: Joi.object({
+				page: Joi.number().min(1),
+				pageSize: Joi.number().min(1)
+			})
+		})
+	])
+	public async getUnits(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number
+	): Promise<void> {
+		try {
+			const producer = await container.producerGateway.findById(producerId);
+
+			if (!producer) {
+				throw new NotFoundError('Producer not found');
+			}
+
+			const options: PaginatedOptions = {
+				page: Number(req.query.page) || -1,
+				size: Number(req.query.pageSize) || -1
+			};
+
+			res.json(await container.productionUnitGateway.findFromProducer(producer.id, options));
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
 		}
 	}
 }

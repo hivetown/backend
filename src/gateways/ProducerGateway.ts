@@ -22,6 +22,10 @@ export class ProducerGateway {
 		return producer;
 	}
 
+	public async findById(id: number): Promise<Producer | null> {
+		return this.repository.findOne(id);
+	}
+
 	public async findByAuthId(authId: string): Promise<Producer | null> {
 		return this.repository.findOne({ authId });
 	}

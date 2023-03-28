@@ -16,6 +16,7 @@ import cookieParser from 'cookie-parser';
 import { ProducersController } from './controllers/producers';
 import { AddressGateway } from './gateways/AddressGateway';
 import { CartItemGateway } from './gateways/CartItemGateway';
+import { ProductionUnitGateway } from './gateways/ProductionUnitGateway';
 
 export const container = {} as {
 	server: http.Server;
@@ -32,6 +33,7 @@ export const container = {} as {
 	productSpecFieldGateway: ProductSpecFieldGateway;
 	productSpecGateway: ProductSpecGateway;
 	cartItemGateway: CartItemGateway;
+	productionUnitGateway: ProductionUnitGateway;
 };
 
 export const app = express();
@@ -50,6 +52,7 @@ export const main = async () => {
 	container.productSpecFieldGateway = new ProductSpecFieldGateway(container.orm);
 	container.productSpecGateway = new ProductSpecGateway(container.orm);
 	container.cartItemGateway = new CartItemGateway(container.orm);
+	container.productionUnitGateway = new ProductionUnitGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
