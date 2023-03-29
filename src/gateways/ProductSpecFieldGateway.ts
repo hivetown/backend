@@ -18,11 +18,11 @@ export class ProductSpecFieldGateway {
 	): Promise<BaseItems<ProductSpecField>> {
 		const pagination = paginate(options);
 		const [productSpecField, totalResults] = await Promise.all([
-			await this.repository.find(
+			this.repository.find(
 				{ productSpecCategory: { productSpec: productSpecId, category: categoryId } },
 				{ fields: ['field', 'value'], limit: pagination.limit, offset: pagination.offset }
 			),
-			await this.repository.count({ productSpecCategory: { productSpec: productSpecId, category: categoryId } })
+			this.repository.count({ productSpecCategory: { productSpec: productSpecId, category: categoryId } })
 		]);
 		return {
 			items: productSpecField,

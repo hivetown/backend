@@ -20,8 +20,8 @@ export class FieldGateway {
 		const pagination = paginate(options);
 
 		const [fields, totalResults] = await Promise.all([
-			await this.repository.find({ categories: categoryId }, { limit: pagination.limit, offset: pagination.offset }),
-			await this.repository.count({ categories: categoryId })
+			this.repository.find({ categories: categoryId }, { limit: pagination.limit, offset: pagination.offset }),
+			this.repository.count({ categories: categoryId })
 		]);
 
 		return {

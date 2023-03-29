@@ -14,13 +14,13 @@ export class CategoryGateway {
 	public async findAllRoot(options: PaginatedOptions): Promise<BaseItems<Category>> {
 		const pagination = paginate(options);
 		const [categories, totalResults] = await Promise.all([
-			await this.repository
+			this.repository
 				.createQueryBuilder('category')
 				.where('category.parent_id IS NULL')
 				.limit(pagination.limit)
 				.offset(pagination.offset)
 				.getResult(),
-			await this.repository.createQueryBuilder('category').where('category.parent_id IS NULL').count()
+			this.repository.createQueryBuilder('category').where('category.parent_id IS NULL').count()
 		]);
 		return {
 			items: categories,
@@ -34,11 +34,11 @@ export class CategoryGateway {
 	public async findAllChildrenOfCategory(categoryId: number, options: PaginatedOptions): Promise<BaseItems<Category>> {
 		const pagination = paginate(options);
 		const [categories, totalResults] = await Promise.all([
-			await this.repository.find(
+			this.repository.find(
 				{ parent: categoryId },
 				{ fields: ['name', 'parent.name'], limit: pagination.limit, offset: pagination.offset }
 			),
-			await this.repository.count({ parent: categoryId })
+			this.repository.count({ parent: categoryId })
 		]);
 		return {
 			items: categories,
