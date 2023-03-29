@@ -214,7 +214,6 @@ export class CategoryController {
 			const field = await container.fieldGateway.findById(fieldId);
 
 			if (category && field) {
-				console.log('hello');
 				category.fields.add(field);
 				await container.categoryGateway.update(category);
 				res.status(201).json(field);
