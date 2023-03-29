@@ -40,7 +40,7 @@ export class ProductSpecGateway {
 		}
 
 		// Calculate items count before grouping and paginating
-		const totalItems = await qb.clone().getCount();
+		const totalItemsQb = qb.clone();
 
 		// Add producers count, min and max price
 		void qb
@@ -54,7 +54,7 @@ export class ProductSpecGateway {
 		void qb.offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
-		const productSpecs = (await qb.execute()).map((raw: any) => {
+		const [totalItems, productSpecs] = await Promise.all([totalItemsQb.getCount(), qb.execute().then(rs => rs.map((raw: any) => {
 			const spec: any = { ...this.repository.map(raw) };
 			spec.producersCount = raw.producersCount;
 			spec.minPrice = raw.minPrice || -1;
@@ -65,7 +65,7 @@ export class ProductSpecGateway {
 			delete spec.producerProducts;
 
 			return spec;
-		});
+		}))]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
