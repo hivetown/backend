@@ -1,6 +1,7 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
+import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import { CartItem } from '../entities';
 // import { Consumer } from '../entities';
@@ -107,4 +108,77 @@ export class ConsumerController {
 			res.status(500).json({ error: (error as any).message });
 		}
 	}
+
+	@Get('/:consumerId/orders', [
+		validate({
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				limit: Joi.number().integer().min(1).max(100)
+			}),
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			})
+		})
+	])
+	public async getOrders(
+		@Response() res: Express.Response,
+		// @Request() req: Express.Request,
+		@Params('consumerId') consumerId: number
+	): Promise<void> {
+		// const options: PaginatedOptions = {
+		// 	page: Number(req.query.page) || -1,
+		// 	size: Number(req.query.pageSize) || -1
+		// };
+
+		try {
+			const orders = await container.orderGateway.findByConsumer(consumerId);
+			res.status(200).json({ orders });
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	// @Post('/:consumerId/orders')
+
+	@Get('/:consumerId/orders/:orderId', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1),
+				orderId: Joi.number().integer().min(1)
+			})
+		})
+	])
+	public async getOrder(
+		@Response() res: Express.Response,
+		@Params('consumerId') consumerId: number,
+		@Params('orderId') orderId: number
+	): Promise<void> {
+		try {
+			const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
+
+			if (order) {
+				const o = { id: order.id, shippingAddress: order.shippingAddress };
+				res.status(200).json({ order: o, status: order.getGeneralStatus() });
+			} else {
+				res.status(404).json({ error: 'Order not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	// @Delete('/:consumerId/orders/:orderId')
+
+	// @Get('/:consumerId/orders/:orderId/items')
+	// public async getOrderItems(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {}
+
+	// @Get('/:consumerId/orders/:orderId/items/:producerProductId')
+	// public async getOrderItem(
+	// 	@Response() res: Express.Response,
+	// 	@Params('consumerId') consumerId: number,
+	// 	@Params('orderId') orderId: number,
+	// 	@Params('producerProductId') producerProductId: number
+	// ): Promise<void> {}
 }

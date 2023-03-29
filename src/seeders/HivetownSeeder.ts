@@ -307,7 +307,7 @@ export class HivetownSeeder extends Seeder {
 														.map((item) => Number(item))
 												);
 											})
-											.make(faker.datatype.number({ min: 0, max: 5 }))
+											.make(faker.datatype.number({ min: 1, max: 5 }))
 									);
 								})
 								.makeOne();

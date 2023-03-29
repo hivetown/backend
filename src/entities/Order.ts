@@ -10,10 +10,10 @@ export class Order {
 	public id!: number;
 
 	@ManyToOne()
-	public consumer?: Consumer;
+	public consumer!: Consumer;
 
 	@ManyToOne()
-	public shippingAddress?: Address;
+	public shippingAddress!: Address;
 
 	@OneToMany('OrderItem', 'order')
 	public items = new Collection<OrderItem>(this);
