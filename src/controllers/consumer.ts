@@ -4,6 +4,7 @@ import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import { CartItem } from '../entities';
+import { ShipmentStatus } from '../enums';
 // import { Consumer } from '../entities';
 
 @Controller('/consumers')
@@ -171,14 +172,64 @@ export class ConsumerController {
 
 	// @Delete('/:consumerId/orders/:orderId')
 
-	// @Get('/:consumerId/orders/:orderId/items')
-	// public async getOrderItems(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {}
+	@Get('/:consumerId/orders/:orderId/items', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1),
+				orderId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				limit: Joi.number().integer().min(1).max(100)
+			})
+		})
+	])
+	public async getOrderItems(
+		@Response() res: Express.Response,
+		@Params('consumerId') consumerId: number,
+		@Params('orderId') orderId: number
+	): Promise<void> {
+		// const options: PaginatedOptions = {
+		// 	page: Number(req.query.page) || -1,
+		// 	size: Number(req.query.pageSize) || -1
+		// };
 
-	// @Get('/:consumerId/orders/:orderId/items/:producerProductId')
-	// public async getOrderItem(
-	// 	@Response() res: Express.Response,
-	// 	@Params('consumerId') consumerId: number,
-	// 	@Params('orderId') orderId: number,
-	// 	@Params('producerProductId') producerProductId: number
-	// ): Promise<void> {}
+		try {
+			const result = await container.orderItemGateway.findByConsumerIDAndOrderId(consumerId, orderId);
+			const items = [];
+
+			for (const item of result) {
+				const status = ShipmentStatus[item.shipment.getLastEvent().status];
+				items.push({ producerProduct: item.producerProduct, status, quantity: item.quantity, price: item.price });
+			}
+			res.status(200).json({ items });
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Get('/:consumerId/orders/:orderId/items/:producerProductId', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1),
+				orderId: Joi.number().integer().min(1),
+				producerProductId: Joi.number().integer().min(1)
+			})
+		})
+	])
+	public async getOrderItem(
+		@Response() res: Express.Response,
+		@Params('consumerId') consumerId: number,
+		@Params('orderId') orderId: number,
+		@Params('producerProductId') producerProductId: number
+	): Promise<void> {
+		try {
+			const item = await container.orderItemGateway.findByConsumerIdOrderIdProducerProductId(consumerId, orderId, producerProductId);
+			res.json(item);
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 }

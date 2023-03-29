@@ -192,7 +192,7 @@ export class HivetownSeeder extends Seeder {
 		// We create some consumers
 		const consumers = await consumerFactory
 			.each((consumer) => {
-				consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 0, max: 5 })));
+				consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 1, max: 5 })));
 				consumer.image = imageFactory.makeOne();
 
 				// Keep track of the cart items so we don't have collisions
@@ -212,7 +212,7 @@ export class HivetownSeeder extends Seeder {
 								order.shippingAddress = faker.helpers.arrayElement(consumer.addresses.getItems());
 							}
 						})
-						.make(faker.datatype.number({ min: 0, max: 13 }))
+						.make(faker.datatype.number({ min: 1, max: 13 }))
 				);
 			})
 			.create(600);

@@ -923,7 +923,7 @@
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": true,
+					"nullable": false,
 					"mappedType": "integer"
 				},
 				"shipping_address_id": {
@@ -932,7 +932,7 @@
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": true,
+					"nullable": false,
 					"mappedType": "integer"
 				}
 			},
@@ -968,7 +968,6 @@
 					"localTableName": "order",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "consumer",
-					"deleteRule": "set null",
 					"updateRule": "cascade"
 				},
 				"order_shipping_address_id_foreign": {
@@ -977,7 +976,6 @@
 					"localTableName": "order",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "address",
-					"deleteRule": "set null",
 					"updateRule": "cascade"
 				}
 			}
