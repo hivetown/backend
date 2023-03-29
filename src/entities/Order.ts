@@ -1,4 +1,5 @@
 import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey } from '@mikro-orm/core';
+import { ShipmentStatus } from '../enums';
 import { Address } from './Address';
 import { Consumer } from './Consumer';
 import type { OrderItem } from './OrderItem';
@@ -16,4 +17,12 @@ export class Order {
 
 	@OneToMany('OrderItem', 'order')
 	public items = new Collection<OrderItem>(this);
+
+	public getGeneralStatus(): string {
+		const statuses: number[] = [];
+		for (const i of this.items.getItems()) {
+			statuses.push(i.getActualStatus());
+		}
+		return ShipmentStatus[Math.min(...statuses)];
+	}
 }
