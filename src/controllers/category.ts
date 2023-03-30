@@ -36,7 +36,11 @@ export class CategoryController {
 			body: Joi.object({
 				name: Joi.string().required(),
 				parent: Joi.number().min(1),
-				image: Joi.string().required()
+				image: Joi.object({
+					name: Joi.string().required(),
+					url: Joi.string().required(),
+					alt: Joi.string().required()
+				})
 			})
 		})
 	])
@@ -79,7 +83,11 @@ export class CategoryController {
 			body: Joi.object({
 				name: Joi.string().required(),
 				parent: Joi.number().min(1),
-				image: Joi.string().required()
+				image: Joi.object({
+					name: Joi.string().required(),
+					url: Joi.string().required(),
+					alt: Joi.string().required()
+				})
 			})
 		})
 	])
