@@ -70,14 +70,17 @@ export class ConsumerController {
 					const items = consumer.cartItems.getItems();
 					const item = items.find((item) => item.producerProduct.id === Number(req.body.producerProduct));
 					if (req.body.quantity <= product.stock) {
+						let updatedItem = null;
 						if (item) {
 							item.quantity = req.body.quantity;
+							updatedItem = await container.cartItemGateway.findProductById(consumerId, item.producerProduct.id);
 						} else {
 							const newItem = new CartItem(consumer, product, req.body.quantity);
 							consumer.cartItems.add(newItem);
+							updatedItem = await container.cartItemGateway.findProductById(consumerId, newItem.producerProduct.id);
 						}
 						await container.consumerGateway.updateCart(consumer);
-						res.status(201).json({ message: 'Item added to cart' });
+						res.status(201).json(updatedItem);
 					} else {
 						res.status(400).json({ error: 'Product out of stock' });
 					}
