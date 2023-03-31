@@ -34,10 +34,7 @@ export class CategoryGateway {
 	public async findAllChildrenOfCategory(categoryId: number, options: PaginatedOptions): Promise<BaseItems<Category>> {
 		const pagination = paginate(options);
 		const [categories, totalResults] = await Promise.all([
-			this.repository.find(
-				{ parent: categoryId },
-				{ fields: ['name', 'parent.name'], limit: pagination.limit, offset: pagination.offset }
-			),
+			this.repository.find({ parent: categoryId }, { fields: ['name', 'parent.name'], limit: pagination.limit, offset: pagination.offset }),
 			this.repository.count({ parent: categoryId })
 		]);
 		return {

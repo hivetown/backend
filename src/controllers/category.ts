@@ -144,12 +144,17 @@ export class CategoryController {
 	])
 	public async categoryCategories(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
 		try {
-			const options: PaginatedOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1
-			};
-			const items = await container.categoryGateway.findAllChildrenOfCategory(categoryId, options);
-			res.status(200).json(items);
+			const category = await container.categoryGateway.findById(categoryId);
+			if (category) {
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
+				const items = await container.categoryGateway.findAllChildrenOfCategory(categoryId, options);
+				res.status(200).json(items);
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -169,13 +174,18 @@ export class CategoryController {
 	])
 	public async allFieldsByCategoryId(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
 		try {
-			const options: PaginatedOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1
-			};
-			const items = await container.fieldGateway.findFieldsByCategoryId(categoryId, options);
+			const category = await container.categoryGateway.findById(categoryId);
+			if (category) {
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
+				const items = await container.fieldGateway.findFieldsByCategoryId(categoryId, options);
 
-			res.status(200).json(items);
+				res.status(200).json(items);
+			} else {
+				res.status(404).json({ error: 'Category not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -196,11 +206,16 @@ export class CategoryController {
 		@Params('fieldId') fieldId: number
 	) {
 		try {
-			const field = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
-			if (field) {
-				res.status(200).json(field);
+			const category = await container.categoryGateway.findById(categoryId);
+			if (category) {
+				const field = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
+				if (field) {
+					res.status(200).json(field);
+				} else {
+					res.status(404).json({ error: 'Field not found' });
+				}
 			} else {
-				res.status(404).json({ error: 'Category or Field not found' });
+				res.status(404).json({ error: 'Category not found' });
 			}
 		} catch (error) {
 			console.error(error);
@@ -221,12 +236,16 @@ export class CategoryController {
 			const category = await container.categoryGateway.findById(categoryId);
 			const field = await container.fieldGateway.findById(fieldId);
 
-			if (category && field) {
-				category.fields.add(field);
-				await container.categoryGateway.update(category);
-				res.status(201).json(field);
+			if (category) {
+				if (field) {
+					category.fields.add(field);
+					await container.categoryGateway.update(category);
+					res.status(201).json(field);
+				} else {
+					res.status(404).json({ error: 'Field not found' });
+				}
 			} else {
-				res.status(404).json({ error: 'Category or field not found' });
+				res.status(404).json({ error: 'Category not found' });
 			}
 		} catch (error) {
 			console.error(error);
@@ -244,10 +263,14 @@ export class CategoryController {
 			const category = await container.categoryGateway.findByIdWithFields(categoryId);
 			const field = await container.fieldGateway.findById(fieldId);
 
-			if (category && field) {
-				category.fields.remove(field);
-				await container.categoryGateway.update(category);
-				res.status(204).json('The field was removed from the category');
+			if (category) {
+				if (field) {
+					category.fields.remove(field);
+					await container.categoryGateway.update(category);
+					res.status(204).json('The field was removed from the category');
+				} else {
+					res.status(404).json({ error: 'Field not found' });
+				}
 			} else {
 				res.status(404).json({ error: 'Category or field not found' });
 			}
