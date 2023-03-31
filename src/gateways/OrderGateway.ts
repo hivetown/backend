@@ -16,6 +16,11 @@ export class OrderGateway {
 		return order;
 	}
 
+	public async findByIdWithShippingAddress(orderId: number): Promise<Order | null> {
+		const order = await this.repository.findOne(orderId, { fields: ['shippingAddress'] });
+		return order;
+	}
+
 	public async findByIds(orderIds: number[], options: PaginatedOptions): Promise<BaseItems<Order>> {
 		const pagination = paginate(options);
 

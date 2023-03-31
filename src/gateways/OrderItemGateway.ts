@@ -18,4 +18,9 @@ export class OrderItemGateway {
 
 		return orderIds;
 	}
+
+	public async findOrderByProducerAndOrderId(producerId: number, orderId: number): Promise<OrderItem | null> {
+		const orderItem = await this.repository.findOne({ order: orderId, producerProduct: { producer: producerId } });
+		return orderItem;
+	}
 }
