@@ -270,13 +270,14 @@ export class ConsumerController {
 			const consumer = await container.consumerGateway.findById(consumerId);
 
 			if (consumer) {
-				const order = await container.orderGateway.findById(orderId);
-				if (order) {
-					const options: PaginatedOptions = {
-						page: Number(req.query.page) || -1,
-						size: Number(req.query.pageSize) || -1
-					};
-					const result = await container.orderItemGateway.findByConsumerIDAndOrderId(consumerId, orderId, options);
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
+				const result = await container.orderItemGateway.findByConsumerIDAndOrderId(consumerId, orderId, options);
+
+				if (result.items.length > 0) {
+					// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
 					const items = [];
 					for (const item of result.items) {
 						const status = ShipmentStatus[item.shipment.getLastEvent().status];
@@ -291,7 +292,7 @@ export class ConsumerController {
 						pageSize: result.pageSize
 					});
 				} else {
-					res.status(404).json({ error: 'Order not found' });
+					res.status(404).json({ error: 'Order not found for this consumer' });
 				}
 			} else {
 				res.status(404).json({ error: 'Consumer not found' });
