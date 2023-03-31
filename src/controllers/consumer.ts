@@ -228,13 +228,17 @@ export class ConsumerController {
 		@Params('orderId') orderId: number
 	): Promise<void> {
 		try {
-			const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
-
-			if (order) {
-				const o = { id: order.id, shippingAddress: order.shippingAddress };
-				res.status(200).json({ order: o, status: order.getGeneralStatus() });
+			const consumer = await container.consumerGateway.findById(consumerId);
+			if (consumer) {
+				const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
+				if (order) {
+					const o = { id: order.id, shippingAddress: order.shippingAddress };
+					res.status(200).json({ order: o, status: order.getGeneralStatus() });
+				} else {
+					res.status(404).json({ error: 'Order not found for this consumer' });
+				}
 			} else {
-				res.status(404).json({ error: 'Order not found' });
+				res.status(404).json({ error: 'Consumer not found' });
 			}
 		} catch (error) {
 			console.error(error);
