@@ -5,7 +5,7 @@ import { ProductSpecFactory } from './factories/ProductSpec';
 import { ProductSpecCategoryFactory } from './factories/ProductSpecCategory';
 import { CategoryFactory } from './factories/Category';
 import { FieldFactory } from './factories/Field';
-import { FieldType } from '../enums';
+import { FieldType, ShipmentStatus } from '../enums';
 import { ProductSpecFieldFactory } from './factories/ProductSpecField';
 import { FieldPossibleValueFactory } from './factories/FieldPossibleValue';
 import { ProductionUnitFactory } from './factories/ProductionUnit';
@@ -17,7 +17,6 @@ import { CartItemFactory } from './factories/CartItem';
 import { OrderFactory } from './factories/Order';
 import { OrderItemFactory } from './factories/OrderItem';
 import { ShipmentEventFactory } from './factories/ShipmentEvent';
-import { ShipmentStatusFactory } from './factories/ShipmentStatus';
 import { ProducerFactory } from './factories/Producer';
 import { CarrierFactory } from './factories/Carrier';
 import { ImageFactory } from './factories/Image';
@@ -40,7 +39,6 @@ export class HivetownSeeder extends Seeder {
 		const orderItemFactory = new OrderItemFactory(em);
 		const shipmentFactory = new ShipmentFactory(em);
 		const shipmentEventFactory = new ShipmentEventFactory(em);
-		const shipmentStatusFactory = new ShipmentStatusFactory(em);
 		const carrierFactory = new CarrierFactory(em);
 		const imageFactory = new ImageFactory(em);
 
@@ -194,7 +192,7 @@ export class HivetownSeeder extends Seeder {
 		// We create some consumers
 		const consumers = await consumerFactory
 			.each((consumer) => {
-				consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 0, max: 5 })));
+				consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 1, max: 5 })));
 				consumer.image = imageFactory.makeOne();
 
 				// Keep track of the cart items so we don't have collisions
@@ -214,7 +212,7 @@ export class HivetownSeeder extends Seeder {
 								order.shippingAddress = faker.helpers.arrayElement(consumer.addresses.getItems());
 							}
 						})
-						.make(faker.datatype.number({ min: 0, max: 13 }))
+						.make(faker.datatype.number({ min: 1, max: 13 }))
 				);
 			})
 			.create(600);
@@ -244,7 +242,7 @@ export class HivetownSeeder extends Seeder {
 		await em.persistAndFlush(consumers);
 
 		console.log('Generating shipment statuses...');
-		const shipmentStatuses = await shipmentStatusFactory.create(15);
+		// const shipmentStatuses = await shipmentStatusFactory.create(15);
 
 		console.log("Generating consumers' order items...");
 		consumers.forEach((consumer) => {
@@ -302,10 +300,14 @@ export class HivetownSeeder extends Seeder {
 									shipment.events.set(
 										shipmentEventFactory
 											.each((event) => {
-												event.status = faker.helpers.arrayElement(shipmentStatuses);
 												event.address = addressFactory.makeOne();
+												event.status = faker.helpers.arrayElement(
+													Object.values(ShipmentStatus)
+														.filter((item) => typeof item === 'number')
+														.map((item) => Number(item))
+												);
 											})
-											.make(faker.datatype.number({ min: 0, max: 5 }))
+											.make(faker.datatype.number({ min: 1, max: 5 }))
 									);
 								})
 								.makeOne();

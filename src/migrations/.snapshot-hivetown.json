@@ -922,7 +922,7 @@
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": true,
+					"nullable": false,
 					"mappedType": "integer"
 				},
 				"shipping_address_id": {
@@ -931,7 +931,7 @@
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": true,
+					"nullable": false,
 					"mappedType": "integer"
 				}
 			},
@@ -967,7 +967,6 @@
 					"localTableName": "order",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "consumer",
-					"deleteRule": "set null",
 					"updateRule": "cascade"
 				},
 				"order_shipping_address_id_foreign": {
@@ -976,7 +975,6 @@
 					"localTableName": "order",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "address",
-					"deleteRule": "set null",
 					"updateRule": "cascade"
 				}
 			}
@@ -1684,49 +1682,6 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"name": {
-					"name": "name",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"description": {
-					"name": "description",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				}
-			},
-			"name": "shipment_status",
-			"indexes": [
-				{
-					"keyName": "PRIMARY",
-					"columnNames": ["id"],
-					"composite": false,
-					"primary": true,
-					"unique": true
-				}
-			],
-			"checks": [],
-			"foreignKeys": {}
-		},
-		{
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": true,
-					"primary": true,
-					"nullable": false,
-					"mappedType": "integer"
-				},
 				"date": {
 					"name": "date",
 					"type": "datetime",
@@ -1755,14 +1710,14 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"status_id": {
-					"name": "status_id",
-					"type": "int",
-					"unsigned": true,
+				"status": {
+					"name": "status",
+					"type": "tinyint",
+					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "integer"
+					"mappedType": "enum"
 				}
 			},
 			"name": "shipment_event",
@@ -1778,13 +1733,6 @@
 					"columnNames": ["address_id"],
 					"composite": false,
 					"keyName": "shipment_event_address_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["status_id"],
-					"composite": false,
-					"keyName": "shipment_event_status_id_index",
 					"primary": false,
 					"unique": false
 				},
@@ -1812,14 +1760,6 @@
 					"localTableName": "shipment_event",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "address",
-					"updateRule": "cascade"
-				},
-				"shipment_event_status_id_foreign": {
-					"constraintName": "shipment_event_status_id_foreign",
-					"columnNames": ["status_id"],
-					"localTableName": "shipment_event",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "shipment_status",
 					"updateRule": "cascade"
 				}
 			}

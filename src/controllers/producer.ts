@@ -4,7 +4,6 @@ import * as Express from 'express';
 import { container } from '..';
 import { Joi, validate } from 'express-validation';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
-import e from 'cors';
 
 @Controller('/producers')
 @Injectable()
