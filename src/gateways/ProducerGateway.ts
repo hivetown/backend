@@ -11,6 +11,11 @@ export class ProducerGateway {
 		this.repository = orm.em.getRepository(Producer);
 	}
 
+	public async findById(id: number): Promise<Producer | null> {
+		const producer = await this.repository.findOne(id);
+		return producer;
+	}
+
 	public async findAll(): Promise<Producer[]> {
 		const producers = await this.repository.findAll();
 		return producers;
