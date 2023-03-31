@@ -4,6 +4,7 @@ import * as Express from 'express';
 import { container } from '..';
 import { Joi, validate } from 'express-validation';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { ShipmentStatus } from '../enums';
 
 @Controller('/producers')
 @Injectable()
@@ -79,7 +80,58 @@ export class ProducerController {
 		}
 	}
 
-	// @Get('/:producerId/orders/:orderId/items')
+	@Get('/:producerId/orders/:orderId/items', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				orderId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1),
+				pageSize: Joi.number().min(1)
+			})
+		})
+	])
+	public async getOrderItems(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('producerId') producerId: number,
+		@Params('orderId') orderId: number
+	) {
+		try {
+			const producer = await container.producerGateway.findById(producerId);
+			if (producer) {
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
+				const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
+				if (orderItems.totalItems > 0) {
+					// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
+
+					const items = [];
+					for (const orderItem of orderItems.items) {
+						const status = ShipmentStatus[orderItem.shipment.getLastEvent().status];
+						items.push({ producerProduct: orderItem.producerProduct, status, quantity: orderItem.quantity, price: orderItem.price });
+					}
+					res.status(200).json({
+						items,
+						totalItems: orderItems.totalItems,
+						totalPages: orderItems.totalPages,
+						page: orderItems.page,
+						pageSize: orderItems.pageSize
+					});
+				} else {
+					res.status(404).json({ error: 'Order not found for this producer' });
+				}
+			} else {
+				res.status(404).json({ error: 'Producer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	// @Get('/:producerId/orders/:orderId/items/:producerProductId')
 
