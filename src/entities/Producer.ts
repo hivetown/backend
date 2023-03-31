@@ -3,6 +3,7 @@ import { User } from './User';
 import { UserType } from '../enums/UserType';
 import type { ProductionUnit } from './ProductionUnit';
 import type { Image } from './Image';
+import type { ProducerProduct } from './ProducerProduct';
 
 @Entity()
 export class Producer extends User {
@@ -14,6 +15,9 @@ export class Producer extends User {
 
 	@OneToMany('ProductionUnit', 'producer')
 	public productionUnits = new Collection<ProductionUnit>(this);
+
+	@OneToMany('ProducerProduct', 'producer')
+	public producerProducts = new Collection<ProducerProduct>(this);
 
 	@OneToOne()
 	public image?: Image;

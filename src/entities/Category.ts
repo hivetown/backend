@@ -1,5 +1,5 @@
 import { Collection, Entity, ManyToMany, ManyToOne, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
-import type { Field } from './Field';
+import { Field } from './Field';
 import type { Image } from './Image';
 
 @Entity()
@@ -13,7 +13,7 @@ export class Category {
 	@ManyToOne()
 	public parent?: Category;
 
-	@ManyToMany()
+	@ManyToMany(() => Field, (field) => field.categories, { owner: true })
 	public fields = new Collection<Field>(this);
 
 	@OneToOne()
