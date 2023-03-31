@@ -103,14 +103,20 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			const options: ProductSpecOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1
-			};
+			const productSpec = await container.productSpecGatway.findById(productSpecId);
 
-			const results = await container.productGateway.findBySpecificationId(productSpecId, options);
+			if (productSpec) {
+				const options: ProductSpecOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
 
-			res.status(200).json(results);
+				const results = await container.productGateway.findBySpecificationId(productSpecId, options);
+
+				res.status(200).json(results);
+			} else {
+				res.status(404).json({ error: 'Product Spec not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -134,14 +140,20 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			const options: PaginatedOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1
-			};
+			const productSpec = await container.productSpecGatway.findById(productSpecId);
 
-			const results = await container.producerGateway.findFromProductSpecId(productSpecId, options);
+			if (productSpec) {
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
 
-			res.status(200).json(results);
+				const results = await container.producerGateway.findFromProductSpecId(productSpecId, options);
+
+				res.status(200).json(results);
+			} else {
+				res.status(404).json({ error: 'Product Spec not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -165,14 +177,20 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			const options: PaginatedOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1
-			};
+			const productSpec = await container.productSpecGatway.findById(productSpecId);
 
-			const results = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, options);
+			if (productSpec) {
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
 
-			res.status(200).json(results);
+				const results = await container.productSpecCategoryGateway.findCategoriesBySpecificationId(productSpecId, options);
+
+				res.status(200).json(results);
+			} else {
+				res.status(404).json({ error: 'Product Spec not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -193,12 +211,21 @@ export class ProductsController {
 		@Params('categoryId') categoryId: number
 	) {
 		try {
-			const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
-			if (c.length > 0) {
-				const item = c[0];
-				res.status(200).json(item);
+			const productSpec = await container.productSpecGatway.findById(productSpecId);
+			if (productSpec) {
+				const category = await container.categoryGateway.findById(categoryId);
+				if (category) {
+					const c = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+					if (c) {
+						res.status(200).json(c.category);
+					} else {
+						res.status(404).json({ error: 'Category not found in this Product Specification' });
+					}
+				} else {
+					res.status(404).json({ error: 'Category not found' });
+				}
 			} else {
-				res.status(404).json({ error: 'Category not found' });
+				res.status(404).json({ error: 'Product Spec not found' });
 			}
 		} catch (error) {
 			console.error(error);
@@ -225,13 +252,23 @@ export class ProductsController {
 		@Request() req: Express.Request
 	) {
 		try {
-			const options: PaginatedOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1
-			};
-			const f = await container.productSpecFieldGateway.findAllFieldsByProductSpecIdAndCategoryId(productSpecId, categoryId, options);
+			const productSpec = await container.productSpecGatway.findById(productSpecId);
+			if (productSpec) {
+				const category = await container.categoryGateway.findById(categoryId);
+				if (category) {
+					const options: PaginatedOptions = {
+						page: Number(req.query.page) || -1,
+						size: Number(req.query.pageSize) || -1
+					};
+					const f = await container.productSpecFieldGateway.findAllFieldsByProductSpecIdAndCategoryId(productSpecId, categoryId, options);
 
-			res.status(200).json(f);
+					res.status(200).json(f);
+				} else {
+					res.status(404).json({ error: 'Category not found' });
+				}
+			} else {
+				res.status(404).json({ error: 'Product Spec not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -254,11 +291,26 @@ export class ProductsController {
 		@Params('fieldId') fieldId: number
 	) {
 		try {
-			const c = await container.productSpecFieldGateway.findFieldBySpecAndCategory(productSpecId, categoryId, fieldId);
-			if (c) {
-				res.status(200).json(c);
+			const productSpec = await container.productSpecGatway.findById(productSpecId);
+			if (productSpec) {
+				const category = await container.categoryGateway.findById(categoryId);
+				if (category) {
+					const field = await container.fieldGateway.findById(fieldId);
+					if (field) {
+						const c = await container.productSpecFieldGateway.findFieldBySpecAndCategory(productSpecId, categoryId, fieldId);
+						if (c) {
+							res.status(200).json(c);
+						} else {
+							res.status(404).json({ error: 'Field of this Category of this Product Specification not found' });
+						}
+					} else {
+						res.status(404).json({ error: 'Field not found' });
+					}
+				} else {
+					res.status(404).json({ error: 'Category not found' });
+				}
 			} else {
-				res.status(404).json({ error: 'Category, Specification or Field not found' });
+				res.status(404).json({ error: 'Product Spec not found' });
 			}
 		} catch (error) {
 			console.error(error);
