@@ -133,7 +133,101 @@ export class ProducerController {
 		}
 	}
 
-	// @Get('/:producerId/orders/:orderId/items/:producerProductId')
+	@Get('/:producerId/orders/:orderId/items/:producerProductId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				orderId: Joi.number().min(1).required(),
+				producerProductId: Joi.number().min(1).required()
+			})
+		})
+	])
+	public async getOrderItem(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('producerId') producerId: number,
+		@Params('orderId') orderId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		try {
+			const producer = await container.producerGateway.findById(producerId);
+			if (producer) {
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
+				const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
+				if (orderItems.totalItems > 0) {
+					const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProduct(
+						producerId,
+						orderId,
+						producerProductId
+					);
+					if (orderItem) {
+						res.status(200).json({
+							producerProduct: orderItem.producerProduct,
+							quantity: orderItem.quantity,
+							price: orderItem.price
+						});
+					} else {
+						res.status(404).json({ error: 'Order item not found for this producer' });
+					}
+				} else {
+					res.status(404).json({ error: 'Order not found for this producer' });
+				}
+			} else {
+				res.status(404).json({ error: 'Producer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
-	// @Get('/:producerId/orders/:orderId/items/:producerProductId/shipment')
+	@Get('/:producerId/orders/:orderId/items/:producerProductId/shipment', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				orderId: Joi.number().min(1).required(),
+				producerProductId: Joi.number().min(1).required()
+			})
+		})
+	])
+	public async getOrderItemShipment(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('producerId') producerId: number,
+		@Params('orderId') orderId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		try {
+			const producer = await container.producerGateway.findById(producerId);
+			if (producer) {
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
+				const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
+				if (orderItems.totalItems > 0) {
+					const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProductWithShipment(
+						producerId,
+						orderId,
+						producerProductId
+					);
+					if (orderItem) {
+						res.status(200).json(orderItem.shipment);
+					} else {
+						res.status(404).json({ error: 'Order item not found for this producer' });
+					}
+				} else {
+					res.status(404).json({ error: 'Order not found for this producer' });
+				}
+			} else {
+				res.status(404).json({ error: 'Producer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 }

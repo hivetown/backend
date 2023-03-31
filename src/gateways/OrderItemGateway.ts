@@ -55,4 +55,24 @@ export class OrderItemGateway {
 			pageSize: orderItems.length
 		};
 	}
+
+	public async findByProducerAndOrderAndProducerProduct(producerId: number, orderId: number, producerProductId: number): Promise<OrderItem | null> {
+		const orderItem = await this.repository.findOne(
+			{ order: orderId, producerProduct: { producer: producerId, id: producerProductId } },
+			{ populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec'] }
+		);
+		return orderItem;
+	}
+
+	public async findByProducerAndOrderAndProducerProductWithShipment(
+		producerId: number,
+		orderId: number,
+		producerProductId: number
+	): Promise<OrderItem | null> {
+		const orderItem = await this.repository.findOne(
+			{ order: orderId, producerProduct: { producer: producerId, id: producerProductId } },
+			{ populate: ['shipment', 'shipment.carrier', 'shipment.events.address'] }
+		);
+		return orderItem;
+	}
 }
