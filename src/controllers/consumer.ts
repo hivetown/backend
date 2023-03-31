@@ -32,14 +32,20 @@ export class ConsumerController {
 		@Request() req: Express.Request
 	): Promise<void> {
 		try {
-			const options: PaginatedOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1
-			};
+			const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
 
-			const items = await container.cartItemGateway.findAllItemsByConsumerId(consumerId, options);
+			if (consumer) {
+				const options: PaginatedOptions = {
+					page: Number(req.query.page) || -1,
+					size: Number(req.query.pageSize) || -1
+				};
 
-			res.status(200).json(items);
+				const items = await container.cartItemGateway.findAllItemsByConsumerId(consumerId, options);
+
+				res.status(200).json(items);
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });

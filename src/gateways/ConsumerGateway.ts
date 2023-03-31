@@ -8,6 +8,11 @@ export class ConsumerGateway {
 		this.repository = orm.em.getRepository(Consumer);
 	}
 
+	public async findById(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id);
+		return consumer;
+	}
+
 	public async findAll(): Promise<Consumer[]> {
 		const consumers = await this.repository.findAll();
 		return consumers;
