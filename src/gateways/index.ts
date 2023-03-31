@@ -7,3 +7,5 @@ export * from './FieldGateway';
 export * from './ConsumerGateway';
 export * from './OrderGateway';
 export * from './OrderItemGateway';
+export * from './ProductSpecFieldGateway';
+export * from './CartItemGateway';

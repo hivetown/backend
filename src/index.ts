@@ -4,7 +4,16 @@ import { RequestContext } from '@mikro-orm/core';
 import { EntityManager, MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import express, { NextFunction, Request, Response } from 'express';
 import { attachControllers } from '@decorators/express';
-import { CategoryGateway, FieldGateway, OrderItemGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway } from './gateways';
+import {
+	CartItemGateway,
+	CategoryGateway,
+	FieldGateway,
+	OrderItemGateway,
+	ProducerGateway,
+	ProductGateway,
+	ProductSpecCategoryGateway,
+	ProductSpecFieldGateway
+} from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
@@ -27,6 +36,9 @@ export const container = {} as {
 	consumerGateway: ConsumerGateway;
 	orderGateway: OrderGateway;
 	orderItemGateway: OrderItemGateway;
+	productSpecFieldGateway: ProductSpecFieldGateway;
+	productSpecGateway: ProductSpecGateway;
+	cartItemGateway: CartItemGateway;
 };
 
 export const app = express();
@@ -43,6 +55,9 @@ export const main = async () => {
 	container.consumerGateway = new ConsumerGateway(container.orm);
 	container.orderGateway = new OrderGateway(container.orm);
 	container.orderItemGateway = new OrderItemGateway(container.orm);
+	container.productSpecFieldGateway = new ProductSpecFieldGateway(container.orm);
+	container.productSpecGateway = new ProductSpecGateway(container.orm);
+	container.cartItemGateway = new CartItemGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
