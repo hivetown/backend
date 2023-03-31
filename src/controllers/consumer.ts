@@ -181,7 +181,7 @@ export class ConsumerController {
 		validate({
 			query: Joi.object({
 				page: Joi.number().integer().min(1),
-				limit: Joi.number().integer().min(1).max(100)
+				pageSize: Joi.number().integer().min(1).max(100)
 			}),
 			params: Joi.object({
 				consumerId: Joi.number().integer().min(1)
@@ -190,17 +190,22 @@ export class ConsumerController {
 	])
 	public async getOrders(
 		@Response() res: Express.Response,
-		// @Request() req: Express.Request,
+		@Request() req: Express.Request,
 		@Params('consumerId') consumerId: number
 	): Promise<void> {
-		// const options: PaginatedOptions = {
-		// 	page: Number(req.query.page) || -1,
-		// 	size: Number(req.query.pageSize) || -1
-		// };
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
 
 		try {
-			const orders = await container.orderGateway.findByConsumer(consumerId);
-			res.status(200).json({ orders });
+			const consumer = await container.consumerGateway.findById(consumerId);
+			if (consumer) {
+				const orders = await container.orderGateway.findByConsumer(consumerId, options);
+				res.status(200).json(orders);
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -247,29 +252,46 @@ export class ConsumerController {
 			}),
 			query: Joi.object({
 				page: Joi.number().integer().min(1),
-				limit: Joi.number().integer().min(1).max(100)
+				pageSize: Joi.number().integer().min(1).max(100)
 			})
 		})
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
+		@Request() req: Express.Request,
 		@Params('consumerId') consumerId: number,
 		@Params('orderId') orderId: number
 	): Promise<void> {
-		// const options: PaginatedOptions = {
-		// 	page: Number(req.query.page) || -1,
-		// 	size: Number(req.query.pageSize) || -1
-		// };
-
 		try {
-			const result = await container.orderItemGateway.findByConsumerIDAndOrderId(consumerId, orderId);
-			const items = [];
+			const consumer = await container.consumerGateway.findById(consumerId);
 
-			for (const item of result) {
-				const status = ShipmentStatus[item.shipment.getLastEvent().status];
-				items.push({ producerProduct: item.producerProduct, status, quantity: item.quantity, price: item.price });
+			if (consumer) {
+				const order = await container.orderGateway.findById(orderId);
+				if (order) {
+					const options: PaginatedOptions = {
+						page: Number(req.query.page) || -1,
+						size: Number(req.query.pageSize) || -1
+					};
+					const result = await container.orderItemGateway.findByConsumerIDAndOrderId(consumerId, orderId, options);
+					const items = [];
+					for (const item of result.items) {
+						const status = ShipmentStatus[item.shipment.getLastEvent().status];
+						items.push({ producerProduct: item.producerProduct, status, quantity: item.quantity, price: item.price });
+					}
+
+					res.status(200).json({
+						items,
+						totalItems: result.totalItems,
+						totalPages: result.totalPages,
+						page: result.page,
+						pageSize: result.pageSize
+					});
+				} else {
+					res.status(404).json({ error: 'Order not found' });
+				}
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
 			}
-			res.status(200).json({ items });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -292,8 +314,30 @@ export class ConsumerController {
 		@Params('producerProductId') producerProductId: number
 	): Promise<void> {
 		try {
-			const item = await container.orderItemGateway.findByConsumerIdOrderIdProducerProductId(consumerId, orderId, producerProductId);
-			res.json(item);
+			const consumer = await container.consumerGateway.findById(consumerId);
+			if (consumer) {
+				const order = await container.orderGateway.findById(orderId);
+				if (order) {
+					if (order.consumer.id === consumer.id) {
+						const item = await container.orderItemGateway.findByConsumerIdOrderIdProducerProductId(
+							consumerId,
+							orderId,
+							producerProductId
+						);
+						if (item) {
+							res.status(200).json(item);
+						} else {
+							res.status(404).json({ error: 'This product does not exist for this order' });
+						}
+					} else {
+						res.status(404).json({ error: 'Order not found for this consumer' });
+					}
+				} else {
+					res.status(404).json({ error: 'Order not found' });
+				}
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
