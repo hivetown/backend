@@ -208,9 +208,15 @@ export class CategoryController {
 		try {
 			const category = await container.categoryGateway.findById(categoryId);
 			if (category) {
-				const field = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
+				const field = await container.fieldGateway.findById(fieldId);
 				if (field) {
-					res.status(200).json(field);
+					const f = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
+
+					if (f) {
+						res.status(200).json(f);
+					} else {
+						res.status(404).json({ error: 'Field not found in this category' });
+					}
 				} else {
 					res.status(404).json({ error: 'Field not found' });
 				}
@@ -261,13 +267,17 @@ export class CategoryController {
 	) {
 		try {
 			const category = await container.categoryGateway.findByIdWithFields(categoryId);
-			const field = await container.fieldGateway.findById(fieldId);
-
 			if (category) {
+				const field = await container.fieldGateway.findById(fieldId);
 				if (field) {
-					category.fields.remove(field);
-					await container.categoryGateway.update(category);
-					res.status(204).json('The field was removed from the category');
+					const f = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
+					if (f) {
+						category.fields.remove(f);
+						await container.categoryGateway.update(category);
+						res.status(204).json('The field was removed from the category');
+					} else {
+						res.status(404).json({ error: 'Field not found in this category' });
+					}
 				} else {
 					res.status(404).json({ error: 'Field not found' });
 				}
