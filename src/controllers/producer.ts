@@ -65,7 +65,8 @@ export class ProducerController {
 				const orderItem = await container.orderItemGateway.findOrderByProducerAndOrderId(producerId, orderId);
 				if (orderItem) {
 					const order = await container.orderGateway.findByIdWithShippingAddress(orderId);
-					res.status(200).json({ order });
+					const o = { id: order?.id, shippingAddress: order?.shippingAddress };
+					res.status(200).json({ order: o, status: order?.getGeneralStatus() });
 				} else {
 					res.status(404).json({ error: 'Order not found in this Producer' });
 				}
