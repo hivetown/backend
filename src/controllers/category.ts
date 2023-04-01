@@ -133,7 +133,7 @@ export class CategoryController {
 		}
 	}
 
-	@Get('/:categoryId/children', [
+	@Get('/:categoryId/categories', [
 		validate({
 			params: Joi.object({
 				categoryId: Joi.number().min(1).required()
