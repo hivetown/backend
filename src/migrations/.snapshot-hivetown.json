@@ -867,15 +867,14 @@
 					"length": 0,
 					"mappedType": "datetime"
 				},
-				"status": {
-					"name": "status",
-					"type": "enum('AVAILABLE', 'SOLD_OUT')",
+				"stock": {
+					"name": "stock",
+					"type": "int",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"enumItems": ["AVAILABLE", "SOLD_OUT"],
-					"mappedType": "enum"
+					"mappedType": "integer"
 				},
 				"producer_id": {
 					"name": "producer_id",

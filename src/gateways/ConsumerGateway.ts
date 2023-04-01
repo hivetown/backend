@@ -18,6 +18,11 @@ export class ConsumerGateway {
 		return this.repository.findOne({ authId });
 	}
 
+	public async findById(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id);
+		return consumer;
+	}
+
 	public async findAll(): Promise<Consumer[]> {
 		const consumers = await this.repository.findAll();
 		return consumers;

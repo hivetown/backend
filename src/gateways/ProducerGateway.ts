@@ -29,7 +29,7 @@ export class ProducerGateway {
 	public async findFromProductSpecId(id: number, options: PaginatedOptions): Promise<BaseItems<Producer>> {
 		const pagination = paginate(options);
 		const [producers, totalResults] = await Promise.all([
-			await this.repository
+			this.repository
 				.createQueryBuilder('p')
 				.select('p.*', true)
 				.leftJoin('p.producerProducts', 'pp')
@@ -37,7 +37,7 @@ export class ProducerGateway {
 				.limit(pagination.limit)
 				.offset(pagination.offset)
 				.execute(),
-			await this.repository
+			this.repository
 				.createQueryBuilder('p')
 				.select('p.*', true)
 				.leftJoin('p.producerProducts', 'pp')
