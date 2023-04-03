@@ -341,7 +341,7 @@ export class ConsumerController {
 
 				if (result.items.length > 0) {
 					// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
-					const items = [];
+					const items = new Array(result.items.length);
 					for (const item of result.items) {
 						const status = ShipmentStatus[item.shipment.getLastEvent().status];
 						items.push({ producerProduct: item.producerProduct, status, quantity: item.quantity, price: item.price });
