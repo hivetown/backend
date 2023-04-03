@@ -25,4 +25,12 @@ export class Order {
 		}
 		return ShipmentStatus[Math.min(...statuses)];
 	}
+
+	public getTotalPrice(): number {
+		let total = 0;
+		for (const i of this.items.getItems()) {
+			total += i.price * i.quantity;
+		}
+		return total;
+	}
 }

@@ -6,7 +6,8 @@ import { container } from '..';
 import { CartItem } from '../entities';
 import { ShipmentStatus } from '../enums';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
-// import { Consumer } from '../entities';
+// import * as fs from 'fs';
+import { convertExportOrderItem } from '../utils/convertExportOrderItem';
 
 @Controller('/consumers')
 @Injectable()
@@ -213,6 +214,68 @@ export class ConsumerController {
 	}
 
 	// @Post('/:consumerId/orders')
+
+	@Get('/:consumerId/orders/export', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				orderIds: Joi.array().items(Joi.number().integer().min(1)).required()
+			})
+		})
+	])
+	public async exportOrders(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('consumerId') consumerId: number
+	): Promise<void> {
+		try {
+			const consumer = await container.consumerGateway.findById(consumerId);
+			if (consumer) {
+				const orderIds = (req.query.orderIds as string[]).map((id: string) => Number(id));
+				const os = await container.orderGateway.findByIdsToExport(orderIds, consumerId);
+
+				// ver como fazer no caso de houver por exemplo 1 order bem posta, e outra não
+				if (os.length > 0) {
+					// res.status(200).json(orders);
+					const results = new Array(os.length);
+					let i = 0;
+					for (const o of os) {
+						const newObj = {
+							id: o.id,
+							shippingAddress: o.shippingAddress,
+							generalStatus: o.getGeneralStatus(),
+							totalPrice: o.getTotalPrice(),
+							items: convertExportOrderItem(o.items)
+						};
+						results[i] = newObj;
+						i++;
+					}
+					// res.status(200).json(results);
+					// fs.writeFile('orders.json', JSON.stringify(results), 'utf8', (err) => {
+					// 	if (err) {
+					// 		console.error(err);
+					// 		res.status(500).send('Erro ao criar o arquivo de orders.');
+					// 	} else {
+					// 		res.download(JSON.stringify(results));
+					// 	}
+					// });
+					const ordersJson = JSON.stringify(results);
+					res.setHeader('Content-Type', 'application/json');
+					res.setHeader('Content-Disposition', 'attachment; filename=orders.json');
+					res.send(ordersJson);
+				} else {
+					res.status(404).json({ error: 'Orders not found for this consumer' });
+				}
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	@Get('/:consumerId/orders/:orderId', [
 		validate({

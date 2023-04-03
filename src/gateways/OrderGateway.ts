@@ -32,6 +32,25 @@ export class OrderGateway {
 		};
 	}
 
+	public async findByIdsToExport(orderIds: number[], consumerId: number): Promise<Order[]> {
+		const orders = await this.repository.find(
+			{ id: { $in: orderIds }, consumer: consumerId },
+			{
+				populate: [
+					'items',
+					'items.shipment.events.status',
+					'items.shipment.carrier',
+					'items.shipment.events.address',
+					'items.producerProduct.productionUnit.address',
+					'items.producerProduct.productSpec',
+					'items.producerProduct.producer',
+					'shippingAddress'
+				]
+			}
+		);
+		return orders;
+	}
+
 	public async findByConsumerAndOrder(consumerId: number, orderId: number): Promise<Order | null> {
 		const order = await this.repository.findOne(
 			{ consumer: consumerId, id: orderId },
