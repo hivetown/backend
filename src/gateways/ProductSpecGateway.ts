@@ -1,6 +1,6 @@
 import type { EntityRepository, MikroORM, QueryBuilder } from '@mikro-orm/mysql';
 import { isEmpty } from 'lodash';
-import { ProductSpec } from '../entities';
+import { Image, ProductSpec } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
@@ -44,8 +44,9 @@ export class ProductSpecGateway {
 
 		// Add producers count, min and max price
 		void qb
+			.leftJoinAndSelect('spec.images', 'image')
 			.leftJoin('spec.producerProducts', 'producerProduct')
-			.groupBy('spec.id')
+			.groupBy(['spec.id', 'image.id'])
 			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
 			.addSelect('MAX(producerProduct.current_price) as maxPrice');
@@ -63,6 +64,13 @@ export class ProductSpecGateway {
 					spec.minPrice = raw.minPrice || -1;
 					spec.maxPrice = raw.maxPrice || -1;
 
+					spec.images = spec.images.getItems().map((i: Image) => ({
+						id: i.id,
+						name: i.name,
+						url: i.url,
+						alt: i.alt
+					})) as any;
+
 					// Remove unnecessary fields
 					delete spec.categories;
 					delete spec.producerProducts;
@@ -78,7 +86,41 @@ export class ProductSpecGateway {
 	}
 
 	public async findById(id: number): Promise<ProductSpec | null> {
-		const productSpec = await this.repository.findOne(id, { fields: ['id', 'name', 'description', 'images', 'producerProducts.producer'] });
-		return productSpec;
+		return this.repository
+			.createQueryBuilder('spec')
+			.select('*')
+			.where({ id })
+			.leftJoinAndSelect('spec.images', 'image')
+			.leftJoin('spec.producerProducts', 'producerProduct')
+			.groupBy(['spec.id', 'image.id'])
+			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
+			.addSelect('MIN(producerProduct.current_price) as minPrice')
+			.addSelect('MAX(producerProduct.current_price) as maxPrice')
+			.execute()
+			.then((rs) => {
+				if (rs.length === 0) {
+					return null;
+				}
+
+				const raw = rs[0] as any;
+
+				const spec: any = { ...this.repository.map(raw) };
+				spec.producersCount = raw.producersCount;
+				spec.minPrice = raw.minPrice || -1;
+				spec.maxPrice = raw.maxPrice || -1;
+
+				spec.images = spec.images.getItems().map((i: Image) => ({
+					id: i.id,
+					name: i.name,
+					url: i.url,
+					alt: i.alt
+				})) as any;
+
+				// Remove unnecessary fields
+				delete spec.categories;
+				delete spec.producerProducts;
+
+				return spec;
+			});
 	}
 }
