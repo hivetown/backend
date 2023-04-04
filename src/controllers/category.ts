@@ -43,7 +43,8 @@ export class CategoryController {
 					alt: Joi.string().required()
 				})
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async createCategory(@Response() res: Express.Response, @Request() req: Express.Request) {
 		try {
@@ -90,7 +91,8 @@ export class CategoryController {
 					alt: Joi.string().required()
 				})
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async updateCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
 		try {
@@ -262,7 +264,15 @@ export class CategoryController {
 		}
 	}
 
-	@Delete('/:categoryId/fields/:fieldId')
+	@Delete('/:categoryId/fields/:fieldId', [
+		validate({
+			params: Joi.object({
+				categoryId: Joi.number().min(1).required(),
+				fieldId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
 	public async removeFieldFromCategory(
 		@Response() res: Express.Response,
 		@Params('categoryId') categoryId: number,
