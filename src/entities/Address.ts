@@ -1,4 +1,5 @@
-import { Entity, Property, PrimaryKey } from '@mikro-orm/core';
+import { Entity, Property, PrimaryKey, ManyToOne } from '@mikro-orm/core';
+import type { Consumer } from './Consumer';
 
 @Entity()
 export class Address {
@@ -8,8 +9,8 @@ export class Address {
 	@Property({ type: 'int' })
 	public number!: number;
 
-	@Property({ type: 'int' })
-	public door!: number;
+	@Property()
+	public door!: string;
 
 	@Property({ type: 'int' })
 	public floor!: number;
@@ -37,4 +38,7 @@ export class Address {
 
 	@Property({ type: 'double' })
 	public longitude!: number;
+
+	@ManyToOne()
+	public consumer?: Consumer;
 }

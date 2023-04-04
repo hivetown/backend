@@ -12,15 +12,20 @@ import { CategoryController } from './controllers/category';
 import { ServerErrorMiddleware } from './middlewares/error';
 import { ConsumerController } from './controllers/consumer';
 import { ConsumerGateway } from './gateways/ConsumerGateway';
+import cookieParser from 'cookie-parser';
+import { ProducersController } from './controllers/producers';
+import { AddressGateway } from './gateways/AddressGateway';
 import { CartItemGateway } from './gateways/CartItemGateway';
 import { ProducerController } from './controllers/producer';
 import { OrderItemGateway } from './gateways/OrderItemGateway';
 import { OrderGateway } from './gateways/OrderGateway';
+import { AuthController } from './controllers/auth';
 
 export const container = {} as {
 	server: http.Server;
 	orm: MikroORM;
 	em: EntityManager;
+	addressGateway: AddressGateway;
 	producerGateway: ProducerGateway;
 	productGateway: ProductGateway;
 	productSpecCategoryGateway: ProductSpecCategoryGateway;
@@ -40,6 +45,7 @@ const port = Number(process.env.PORT) || 3000;
 export const main = async () => {
 	container.orm = await MikroORM.init<MySqlDriver>();
 	container.em = container.orm.em;
+	container.addressGateway = new AddressGateway(container.orm);
 	container.producerGateway = new ProducerGateway(container.orm);
 	container.productGateway = new ProductGateway(container.orm);
 	container.productSpecCategoryGateway = new ProductSpecCategoryGateway(container.orm);
@@ -55,6 +61,9 @@ export const main = async () => {
 
 	app.use(express.json());
 	app.use(cors());
+	// Cookies
+	app.use(cookieParser());
+
 	app.use((_req: Request, _res: Response, next: NextFunction) => RequestContext.create(container.orm.em, next));
 
 	const serverErrorMiddleware = new ServerErrorMiddleware();
@@ -62,6 +71,7 @@ export const main = async () => {
 
 	await attachControllers(app, [HelloController]);
 	await attachControllers(app, [ProductsController, CategoryController, ConsumerController, ProducerController]);
+	await attachControllers(app, [AuthController, ProductsController, CategoryController, ConsumerController, ProducersController]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
