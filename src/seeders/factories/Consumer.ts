@@ -9,8 +9,9 @@ export class ConsumerFactory extends Factory<Consumer> {
 		return {
 			name: faker.name.fullName(),
 			email: faker.internet.email(),
-			phone: Number(faker.phone.number('9########')),
-			vat: Number(faker.phone.number('2########')) // It's fine to use phone number generator for vat
+			phone: faker.phone.number('9########'),
+			vat: Number(faker.phone.number('2########')), // It's fine to use phone number generator for vat
+			authId: faker.datatype.uuid()
 		};
 	}
 }

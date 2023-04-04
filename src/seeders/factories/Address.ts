@@ -8,7 +8,7 @@ export class AddressFactory extends Factory<Address> {
 	protected definition(faker: Faker): EntityData<Address> {
 		return {
 			number: Number(faker.random.numeric(2)),
-			door: Number(faker.random.numeric(2)),
+			door: faker.random.numeric(2),
 			floor: Number(faker.random.numeric(2)),
 			zipCode: faker.address.zipCode(),
 			street: faker.address.street(),
