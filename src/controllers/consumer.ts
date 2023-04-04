@@ -229,7 +229,8 @@ export class ConsumerController {
 			params: Joi.object({
 				consumerId: Joi.number().integer().min(1)
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrders(
 		@Response() res: Express.Response,
@@ -281,7 +282,8 @@ export class ConsumerController {
 			query: Joi.object({
 				orderIds: Joi.array().items(Joi.number().integer().min(1)).required()
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async exportOrders(
 		@Response() res: Express.Response,
@@ -334,7 +336,8 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1),
 				orderId: Joi.number().integer().min(1)
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrder(
 		@Response() res: Express.Response,
@@ -372,7 +375,8 @@ export class ConsumerController {
 				page: Joi.number().integer().min(1),
 				pageSize: Joi.number().integer().min(1).max(100)
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
@@ -426,7 +430,8 @@ export class ConsumerController {
 				orderId: Joi.number().integer().min(1),
 				producerProductId: Joi.number().integer().min(1)
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrderItem(
 		@Response() res: Express.Response,
