@@ -50,7 +50,8 @@ export class ProducersController {
 				page: Joi.number().min(1),
 				pageSize: Joi.number().min(1)
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		try {
@@ -89,7 +90,8 @@ export class ProducersController {
 				producerId: Joi.number().min(1).required(),
 				orderId: Joi.number().min(1).required()
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('orderId') orderId: number) {
 		try {
@@ -122,7 +124,8 @@ export class ProducersController {
 				page: Joi.number().min(1),
 				pageSize: Joi.number().min(1)
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
@@ -172,7 +175,8 @@ export class ProducersController {
 				orderId: Joi.number().min(1).required(),
 				producerProductId: Joi.number().min(1).required()
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrderItem(
 		@Response() res: Express.Response,
@@ -223,7 +227,8 @@ export class ProducersController {
 				orderId: Joi.number().min(1).required(),
 				producerProductId: Joi.number().min(1).required()
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getOrderItemShipment(
 		@Response() res: Express.Response,

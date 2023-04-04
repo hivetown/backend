@@ -16,8 +16,6 @@ export class AuthController {
 		user = await container.consumerGateway.findByAuthId(req.authUser!.uid);
 		if (!user) user = await container.producerGateway.findByAuthId(req.authUser!.uid);
 
-		console.log(user);
-
 		if (!user) return res.status(404).json({ error: 'User not found' });
 		return res.status(200).json(user);
 	}
