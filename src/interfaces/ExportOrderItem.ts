@@ -7,7 +7,7 @@ export interface ExportOrderItem {
 		producer: {
 			name: string;
 			email: string;
-			phone: number;
+			phone: string;
 		};
 		productionUnit: {
 			name: string;

@@ -1,6 +1,6 @@
 export interface ExportAddress {
 	number: number;
-	door: number;
+	door: string;
 	floor: number;
 	zipCode: string;
 	street: string;
