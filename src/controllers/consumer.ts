@@ -1,18 +1,49 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
+import { NotFoundError, UniqueConstraintViolationException } from '@mikro-orm/core';
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { CartItem } from '../entities';
+import { Address, CartItem, Consumer } from '../entities';
+import { ApiError } from '../errors/ApiError';
+import { ConflictError } from '../errors/ConflictError';
+import { AuthMiddleware } from '../middlewares/auth';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 
 @Controller('/consumers')
 @Injectable()
 export class ConsumerController {
-	@Get('/')
+	@Get('/', [AuthMiddleware])
 	public async getConsumers(@Response() res: Express.Response): Promise<void> {
 		const consumers = await container.consumerGateway.findAll();
 		res.json(consumers);
+	}
+
+	@Post('/', [
+		validate({
+			body: Joi.object({
+				name: Joi.string().required(),
+				phone: Joi.string().required(),
+				vat: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async createConsumer(@Response() res: Express.Response, @Request() req: Express.Request): Promise<void> {
+		try {
+			const data: Consumer = req.body;
+			data.authId = req.authUser!.uid;
+			data.email = req.authUser!.email!;
+
+			const consumer = await container.consumerGateway.create(data);
+			res.status(201).json(consumer);
+		} catch (error) {
+			if (error instanceof UniqueConstraintViolationException) {
+				throw new ConflictError('Consumer already exists');
+			}
+
+			throw new ApiError((error as any).message, 500);
+		}
 	}
 
 	@Get('/:consumerId/cart', [
@@ -24,7 +55,8 @@ export class ConsumerController {
 				page: Joi.number().integer().min(1),
 				pageSize: Joi.number().integer().min(1)
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async getCart(
 		@Response() res: Express.Response,
@@ -61,7 +93,8 @@ export class ConsumerController {
 				producerProduct: Joi.number().integer().min(1).required(),
 				quantity: Joi.number().integer().min(1).required()
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async addCartItem(
 		@Response() res: Express.Response,
@@ -107,7 +140,8 @@ export class ConsumerController {
 			params: Joi.object({
 				consumerId: Joi.number().integer().min(1)
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async deleteCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {
 		try {
@@ -133,7 +167,8 @@ export class ConsumerController {
 			body: Joi.object({
 				quantity: Joi.number().integer().min(1).required()
 			})
-		})
+		}),
+		AuthMiddleware
 	])
 	public async updateQuantityCartItem(
 		@Response() res: Express.Response,
@@ -172,6 +207,72 @@ export class ConsumerController {
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Get('/:consumerId/addresses', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1),
+				pageSize: Joi.number().min(1)
+			})
+		}),
+		AuthMiddleware
+	])
+	public async getAddresses(@Request() req: Express.Request, @Response() res: Express.Response): Promise<void> {
+		const consumer = await container.consumerGateway.findByAuthId(req.authUser!.uid);
+
+		if (!consumer) {
+			throw new NotFoundError('Consumer not found');
+		}
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		res.json(await container.addressGateway.findFromConsumer(consumer.id, options));
+	}
+
+	@Post('/:consumerId/addresses', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				number: Joi.number().required(),
+				door: Joi.string().required(),
+				floor: Joi.number().required(),
+				zipCode: Joi.string().required(),
+				street: Joi.string().required(),
+				parish: Joi.string().required(),
+				county: Joi.string().required(),
+				city: Joi.string().required(),
+				district: Joi.string().required(),
+				latitude: Joi.number().required(),
+				longitude: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async addAddress(@Request() req: Express.Request, @Response() res: Express.Response): Promise<void> {
+		const consumer = await container.consumerGateway.findByAuthId(req.authUser!.uid);
+
+		if (!consumer) {
+			throw new NotFoundError('Consumer not found');
+		}
+
+		const address: Address = req.body;
+		address.consumer = consumer;
+
+		try {
+			const createdAddress = await container.addressGateway.create(address);
+			res.status(201).json(createdAddress);
+		} catch (error) {
+			throw new ApiError((error as any).message, 500);
 		}
 	}
 }

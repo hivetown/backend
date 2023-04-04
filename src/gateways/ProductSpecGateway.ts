@@ -54,18 +54,23 @@ export class ProductSpecGateway {
 		void qb.offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
-		const [totalItems, productSpecs] = await Promise.all([totalItemsQb.getCount(), qb.execute().then(rs => rs.map((raw: any) => {
-			const spec: any = { ...this.repository.map(raw) };
-			spec.producersCount = raw.producersCount;
-			spec.minPrice = raw.minPrice || -1;
-			spec.maxPrice = raw.maxPrice || -1;
+		const [totalItems, productSpecs] = await Promise.all([
+			totalItemsQb.getCount(),
+			qb.execute().then((rs) =>
+				rs.map((raw: any) => {
+					const spec: any = { ...this.repository.map(raw) };
+					spec.producersCount = raw.producersCount;
+					spec.minPrice = raw.minPrice || -1;
+					spec.maxPrice = raw.maxPrice || -1;
 
-			// Remove unnecessary fields
-			delete spec.categories;
-			delete spec.producerProducts;
+					// Remove unnecessary fields
+					delete spec.categories;
+					delete spec.producerProducts;
 
-			return spec;
-		}))]);
+					return spec;
+				})
+			)
+		]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;

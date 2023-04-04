@@ -8,6 +8,16 @@ export class ConsumerGateway {
 		this.repository = orm.em.getRepository(Consumer);
 	}
 
+	public async create(consumer: Consumer): Promise<Consumer> {
+		const data = this.repository.create(consumer);
+		await this.repository.persistAndFlush(data);
+		return consumer;
+	}
+
+	public async findByAuthId(authId: string): Promise<Consumer | null> {
+		return this.repository.findOne({ authId });
+	}
+
 	public async findById(id: number): Promise<Consumer | null> {
 		const consumer = await this.repository.findOne(id);
 		return consumer;
