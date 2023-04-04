@@ -16,7 +16,6 @@ import cookieParser from 'cookie-parser';
 import { ProducersController } from './controllers/producers';
 import { AddressGateway } from './gateways/AddressGateway';
 import { CartItemGateway } from './gateways/CartItemGateway';
-import { ProducerController } from './controllers/producer';
 import { OrderItemGateway } from './gateways/OrderItemGateway';
 import { OrderGateway } from './gateways/OrderGateway';
 import { AuthController } from './controllers/auth';
@@ -70,7 +69,7 @@ export const main = async () => {
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
-	await attachControllers(app, [ProductsController, CategoryController, ConsumerController, ProducerController]);
+	await attachControllers(app, [ProductsController, CategoryController, ConsumerController]);
 	await attachControllers(app, [AuthController, ProductsController, CategoryController, ConsumerController, ProducersController]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
