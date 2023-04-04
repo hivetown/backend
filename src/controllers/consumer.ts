@@ -8,6 +8,9 @@ import { ShipmentStatus } from '../enums';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 // import * as fs from 'fs';
 import { convertExportOrderItem } from '../utils/convertExportOrderItem';
+import type { ExportOrder } from '../interfaces/ExportOrder';
+import type { ExportAddress } from '../interfaces/ExportAddress';
+import { convertAddress } from '../utils/convertAdress';
 
 @Controller('/consumers')
 @Injectable()
@@ -258,9 +261,10 @@ export class ConsumerController {
 					const results = new Array(os.length);
 					let i = 0;
 					for (const o of os) {
-						const newObj = {
+						const newAddress: ExportAddress = convertAddress(o.shippingAddress);
+						const newObj: ExportOrder = {
 							id: o.id,
-							shippingAddress: o.shippingAddress,
+							shippingAddress: newAddress,
 							generalStatus: o.getGeneralStatus(),
 							totalPrice: o.getTotalPrice(),
 							items: convertExportOrderItem(o.items)

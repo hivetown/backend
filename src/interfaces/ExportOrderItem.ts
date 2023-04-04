@@ -1,3 +1,5 @@
+import type { ExportAddress } from './ExportAddress';
+
 export interface ExportOrderItem {
 	producerProduct: {
 		currentPrice: number;
@@ -9,19 +11,7 @@ export interface ExportOrderItem {
 		};
 		productionUnit: {
 			name: string;
-			address: {
-				number: number;
-				door: number;
-				floor: number;
-				zipCode: string;
-				street: string;
-				parish: string;
-				county: string;
-				city: string;
-				district: string;
-				latitude: number;
-				longitude: number;
-			};
+			address: ExportAddress;
 		};
 		productSpec: {
 			name: string;
@@ -36,19 +26,7 @@ export interface ExportOrderItem {
 		};
 		events: {
 			date: Date;
-			address: {
-				number: number;
-				door: number;
-				floor: number;
-				zipCode: string;
-				street: string;
-				parish: string;
-				county: string;
-				city: string;
-				district: string;
-				latitude: number;
-				longitude: number;
-			};
+			address: ExportAddress;
 			status: {
 				name: string;
 			};
