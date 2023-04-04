@@ -33,4 +33,8 @@ export class Order {
 		}
 		return total;
 	}
+
+	public getOrderDate(): Date {
+		return this.items.getItems()[0].shipment.getFirstEvent().date;
+	}
 }

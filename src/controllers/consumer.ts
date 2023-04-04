@@ -203,7 +203,23 @@ export class ConsumerController {
 			const consumer = await container.consumerGateway.findById(consumerId);
 			if (consumer) {
 				const orders = await container.orderGateway.findByConsumer(consumerId, options);
-				res.status(200).json(orders);
+				const result = [];
+				for (const order of orders.items) {
+					result.push({
+						id: order.id,
+						shippingAddress: order.shippingAddress,
+						generalStatus: order.getGeneralStatus(),
+						totalPrice: order.getTotalPrice(),
+						orderDate: order.getOrderDate()
+					});
+				}
+				res.status(200).json({
+					items: result,
+					totalItems: orders.totalItems,
+					totalPages: orders.totalPages,
+					page: orders.page,
+					pageSize: orders.pageSize
+				});
 			} else {
 				res.status(404).json({ error: 'Consumer not found' });
 			}
@@ -252,15 +268,7 @@ export class ConsumerController {
 						results[i] = newObj;
 						i++;
 					}
-					// res.status(200).json(results);
-					// fs.writeFile('orders.json', JSON.stringify(results), 'utf8', (err) => {
-					// 	if (err) {
-					// 		console.error(err);
-					// 		res.status(500).send('Erro ao criar o arquivo de orders.');
-					// 	} else {
-					// 		res.download(JSON.stringify(results));
-					// 	}
-					// });
+
 					const ordersJson = JSON.stringify(results);
 					res.setHeader('Content-Type', 'application/json');
 					res.setHeader('Content-Disposition', 'attachment; filename=orders.json');
