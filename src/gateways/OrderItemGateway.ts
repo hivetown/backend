@@ -39,6 +39,7 @@ export class OrderItemGateway {
 						'producerProduct.producer',
 						'producerProduct.productionUnit',
 						'producerProduct.productSpec',
+						'producerProduct.productSpec.images',
 						'shipment.events.status'
 					],
 					limit: pagination.limit,
@@ -59,7 +60,15 @@ export class OrderItemGateway {
 	public async findByProducerAndOrderAndProducerProduct(producerId: number, orderId: number, producerProductId: number): Promise<OrderItem | null> {
 		const orderItem = await this.repository.findOne(
 			{ order: orderId, producerProduct: { producer: producerId, id: producerProductId } },
-			{ populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec'] }
+			{
+				populate: [
+					'producerProduct',
+					'producerProduct.producer',
+					'producerProduct.productionUnit',
+					'producerProduct.productSpec',
+					'producerProduct.productSpec.images'
+				]
+			}
 		);
 		return orderItem;
 	}
