@@ -22,6 +22,7 @@ export class OrderItemGateway {
 						'producerProduct.producer',
 						'producerProduct.productionUnit',
 						'producerProduct.productSpec',
+						'producerProduct.productSpec.images',
 						'shipment.events.status'
 					],
 					limit: pagination.limit,
@@ -44,7 +45,13 @@ export class OrderItemGateway {
 		const q2 = await this.repository.findOne(
 			{ order: { id: orderId, consumer: { id: consumerId } }, producerProduct: { id: producerProductId } },
 			{
-				populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec']
+				populate: [
+					'producerProduct',
+					'producerProduct.producer',
+					'producerProduct.productionUnit',
+					'producerProduct.productSpec',
+					'producerProduct.productSpec.images'
+				]
 			}
 		);
 		return q2;
