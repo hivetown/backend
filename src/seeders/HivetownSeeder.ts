@@ -72,7 +72,7 @@ export class HivetownSeeder extends Seeder {
 		// We create some productSpecs that use some of the Categories
 		const productSpecs = await productSpecFactory
 			.each((spec) => {
-				spec.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
+				spec.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 5 })));
 				spec.categories.set(
 					faker.helpers.arrayElements(categories, faker.datatype.number({ min: 3, max: 8 })).map((category) =>
 						productSpecCategoryFactory.makeOne({
