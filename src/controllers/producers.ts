@@ -62,10 +62,10 @@ export class ProducersController {
 				if (orderItems.length === 0) {
 					res.status(404).json({ error: 'No orders found' });
 				} else {
-					const ordersId: number[] = [];
-					orderItems.forEach((orderItem) => {
-						ordersId.push(orderItem.order.id);
-					});
+					const ordersId: number[] = new Array(orderItems.length);
+					for (let i = 0; i < orderItems.length; i++) {
+						ordersId[i] = orderItems[i].order.id;
+					}
 
 					const options: PaginatedOptions = {
 						page: Number(req.query.page) || -1,
@@ -100,8 +100,9 @@ export class ProducersController {
 				const orderItem = await container.orderItemGateway.findOrderByProducerAndOrderId(producerId, orderId);
 				if (orderItem) {
 					const order = await container.orderGateway.findByIdWithShippingAddress(orderId);
-					const o = { id: order?.id, shippingAddress: order?.shippingAddress };
-					res.status(200).json({ order: o, status: order?.getGeneralStatus() });
+					const o = { id: order?.id, shippingAddress: order?.shippingAddress, status: order?.getGeneralStatusForProducer(producerId) };
+					console.log(order?.getGeneralStatusForProducer(producerId));
+					res.status(200).json(o);
 				} else {
 					res.status(404).json({ error: 'Order not found in this Producer' });
 				}
@@ -206,7 +207,7 @@ export class ProducersController {
 							price: orderItem.price
 						});
 					} else {
-						res.status(404).json({ error: 'Order item not found for this producer' });
+						res.status(404).json({ error: 'Order item not found for this producer or Product not found for this Order Item' });
 					}
 				} else {
 					res.status(404).json({ error: 'Order not found for this producer' });

@@ -18,7 +18,7 @@ export class OrderGateway {
 
 	public async findByIdWithShippingAddress(orderId: number): Promise<Order | null> {
 		const order = await this.repository.findOne(orderId, {
-			populate: ['items', 'items.shipment.events.status', 'shippingAddress']
+			populate: ['items', 'items.shipment.events.status', 'shippingAddress', 'items.producerProduct.producer']
 		});
 		return order;
 	}
