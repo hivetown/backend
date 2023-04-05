@@ -5,10 +5,10 @@ import type { ExportOrderItem } from '../interfaces/ExportOrderItem';
 
 // necessária para não retornar ao cliente ids, e tudo aquilo que não é necessário
 export const convertExportOrderItem = (orderItems: Collection<OrderItem>): any[] => {
+	const items = orderItems.getItems();
 	const res: ExportOrderItem[] = new Array(orderItems.length);
-
-	let i = 0;
-	for (const orderItem of orderItems.getItems()) {
+	for (let i = 0; i < items.length; i++) {
+		const orderItem = items[i];
 		const { producerProduct, quantity, price, shipment } = orderItem;
 		res[i] = {
 			producerProduct: {

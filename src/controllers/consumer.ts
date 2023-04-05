@@ -246,15 +246,16 @@ export class ConsumerController {
 			const consumer = await container.consumerGateway.findById(consumerId);
 			if (consumer) {
 				const orders = await container.orderGateway.findByConsumer(consumerId, options);
-				const result = [];
-				for (const order of orders.items) {
-					result.push({
+				const result = new Array(orders.items.length);
+				for (let i = 0; i < orders.items.length; i++) {
+					const order = orders.items[i];
+					result[i] = {
 						id: order.id,
 						shippingAddress: order.shippingAddress,
 						generalStatus: order.getGeneralStatus(),
 						totalPrice: order.getTotalPrice(),
 						orderDate: order.getOrderDate()
-					});
+					};
 				}
 				res.status(200).json({
 					items: result,
@@ -280,7 +281,7 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1)
 			}),
 			query: Joi.object({
-				orderIds: Joi.array().items(Joi.number().integer().min(1)).required()
+				id: Joi.array().items(Joi.number().integer().min(1)).required()
 			})
 		}),
 		AuthMiddleware
@@ -293,15 +294,14 @@ export class ConsumerController {
 		try {
 			const consumer = await container.consumerGateway.findById(consumerId);
 			if (consumer) {
-				const orderIds = (req.query.orderIds as string[]).map((id: string) => Number(id));
+				const orderIds = (req.query.id as string[]).map((id: string) => Number(id));
 				const os = await container.orderGateway.findByIdsToExport(orderIds, consumerId);
 
-				// ver como fazer no caso de houver por exemplo 1 order bem posta, e outra não
 				if (os.length > 0) {
-					// res.status(200).json(orders);
 					const results = new Array(os.length);
-					let i = 0;
-					for (const o of os) {
+
+					for (let i = 0; i < os.length; i++) {
+						const o = os[i];
 						const newAddress: ExportAddress = convertAddress(o.shippingAddress);
 						const newObj: ExportOrder = {
 							id: o.id,
@@ -397,11 +397,10 @@ export class ConsumerController {
 				if (result.items.length > 0) {
 					// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
 					const items = new Array(result.items.length);
-					let i = 0;
-					for (const item of result.items) {
+					for (let i = 0; i < result.items.length; i++) {
+						const item = result.items[i];
 						const status = ShipmentStatus[item.shipment.getLastEvent().status];
 						items[i] = { producerProduct: item.producerProduct, status, quantity: item.quantity, price: item.price };
-						i++;
 					}
 
 					res.status(200).json({
