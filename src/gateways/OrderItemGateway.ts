@@ -84,4 +84,50 @@ export class OrderItemGateway {
 		);
 		return orderItem;
 	}
+
+	public async findByConsumerIDAndOrderId(consumerId: number, orderId: number, options: PaginatedOptions): Promise<BaseItems<OrderItem>> {
+		const pagination = paginate(options);
+		const [orderItems, totalResults] = await Promise.all([
+			this.repository.find(
+				{ order: { id: orderId, consumer: { id: consumerId } } },
+				{
+					populate: [
+						'producerProduct',
+						'producerProduct.producer',
+						'producerProduct.productionUnit',
+						'producerProduct.productSpec',
+						'producerProduct.productSpec.images',
+						'shipment.events.status'
+					],
+					limit: pagination.limit,
+					offset: pagination.offset
+				}
+			),
+			this.repository.count({ order: { id: orderId, consumer: { id: consumerId } } })
+		]);
+
+		return {
+			items: orderItems,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: orderItems.length
+		};
+	}
+
+	public async findByConsumerIdOrderIdProducerProductId(consumerId: number, orderId: number, producerProductId: number): Promise<OrderItem | null> {
+		const q2 = await this.repository.findOne(
+			{ order: { id: orderId, consumer: { id: consumerId } }, producerProduct: { id: producerProductId } },
+			{
+				populate: [
+					'producerProduct',
+					'producerProduct.producer',
+					'producerProduct.productionUnit',
+					'producerProduct.productSpec',
+					'producerProduct.productSpec.images'
+				]
+			}
+		);
+		return q2;
+	}
 }
