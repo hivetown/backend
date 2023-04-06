@@ -4,7 +4,16 @@ import { RequestContext } from '@mikro-orm/core';
 import { EntityManager, MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import express, { NextFunction, Request, Response } from 'express';
 import { attachControllers } from '@decorators/express';
-import { CategoryGateway, FieldGateway, ProducerGateway, ProductGateway, ProductSpecCategoryGateway, ProductSpecFieldGateway } from './gateways';
+import {
+	CartItemGateway,
+	CategoryGateway,
+	FieldGateway,
+	OrderItemGateway,
+	ProducerGateway,
+	ProductGateway,
+	ProductSpecCategoryGateway,
+	ProductSpecFieldGateway
+} from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { ProductSpecGateway } from './gateways/ProductSpecGateway';
@@ -12,10 +21,10 @@ import { CategoryController } from './controllers/category';
 import { ServerErrorMiddleware } from './middlewares/error';
 import { ConsumerController } from './controllers/consumer';
 import { ConsumerGateway } from './gateways/ConsumerGateway';
+import { OrderGateway } from './gateways/OrderGateway';
 import cookieParser from 'cookie-parser';
 import { ProducersController } from './controllers/producers';
 import { AddressGateway } from './gateways/AddressGateway';
-import { CartItemGateway } from './gateways/CartItemGateway';
 import { AuthController } from './controllers/auth';
 
 export const container = {} as {
@@ -30,6 +39,8 @@ export const container = {} as {
 	productSpecGatway: ProductSpecGateway;
 	fieldGateway: FieldGateway;
 	consumerGateway: ConsumerGateway;
+	orderGateway: OrderGateway;
+	orderItemGateway: OrderItemGateway;
 	productSpecFieldGateway: ProductSpecFieldGateway;
 	productSpecGateway: ProductSpecGateway;
 	cartItemGateway: CartItemGateway;
@@ -48,6 +59,8 @@ export const main = async () => {
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
 	container.fieldGateway = new FieldGateway(container.orm);
 	container.consumerGateway = new ConsumerGateway(container.orm);
+	container.orderGateway = new OrderGateway(container.orm);
+	container.orderItemGateway = new OrderItemGateway(container.orm);
 	container.productSpecFieldGateway = new ProductSpecFieldGateway(container.orm);
 	container.productSpecGateway = new ProductSpecGateway(container.orm);
 	container.cartItemGateway = new CartItemGateway(container.orm);
