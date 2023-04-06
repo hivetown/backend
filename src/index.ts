@@ -4,6 +4,8 @@ import { RequestContext } from '@mikro-orm/core';
 import { EntityManager, MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import express, { NextFunction, Request, Response } from 'express';
 import { attachControllers } from '@decorators/express';
+import { ServerErrorMiddleware } from './middlewares/error';
+import cookieParser from 'cookie-parser';
 import {
 	CartItemGateway,
 	CategoryGateway,
@@ -11,20 +13,18 @@ import {
 	OrderItemGateway,
 	ProducerGateway,
 	ProductGateway,
+	ProductSpecGateway,
 	ProductSpecCategoryGateway,
-	ProductSpecFieldGateway
+	ProductSpecFieldGateway,
+	AddressGateway,
+	ConsumerGateway,
+	OrderGateway
 } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
-import { ProductSpecGateway } from './gateways/ProductSpecGateway';
 import { CategoryController } from './controllers/category';
-import { ServerErrorMiddleware } from './middlewares/error';
 import { ConsumerController } from './controllers/consumer';
-import { ConsumerGateway } from './gateways/ConsumerGateway';
-import { OrderGateway } from './gateways/OrderGateway';
-import cookieParser from 'cookie-parser';
 import { ProducersController } from './controllers/producers';
-import { AddressGateway } from './gateways/AddressGateway';
 import { AuthController } from './controllers/auth';
 
 export const container = {} as {
@@ -64,6 +64,8 @@ export const main = async () => {
 	container.productSpecFieldGateway = new ProductSpecFieldGateway(container.orm);
 	container.productSpecGateway = new ProductSpecGateway(container.orm);
 	container.cartItemGateway = new CartItemGateway(container.orm);
+	container.orderItemGateway = new OrderItemGateway(container.orm);
+	container.orderGateway = new OrderGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
@@ -76,6 +78,7 @@ export const main = async () => {
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
+	await attachControllers(app, [ProductsController, CategoryController, ConsumerController]);
 	await attachControllers(app, [AuthController, ProductsController, CategoryController, ConsumerController, ProducersController]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));

@@ -9,3 +9,6 @@ export * from './OrderGateway';
 export * from './OrderItemGateway';
 export * from './ProductSpecFieldGateway';
 export * from './CartItemGateway';
+export * from './OrderGateway';
+export * from './OrderItemGateway';
+export * from './AddressGateway';

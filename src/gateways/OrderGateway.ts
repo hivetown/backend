@@ -16,6 +16,30 @@ export class OrderGateway {
 		return order;
 	}
 
+	public async findByIdWithShippingAddress(orderId: number): Promise<Order | null> {
+		const order = await this.repository.findOne(orderId, {
+			populate: ['items', 'items.shipment.events.status', 'shippingAddress', 'items.producerProduct.producer']
+		});
+		return order;
+	}
+
+	public async findByIds(orderIds: number[], options: PaginatedOptions): Promise<BaseItems<Order>> {
+		const pagination = paginate(options);
+
+		const [orders, totalResults] = await Promise.all([
+			this.repository.find({ id: { $in: orderIds } }, { fields: ['shippingAddress'], limit: pagination.limit, offset: pagination.offset }),
+			this.repository.count({ id: { $in: orderIds } })
+		]);
+
+		return {
+			items: orders,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: orders.length
+		};
+	}
+
 	public async findByConsumer(consumerId: number, options: PaginatedOptions): Promise<BaseItems<Order>> {
 		const pagination = paginate(options);
 		const [orders, totalResults] = await Promise.all([
