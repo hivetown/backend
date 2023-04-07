@@ -33,6 +33,11 @@ export class ConsumerGateway {
 		return consumer;
 	}
 
+	public async findByIdWithCartAndProducts(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id, { populate: ['cartItems', 'cartItems.producerProduct'] });
+		return consumer;
+	}
+
 	public async updateCart(consumer: Consumer): Promise<Consumer> {
 		await this.repository.persistAndFlush(consumer);
 		return consumer;

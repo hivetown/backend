@@ -28,4 +28,8 @@ export class Consumer extends User {
 
 	@OneToOne()
 	public image?: Image;
+
+	public existStockCartItems(): boolean {
+		return this.cartItems.getItems().every((item) => item.producerProduct.stock >= item.quantity);
+	}
 }

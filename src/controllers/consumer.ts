@@ -273,7 +273,39 @@ export class ConsumerController {
 		}
 	}
 
-	// @Post('/:consumerId/orders')
+	@Post('/:consumerId/orders', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			})
+		}),
+		AuthMiddleware
+	])
+	public async createOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {
+		try {
+			const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
+			if (consumer) {
+				if (consumer.cartItems.getItems().length > 0) {
+					const haveStock = consumer.existStockCartItems();
+					if (haveStock) {
+						for (const item of consumer.cartItems.getItems()) {
+							item.producerProduct.stock -= item.quantity;
+							await container.productGateway.updateProduct(item.producerProduct);
+						}
+					} else {
+						res.status(400).json({ error: 'Not enough stock ' }); // elaborar melhor esta mensagem para indicar o stock existente
+					}
+				} else {
+					res.status(400).json({ error: 'Cart is empty' });
+				}
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	@Get('/:consumerId/orders/export', [
 		validate({
