@@ -2,7 +2,7 @@ import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey } from '@mikro-orm
 import { ShipmentStatus } from '../enums';
 import { Address } from './Address';
 import { Consumer } from './Consumer';
-import type { OrderItem } from './OrderItem';
+import { OrderItem } from './OrderItem';
 
 @Entity()
 export class Order {
@@ -17,6 +17,15 @@ export class Order {
 
 	@OneToMany('OrderItem', 'order')
 	public items = new Collection<OrderItem>(this);
+
+	public create(consumer: Consumer, shippingAddress: Address): Order {
+		this.consumer = consumer;
+		this.shippingAddress = shippingAddress;
+		for (const item of consumer.cartItems.getItems()) {
+			this.items.add(new OrderItem().create(this, item.producerProduct, item.quantity));
+		}
+		return this;
+	}
 
 	public getGeneralStatus(): string {
 		const its = this.items.getItems();

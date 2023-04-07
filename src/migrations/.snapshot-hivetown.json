@@ -1522,7 +1522,7 @@
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": false,
+					"nullable": true,
 					"mappedType": "integer"
 				}
 			},
@@ -1551,6 +1551,7 @@
 					"localTableName": "shipment",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "carrier",
+					"deleteRule": "set null",
 					"updateRule": "cascade"
 				}
 			}

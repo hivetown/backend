@@ -8,8 +8,8 @@ export class Shipment {
 	@PrimaryKey()
 	public id!: number;
 
-	@ManyToOne()
-	public carrier!: Carrier;
+	@ManyToOne({ nullable: true })
+	public carrier?: Carrier;
 
 	@OneToMany('OrderItem', 'shipment')
 	public orderItems = new Collection<OrderItem>(this);

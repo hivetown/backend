@@ -34,7 +34,7 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithCartAndProducts(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { populate: ['cartItems', 'cartItems.producerProduct'] });
+		const consumer = await this.repository.findOne(id, { populate: ['cartItems', 'cartItems.producerProduct', 'addresses'] });
 		return consumer;
 	}
 

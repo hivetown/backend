@@ -21,6 +21,15 @@ export class OrderItem {
 	@ManyToOne()
 	public shipment!: Shipment;
 
+	public create(order: Order, producerProduct: ProducerProduct, quantity: number): OrderItem {
+		this.order = order;
+		this.producerProduct = producerProduct;
+		this.quantity = quantity;
+		this.price = producerProduct.currentPrice;
+		this.shipment = new Shipment();
+		return this;
+	}
+
 	public getActualStatus(): ShipmentStatus {
 		return this.shipment.getLastEvent().status;
 	}

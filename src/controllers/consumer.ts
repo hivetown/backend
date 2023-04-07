@@ -4,7 +4,7 @@ import { NotFoundError, UniqueConstraintViolationException } from '@mikro-orm/co
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { Address, CartItem, Consumer } from '../entities';
+import { Address, CartItem, Consumer, Order } from '../entities';
 import { ShipmentStatus } from '../enums';
 import { ApiError } from '../errors/ApiError';
 import { ConflictError } from '../errors/ConflictError';
@@ -277,26 +277,41 @@ export class ConsumerController {
 		validate({
 			params: Joi.object({
 				consumerId: Joi.number().integer().min(1)
+			}),
+			body: Joi.object({
+				shippingAddressId: Joi.number().integer().min(1).required()
 			})
 		}),
 		AuthMiddleware
 	])
-	public async createOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number): Promise<void> {
+	public async createOrder(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('consumerId') consumerId: number
+	): Promise<void> {
 		try {
 			const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
 			if (consumer) {
-				if (consumer.cartItems.getItems().length > 0) {
-					const haveStock = consumer.existStockCartItems();
-					if (haveStock) {
-						for (const item of consumer.cartItems.getItems()) {
-							item.producerProduct.stock -= item.quantity;
-							await container.productGateway.updateProduct(item.producerProduct);
+				const address = consumer.addresses.getItems().find((address) => address.id === req.body.shippingAddressId);
+				if (address) {
+					if (consumer.cartItems.getItems().length > 0) {
+						const haveStock = consumer.existStockCartItems();
+						if (haveStock) {
+							for (const item of consumer.cartItems.getItems()) {
+								item.producerProduct.stock -= item.quantity;
+								await container.productGateway.updateProduct(item.producerProduct);
+							}
+							const newOrder = new Order().create(consumer, address); // para já apenas pego o primeiro endereço do consumidor A ALTERAR
+							const o = await container.orderGateway.createOrder(newOrder);
+							res.json(o);
+						} else {
+							res.status(400).json({ error: 'Not enough stock ' }); // elaborar melhor esta mensagem para indicar o stock existente
 						}
 					} else {
-						res.status(400).json({ error: 'Not enough stock ' }); // elaborar melhor esta mensagem para indicar o stock existente
+						res.status(400).json({ error: 'Cart is empty' });
 					}
 				} else {
-					res.status(400).json({ error: 'Cart is empty' });
+					res.status(404).json({ error: 'Address not found' });
 				}
 			} else {
 				res.status(404).json({ error: 'Consumer not found' });

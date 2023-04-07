@@ -90,4 +90,9 @@ export class OrderGateway {
 		);
 		return order;
 	}
+
+	public async createOrder(order: Order): Promise<Order> {
+		await this.repository.persistAndFlush(order);
+		return order;
+	}
 }
