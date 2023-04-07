@@ -302,8 +302,9 @@ export class ConsumerController {
 								await container.productGateway.updateProduct(item.producerProduct);
 							}
 							const newOrder = new Order().create(consumer, address); // para já apenas pego o primeiro endereço do consumidor A ALTERAR
-							const o = await container.orderGateway.createOrder(newOrder);
-							res.json(o);
+							await container.orderGateway.createOrder(newOrder); // cria a order
+							await container.consumerGateway.deleteCart(consumer); // limpa o carrinho
+							res.status(200).json({ message: 'Order created and cart cleared' });
 						} else {
 							res.status(400).json({ error: 'Not enough stock ' }); // elaborar melhor esta mensagem para indicar o stock existente
 						}
