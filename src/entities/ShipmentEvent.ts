@@ -19,4 +19,12 @@ export class ShipmentEvent {
 
 	@Enum()
 	public status!: ShipmentStatus;
+
+	public create(shipment: Shipment, status: ShipmentStatus, address: Address): ShipmentEvent {
+		this.shipment = shipment;
+		this.status = status;
+		this.address = address;
+		this.date = new Date();
+		return this;
+	}
 }

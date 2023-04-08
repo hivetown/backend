@@ -3,6 +3,7 @@ import { ShipmentStatus } from '../enums';
 import { Address } from './Address';
 import { Consumer } from './Consumer';
 import { OrderItem } from './OrderItem';
+import { ShipmentEvent } from './ShipmentEvent';
 
 @Entity()
 export class Order {
@@ -55,5 +56,11 @@ export class Order {
 
 	public getOrderDate(): Date {
 		return this.items.getItems()[0].shipment.getFirstEvent().date;
+	}
+
+	public addFirstShipmentEvent() {
+		this.items.getItems().forEach((item) => {
+			item.shipment.events.add(new ShipmentEvent().create(item.shipment, ShipmentStatus.Paid, this.shippingAddress));
+		});
 	}
 }

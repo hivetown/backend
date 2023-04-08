@@ -26,6 +26,7 @@ import { CategoryController } from './controllers/category';
 import { ConsumerController } from './controllers/consumer';
 import { ProducersController } from './controllers/producers';
 import { AuthController } from './controllers/auth';
+import { WebhookController } from './controllers/webhook';
 
 export const container = {} as {
 	server: http.Server;
@@ -78,7 +79,7 @@ export const main = async () => {
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
-	await attachControllers(app, [ProductsController, CategoryController, ConsumerController]);
+	await attachControllers(app, [ProductsController, CategoryController, ConsumerController, WebhookController]);
 	await attachControllers(app, [AuthController, ProductsController, CategoryController, ConsumerController, ProducersController]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
