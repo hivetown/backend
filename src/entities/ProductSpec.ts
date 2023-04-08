@@ -14,6 +14,7 @@ export class ProductSpec {
 	@Property()
 	public description!: string;
 
+	// Max 5 images
 	@OneToMany('Image', 'productSpec')
 	public images = new Collection<Image>(this);
 

@@ -16,5 +16,5 @@ export * from './ProductSpecCategory';
 export * from './ProductSpecField';
 export * from './Shipment';
 export * from './ShipmentEvent';
-export * from './ShipmentStatus';
+export * from '../enums/ShipmentStatus';
 export * from './User';

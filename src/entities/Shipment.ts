@@ -16,4 +16,12 @@ export class Shipment {
 
 	@OneToMany('ShipmentEvent', 'shipment')
 	public events = new Collection<ShipmentEvent>(this);
+
+	public getLastEvent(): ShipmentEvent {
+		return this.events.getItems().sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+	}
+
+	public getFirstEvent(): ShipmentEvent {
+		return this.events.getItems().sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+	}
 }

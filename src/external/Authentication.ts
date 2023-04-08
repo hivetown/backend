@@ -10,7 +10,7 @@ export class Authentication {
 		});
 	}
 
-	public async userFromIdToken(idToken: string): Promise<AuthenticationUser | null> {
+	public userFromIdToken(idToken: string): Promise<AuthenticationUser | null> {
 		return auth().verifyIdToken(idToken);
 	}
 

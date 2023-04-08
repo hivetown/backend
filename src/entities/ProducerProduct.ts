@@ -1,8 +1,7 @@
-import { Entity, Enum, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import { Producer } from './Producer';
 import { ProductionUnit } from './ProductionUnit';
 import { ProductSpec } from './ProductSpec';
-import { ProducerProductStatus } from '../enums/ProducerProductStatus';
 
 @Entity()
 export class ProducerProduct {
@@ -15,8 +14,8 @@ export class ProducerProduct {
 	@Property({ type: 'date' })
 	public productionDate!: Date;
 
-	@Enum()
-	public status!: ProducerProductStatus;
+	@Property({ type: 'int' })
+	public stock!: number;
 
 	@ManyToOne()
 	public producer!: Producer;

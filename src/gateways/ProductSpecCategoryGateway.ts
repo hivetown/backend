@@ -32,9 +32,8 @@ export class ProductSpecCategoryGateway {
 		};
 	}
 
-	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<Category[]> {
-		const category = await this.repository.find({ productSpec: id, category: categoryId }, { populate: ['category'] });
-		const c = category.map(({ category }) => category);
-		return c;
+	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory | null> {
+		const category = await this.repository.findOne({ productSpec: id, category: categoryId }, { populate: ['category'] });
+		return category;
 	}
 }

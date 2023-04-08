@@ -14,7 +14,7 @@ export class CartItemGateway {
 	public async findAllItemsByConsumerId(consumerId: number, options: PaginatedOptions): Promise<BaseItems<CartItem>> {
 		const pagination = paginate(options);
 		const [cartItems, totalResults] = await Promise.all([
-			await this.repository.find(
+			this.repository.find(
 				{ consumer: consumerId },
 				{
 					populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit'],
@@ -22,7 +22,7 @@ export class CartItemGateway {
 					offset: pagination.offset
 				}
 			),
-			await this.repository.count({ consumer: consumerId })
+			this.repository.count({ consumer: consumerId })
 		]);
 		return {
 			items: cartItems,
@@ -33,7 +33,7 @@ export class CartItemGateway {
 		};
 	}
 
-	public async findProcutById(cartItemId: number, producerProductId: number): Promise<CartItem | null> {
+	public async findProductById(cartItemId: number, producerProductId: number): Promise<CartItem | null> {
 		const cartItem = await this.repository.findOne(
 			{ consumer: cartItemId, producerProduct: producerProductId },
 			{ fields: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'quantity'] }
