@@ -16,6 +16,7 @@ import type { ExportOrder } from '../interfaces/ExportOrder';
 import type { ExportAddress } from '../interfaces/ExportAddress';
 import { convertAddress } from '../utils/convertAdress';
 import { createCheckoutSession } from '../utils/createCheckoutSession';
+import { stripe } from '../stripe/key';
 
 @Controller('/consumers')
 @Injectable()
@@ -314,6 +315,32 @@ export class ConsumerController {
 				} else {
 					res.status(404).json({ error: 'Address not found' });
 				}
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
+	@Get('/:consumerId/orders/success', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				session_id: Joi.string().required()
+			})
+		})
+	])
+	public async successOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		try {
+			const consumer = await container.consumerGateway.findById(consumerId);
+			if (consumer) {
+				// Para já esta a enviar todas as informações mas depois vai ser filtrado com o que é necessário
+				const session = await stripe.checkout.sessions.retrieve(req.query.session_id as string);
+				res.status(200).json(session);
 			} else {
 				res.status(404).json({ error: 'Consumer not found' });
 			}
