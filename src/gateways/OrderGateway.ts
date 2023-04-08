@@ -93,6 +93,13 @@ export class OrderGateway {
 
 	public async createOrder(order: Order): Promise<Order> {
 		await this.repository.persistAndFlush(order);
+		await this.repository.populate(order, [
+			'items',
+			'items.producerProduct',
+			'items.producerProduct.productSpec',
+			'items.producerProduct.productSpec.images',
+			'shippingAddress'
+		]);
 		return order;
 	}
 }

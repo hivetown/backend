@@ -15,6 +15,7 @@ import { convertExportOrderItem } from '../utils/convertExportOrderItem';
 import type { ExportOrder } from '../interfaces/ExportOrder';
 import type { ExportAddress } from '../interfaces/ExportAddress';
 import { convertAddress } from '../utils/convertAdress';
+import { createCheckoutSession } from '../utils/createCheckoutSession';
 
 @Controller('/consumers')
 @Injectable()
@@ -299,12 +300,11 @@ export class ConsumerController {
 						if (haveStock) {
 							for (const item of consumer.cartItems.getItems()) {
 								item.producerProduct.stock -= item.quantity;
-								await container.productGateway.updateProduct(item.producerProduct);
 							}
-							const newOrder = new Order().create(consumer, address); // para já apenas pego o primeiro endereço do consumidor A ALTERAR
-							await container.orderGateway.createOrder(newOrder); // cria a order
-							await container.consumerGateway.deleteCart(consumer); // limpa o carrinho !!VER SE NÃO FAZ MAIS SENTIDO QUE A LIMPEZA SEJA FEITA APÓS A CONFIRMAÇÃO DO PAGAMENTO!!
-							res.status(200).json({ message: 'Order created and cart cleared' });
+							const newOrder = new Order().create(consumer, address);
+							const populatedNewOrder = await container.orderGateway.createOrder(newOrder); // cria a order
+							const session = await createCheckoutSession(populatedNewOrder);
+							res.status(200).json({ sessionId: session.id, checkout_url: session.url });
 						} else {
 							res.status(400).json({ error: 'Not enough stock ' }); // elaborar melhor esta mensagem para indicar o stock existente
 						}
