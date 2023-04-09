@@ -500,7 +500,14 @@ export class ConsumerController {
 						order.addShipmentEvent(ShipmentStatus.Canceled, order.shippingAddress);
 
 						await container.orderGateway.updateOrder(order);
-						res.json({ message: 'Order canceled' });
+
+						// tratar do refund
+						const refund = await stripe.refunds.create({
+							payment_intent: orderPopulated.payment,
+							reason: 'requested_by_customer' // motivo do reembolso (opcional)
+						});
+
+						res.json({ message: 'Order canceled', refund });
 					} else {
 						res.status(400).json({ error: 'Order can not be canceled' });
 					}
