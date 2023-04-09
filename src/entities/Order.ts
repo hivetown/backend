@@ -1,4 +1,4 @@
-import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey } from '@mikro-orm/core';
+import { Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
 import { ShipmentStatus } from '../enums';
 import { Address } from './Address';
 import { Consumer } from './Consumer';
@@ -18,6 +18,9 @@ export class Order {
 
 	@OneToMany('OrderItem', 'order')
 	public items = new Collection<OrderItem>(this);
+
+	@Property({ nullable: true, unique: true })
+	public payment?: string;
 
 	public create(consumer: Consumer, shippingAddress: Address): Order {
 		this.consumer = consumer;

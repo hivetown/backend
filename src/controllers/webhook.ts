@@ -27,7 +27,6 @@ export class WebhookController {
 
 		try {
 			event = await stripe.webhooks.constructEvent(payloadString, header, endpointSecret);
-			// console.log(event);
 		} catch (err: any) {
 			console.log(err);
 			res.status(400).send(`Webhook Error: ${err.message}`);
@@ -36,11 +35,12 @@ export class WebhookController {
 		// console.log('OLA');
 
 		// Handle the event
+		// console.log(event.type);
 		switch (event.type) {
 			case 'checkout.session.completed': {
 				console.log('checkout.session.completed');
 				const session = event.data.object as Stripe.Checkout.Session;
-				console.log(session);
+				// console.log(session);
 
 				const order = await container.orderGateway.findByIdPopulated(Number(session.metadata?.order_id));
 
@@ -50,6 +50,7 @@ export class WebhookController {
 					if (consumer) {
 						await container.consumerGateway.deleteCart(consumer);
 						order.addFirstShipmentEvent();
+						order.payment = session.payment_intent as string;
 						await container.orderGateway.updateOrder(order);
 					} else {
 						console.log('Consumer not found');
@@ -60,10 +61,27 @@ export class WebhookController {
 
 				break;
 			}
-			case 'checkou.session.expired': {
+			case 'checkout.session.expired': {
 				console.log('checkout.session.expired');
 				const session = event.data.object as Stripe.Checkout.Session;
-				console.log(session);
+				const order = await container.orderGateway.findById(Number(session.metadata?.order_id));
+				let consumerId;
+				if (order) {
+					consumerId = order.consumer.id;
+					await container.orderGateway.deleteOrder(order);
+				}
+				if (consumerId) {
+					const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
+					if (consumer) {
+						for (const item of consumer.cartItems.getItems()) {
+							item.producerProduct.stock += item.quantity;
+						}
+						await container.consumerGateway.updateCart(consumer);
+					} else {
+						console.log('Consumer not found');
+					}
+				}
+
 				break;
 			}
 		}

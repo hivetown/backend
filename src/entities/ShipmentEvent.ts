@@ -11,7 +11,7 @@ export class ShipmentEvent {
 	@Property({ type: 'date' })
 	public date!: Date;
 
-	@ManyToOne()
+	@ManyToOne({ onDelete: 'cascade' })
 	public shipment!: Shipment;
 
 	@ManyToOne()

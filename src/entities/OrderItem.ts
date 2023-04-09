@@ -6,7 +6,7 @@ import { Shipment } from './Shipment';
 
 @Entity()
 export class OrderItem {
-	@ManyToOne({ primary: true })
+	@ManyToOne({ primary: true, onDelete: 'cascade' })
 	public order!: Order;
 
 	@ManyToOne({ primary: true })

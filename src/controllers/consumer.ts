@@ -349,6 +349,45 @@ export class ConsumerController {
 		}
 	}
 
+	@Get('/:consumerId/orders/cancel', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				session_id: Joi.string().required()
+			})
+		})
+	])
+	public PageCancelOrder(@Response() res: Express.Response, @Request() req: Express.Request) {
+		res.json(`Sessão ${req.query.session_id} cancelada com sucesso.`);
+	}
+
+	@Post('/:consumerId/orders/cancel', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				session_id: Joi.string().required()
+			})
+		})
+	])
+	public async cancelOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		try {
+			const consumer = await container.consumerGateway.findById(consumerId);
+			if (consumer) {
+				await stripe.checkout.sessions.expire(req.query.session_id as string);
+				res.json(`Sessão ${req.query.session_id} cancelada com sucesso.`);
+			} else {
+				res.json({ error: 'Consumer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
+
 	@Get('/:consumerId/orders/export', [
 		validate({
 			params: Joi.object({
