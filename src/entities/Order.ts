@@ -31,6 +31,15 @@ export class Order {
 		return this;
 	}
 
+	public canCancel(): boolean {
+		for (const i of this.items.getItems()) {
+			if (i.getActualStatus() > 1) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public getGeneralStatus(): string {
 		const its = this.items.getItems();
 		const statuses: number[] = new Array(its.length);
@@ -61,9 +70,9 @@ export class Order {
 		return this.items.getItems()[0].shipment.getFirstEvent().date;
 	}
 
-	public addFirstShipmentEvent() {
+	public addShipmentEvent(status: ShipmentStatus, address: Address) {
 		this.items.getItems().forEach((item) => {
-			item.shipment.events.add(new ShipmentEvent().create(item.shipment, ShipmentStatus.Paid, this.shippingAddress));
+			item.shipment.events.add(new ShipmentEvent().create(item.shipment, status, address));
 		});
 	}
 }

@@ -476,7 +476,45 @@ export class ConsumerController {
 		}
 	}
 
-	// @Delete('/:consumerId/orders/:orderId')
+	@Delete('/:consumerId/orders/:orderId', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1),
+				orderId: Joi.number().integer().min(1)
+			})
+		}),
+		AuthMiddleware
+	])
+	public async deleteOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
+		try {
+			const consumer = await container.consumerGateway.findById(consumerId);
+			if (consumer) {
+				const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
+				if (order) {
+					const orderPopulated = await container.orderGateway.findByIdPopulated(order.id);
+					// ele nunca vai ser null mas o typescript não sabe disso - ver se há uma maneira de fazer um pouco melhor, talvez criar um findByConsumerAndOrderPopulated
+					if (orderPopulated?.canCancel()) {
+						for (const item of orderPopulated?.items.getItems()) {
+							item.producerProduct.stock += item.quantity;
+						}
+						order.addShipmentEvent(ShipmentStatus.Canceled, order.shippingAddress);
+
+						await container.orderGateway.updateOrder(order);
+						res.json({ message: 'Order canceled' });
+					} else {
+						res.status(400).json({ error: 'Order can not be canceled' });
+					}
+				} else {
+					res.status(404).json({ error: 'Order not found for this consumer' });
+				}
+			} else {
+				res.status(404).json({ error: 'Consumer not found' });
+			}
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
+	}
 
 	@Get('/:consumerId/orders/:orderId/items', [
 		validate({

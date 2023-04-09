@@ -4,6 +4,7 @@ import { Controller, Get, Post, Request, Response } from '@decorators/express';
 import { stripe } from '../stripe/key';
 import type Stripe from 'stripe';
 import { container } from '..';
+import { ShipmentStatus } from '../enums';
 
 @Controller('/webhook')
 @Injectable()
@@ -49,7 +50,7 @@ export class WebhookController {
 					const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
 					if (consumer) {
 						await container.consumerGateway.deleteCart(consumer);
-						order.addFirstShipmentEvent();
+						order.addShipmentEvent(ShipmentStatus.Paid, order.shippingAddress);
 						order.payment = session.payment_intent as string;
 						await container.orderGateway.updateOrder(order);
 					} else {
