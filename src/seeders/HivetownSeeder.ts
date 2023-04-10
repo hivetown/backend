@@ -24,6 +24,7 @@ import type { ProducerProduct } from '../entities';
 
 export class HivetownSeeder extends Seeder {
 	public async run(em: EntityManager): Promise<void> {
+		faker.setLocale('pt_PT');
 		const productSpecFactory = new ProductSpecFactory(em);
 		const productSpecCategoryFactory = new ProductSpecCategoryFactory(em);
 		const categoryFactory = new CategoryFactory(em);
