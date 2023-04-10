@@ -8,17 +8,16 @@ import { ApiError } from '../errors/ApiError';
 export class ServerErrorMiddleware implements ErrorMiddleware {
 	public use(error: Error, _req: Request, res: Response, _next: NextFunction) {
 		if (error instanceof ValidationError) {
-			res.status(error.statusCode).json({ error: error.error, statusCode: error.statusCode, details: error.details });
-			return;
+			return res.status(error.statusCode).json({ error: error.error, statusCode: error.statusCode, details: error.details });
 		}
 
 		if (error instanceof ApiError) {
 			// TODO add details?
-			res.status(error.statusCode).json({ error: error.message, statusCode: error.statusCode });
-			return;
+			return res.status(error.statusCode).json({ error: error.message, statusCode: error.statusCode });
 		}
 
-		res.status(500).json({ error: 'Internal Server Error', statusCode: 500 });
+		console.log(error);
+		return res.status(500).json({ error: 'Internal Server Error', statusCode: 500 });
 	}
 }
 
