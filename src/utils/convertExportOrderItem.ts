@@ -67,7 +67,6 @@ export const convertExportOrderItem = (orderItems: Collection<OrderItem>): any[]
 				}))
 			}
 		};
-		i++;
 	}
 	return res;
 };

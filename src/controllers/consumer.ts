@@ -412,7 +412,6 @@ export class ConsumerController {
 
 				if (os.length > 0) {
 					const results = new Array(os.length);
-					// console.log(os.length);
 					for (let i = 0; i < os.length; i++) {
 						const o = os[i];
 						const newAddress: ExportAddress = convertAddress(o.shippingAddress);
@@ -423,7 +422,6 @@ export class ConsumerController {
 							totalPrice: o.getTotalPrice(),
 							items: convertExportOrderItem(o.items)
 						};
-						console.log(newObj);
 						results[i] = newObj;
 					}
 
