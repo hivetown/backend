@@ -27,6 +27,10 @@ export const main = async () => {
 
 	await attachControllers(app, [HelloController]);
 
+	app.use('/', (_req, res) => {
+		res.status(200).send('Hello Hivetown!');
+	});
+
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
 
