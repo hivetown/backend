@@ -1,5 +1,5 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
-import { Image, ProducerProduct } from '../entities';
+import { ProducerProduct } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
@@ -23,7 +23,7 @@ export class ProducerProductGateway {
 		const [products, totalResults] = await Promise.all([
 			this.repository.find(
 				{ productSpec: id },
-				{ populate: ['producer', 'productionUnit', 'productSpec'], limit: pagination.limit, offset: pagination.offset }
+				{ populate: ['producer', 'productionUnit'], limit: pagination.limit, offset: pagination.offset }
 			),
 			this.repository.count({ productSpec: id })
 		]);
@@ -51,21 +51,7 @@ export class ProducerProductGateway {
 		void qb.offset(pagination.offset).limit(pagination.limit).leftJoinAndSelect('pp.productSpec', 'ps').leftJoinAndSelect('ps.images', 'i');
 
 		// Fetch results and map them
-		const [totalItems, productionUnits] = await Promise.all([
-			totalItemsQb.getCount(),
-			qb.execute().then((rs) =>
-				rs.map((r) => {
-					const images = r.productSpec.images as any as Image[];
-					r.productSpec.images = images.map((i) => ({
-						id: i.id,
-						name: i.name,
-						url: i.url,
-						alt: i.alt
-					})) as any;
-					return r;
-				})
-			)
-		]);
+		const [totalItems, productionUnits] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;

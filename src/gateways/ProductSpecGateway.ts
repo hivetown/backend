@@ -1,6 +1,6 @@
 import type { EntityRepository, MikroORM, QueryBuilder } from '@mikro-orm/mysql';
 import { isEmpty } from 'lodash';
-import { Image, ProductSpec } from '../entities';
+import { ProductSpec } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
@@ -55,30 +55,7 @@ export class ProductSpecGateway {
 		void qb.offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
-		const [totalItems, productSpecs] = await Promise.all([
-			totalItemsQb.getCount(),
-			qb.execute().then((rs) =>
-				rs.map((raw: any) => {
-					const spec: any = { ...this.repository.map(raw) };
-					spec.producersCount = raw.producersCount;
-					spec.minPrice = raw.minPrice || -1;
-					spec.maxPrice = raw.maxPrice || -1;
-
-					spec.images = spec.images.getItems().map((i: Image) => ({
-						id: i.id,
-						name: i.name,
-						url: i.url,
-						alt: i.alt
-					})) as any;
-
-					// Remove unnecessary fields
-					delete spec.categories;
-					delete spec.producerProducts;
-
-					return spec;
-				})
-			)
-		]);
+		const [totalItems, productSpecs] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
@@ -96,31 +73,6 @@ export class ProductSpecGateway {
 			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
 			.addSelect('MAX(producerProduct.current_price) as maxPrice')
-			.execute()
-			.then((rs) => {
-				if (rs.length === 0) {
-					return null;
-				}
-
-				const raw = rs[0] as any;
-
-				const spec: any = { ...this.repository.map(raw) };
-				spec.producersCount = raw.producersCount;
-				spec.minPrice = raw.minPrice || -1;
-				spec.maxPrice = raw.maxPrice || -1;
-
-				spec.images = spec.images.getItems().map((i: Image) => ({
-					id: i.id,
-					name: i.name,
-					url: i.url,
-					alt: i.alt
-				})) as any;
-
-				// Remove unnecessary fields
-				delete spec.categories;
-				delete spec.producerProducts;
-
-				return spec;
-			});
+			.getSingleResult();
 	}
 }

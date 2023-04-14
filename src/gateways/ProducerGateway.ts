@@ -40,7 +40,7 @@ export class ProducerGateway {
 				.where({ 'pp.product_spec_id': id })
 				.limit(pagination.limit)
 				.offset(pagination.offset)
-				.execute(),
+				.getResultList(),
 			this.repository
 				.createQueryBuilder('p')
 				.select('p.*', true)

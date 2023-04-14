@@ -22,7 +22,8 @@ export class ProductionUnitGateway {
 		const qb = this.repository
 			.createQueryBuilder('pu')
 			.select('*')
-			.where({ producer: { id: producerId } });
+			.where({ producer: { id: producerId } })
+			.leftJoinAndSelect('pu.address', 'a');
 
 		const totalItemsQb = qb.clone();
 
@@ -30,15 +31,7 @@ export class ProductionUnitGateway {
 		void qb.offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
-		const [totalItems, productionUnits] = await Promise.all([
-			totalItemsQb.getCount(),
-			qb.execute().then((rs) =>
-				rs.map((r) => {
-					delete r.address.consumer;
-					return r;
-				})
-			)
-		]);
+		const [totalItems, productionUnits] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
