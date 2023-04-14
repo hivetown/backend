@@ -39,6 +39,6 @@ export class Address {
 	@Property({ type: 'double' })
 	public longitude!: number;
 
-	@ManyToOne()
+	@ManyToOne({ hidden: true })
 	public consumer?: Consumer;
 }
