@@ -14,6 +14,17 @@ export class ProductSpec {
 	@Property()
 	public description!: string;
 
+	// VIRTUAL PROPERTIES
+	@Property({ persist: false })
+	public minPrice = -1;
+
+	@Property({ persist: false })
+	public maxPrice = -1;
+
+	@Property({ persist: false })
+	public producersCount = 0;
+	// -----------------
+
 	// Max 5 images
 	@OneToMany('Image', 'productSpec')
 	public images = new Collection<Image>(this);
