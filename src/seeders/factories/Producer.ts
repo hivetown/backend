@@ -10,7 +10,7 @@ export class ProducerFactory extends Factory<Producer> {
 			name: faker.company.name(),
 			email: faker.internet.email(),
 			phone: faker.phone.number('9########'),
-			vat: Number(faker.phone.number('2########')),
+			vat: faker.phone.number('2########'),
 			authId: faker.datatype.uuid()
 		};
 	}
