@@ -196,7 +196,7 @@ export class ProductsController {
 			})
 		})
 	])
-	public async productFieldsByCateogryOfSpecification(
+	public async productFieldsByCategoryOfSpecification(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
 		@Params('categoryId') categoryId: number,
@@ -226,7 +226,7 @@ export class ProductsController {
 			})
 		})
 	])
-	public async productFieldByCateogryOfSpecificationAndField(
+	public async productFieldByCategoryOfSpecificationAndField(
 		@Response() res: Express.Response,
 		@Params('productSpecId') productSpecId: number,
 		@Params('categoryId') categoryId: number,
