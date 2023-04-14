@@ -24,12 +24,9 @@
 		"prepack": "yarn build && pinst --disable",
 		"postpack": "pinst --enable",
 		"upgrade": "yarn upgrade",
-		"docker:mysql:dev:create": "docker run --name mysql-hivetown -p 3306:3306 -v mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=hello -d mysql:latest",
-		"docker:mysql:dev:start": "docker start mysql-hivetown",
-		"docker:mysql:dev:stop": "docker stop mysql-hivetown",
-		"docker:mysql:dev:rm": "docker rm mysql-hivetown",
-		"docker:mysql:dev:logs": "docker logs mysql-hivetown",
-		"docker:mysql:dev:shell": "docker exec -it mysql-hivetown mysql -u root -p"
+		"docker:build": "docker build --no-cache -t hivetown-api .",
+		"docker:run": "docker run -p 3000:3000 hivetown-api",
+		"docker:push": "docker tag hivetown-api luckspt/hivetown-api; docker push luckspt/hivetown-api"
 	},
 	"dependencies": {
 		"@decorators/di": "^2.0.0",
