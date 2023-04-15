@@ -1,6 +1,6 @@
 {
 	"name": "@hivetown/backend",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Hivetown Backend",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
