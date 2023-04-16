@@ -638,8 +638,12 @@ export class ConsumerController {
 		}),
 		AuthMiddleware
 	])
-	public async getAddresses(@Request() req: Express.Request, @Response() res: Express.Response): Promise<void> {
-		const consumer = await container.consumerGateway.findByAuthId(req.authUser!.uid);
+	public async getAddresses(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('consumerId') consumerId: number
+	): Promise<void> {
+		const consumer = await container.consumerGateway.findById(consumerId);
 
 		if (!consumer) {
 			throw new NotFoundError('Consumer not found');
@@ -674,8 +678,12 @@ export class ConsumerController {
 		}),
 		AuthMiddleware
 	])
-	public async addAddress(@Request() req: Express.Request, @Response() res: Express.Response): Promise<void> {
-		const consumer = await container.consumerGateway.findByAuthId(req.authUser!.uid);
+	public async addAddress(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('consumerId') consumerId: number
+	): Promise<void> {
+		const consumer = await container.consumerGateway.findById(consumerId);
 
 		if (!consumer) {
 			throw new NotFoundError('Consumer not found');
