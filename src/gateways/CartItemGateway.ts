@@ -17,7 +17,13 @@ export class CartItemGateway {
 			this.repository.find(
 				{ consumer: consumerId },
 				{
-					populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit'],
+					populate: [
+						'producerProduct',
+						'producerProduct.producer',
+						'producerProduct.productionUnit',
+						'producerProduct.productSpec',
+						'producerProduct.productSpec.images'
+					],
 					limit: pagination.limit,
 					offset: pagination.offset
 				}
