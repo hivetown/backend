@@ -1,20 +1,26 @@
 import { Collection, Entity, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
+import type { ProducerProduct } from './ProducerProduct';
 import type { ProductSpecCategory } from './ProductSpecCategory';
+import type { Image } from './Image';
 
 @Entity()
 export class ProductSpec {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'string' })
+	@Property()
 	public name!: string;
 
-	@Property({ type: 'string' })
+	@Property()
 	public description!: string;
 
-	@Property()
-	public images!: string[];
+	// Max 5 images
+	@OneToMany('Image', 'productSpec')
+	public images = new Collection<Image>(this);
 
 	@OneToMany('ProductSpecCategory', 'productSpec')
 	public categories = new Collection<ProductSpecCategory>(this);
+
+	@OneToMany('ProducerProduct', 'productSpec')
+	public producerProducts = new Collection<ProducerProduct>(this);
 }

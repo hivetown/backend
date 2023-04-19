@@ -9,6 +9,6 @@ export class FieldPossibleValue {
 	@ManyToOne()
 	public field!: Field;
 
-	@Property({ type: 'string' })
+	@Property()
 	public value!: string;
 }

@@ -1,7 +1,7 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, Enum, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import { Address } from './Address';
 import { Shipment } from './Shipment';
-import { ShipmentStatus } from './ShipmentStatus';
+import { ShipmentStatus } from '../enums/ShipmentStatus';
 
 @Entity()
 export class ShipmentEvent {
@@ -17,6 +17,6 @@ export class ShipmentEvent {
 	@ManyToOne()
 	public address!: Address;
 
-	@ManyToOne()
-	public shipmentStatus!: ShipmentStatus;
+	@Enum()
+	public status!: ShipmentStatus;
 }
