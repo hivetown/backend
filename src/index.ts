@@ -7,6 +7,11 @@ import { attachControllers } from '@decorators/express';
 import { ProducerGateway } from './gateways';
 import { HelloController } from './controllers/hello';
 
+// ENV
+import { config } from 'dotenv-cra';
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+config();
+
 export const container = {} as {
 	server: http.Server;
 	orm: MikroORM;
