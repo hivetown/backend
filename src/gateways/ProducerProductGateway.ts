@@ -63,4 +63,10 @@ export class ProducerProductGateway {
 			pageSize: pagination.limit
 		};
 	}
+
+	// para dar update no stock do produto
+	public async updateProduct(product: ProducerProduct): Promise<ProducerProduct> {
+		await this.repository.persistAndFlush(product);
+		return product;
+	}
 }

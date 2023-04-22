@@ -44,7 +44,7 @@ export const convertExportOrderItem = (orderItems: Collection<OrderItem>): any[]
 			price,
 			shipment: {
 				carrier: {
-					licensePlate: shipment.carrier.licensePlate
+					licensePlate: shipment.carrier?.licensePlate
 				},
 				events: shipment.events.getItems().map((event: ShipmentEvent) => ({
 					date: event.date,
@@ -67,7 +67,6 @@ export const convertExportOrderItem = (orderItems: Collection<OrderItem>): any[]
 				}))
 			}
 		};
-		i++;
 	}
 	return res;
 };

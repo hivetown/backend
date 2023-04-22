@@ -22,7 +22,7 @@ export interface ExportOrderItem {
 	price: number;
 	shipment: {
 		carrier: {
-			licensePlate: string;
+			licensePlate: string | undefined;
 		};
 		events: {
 			date: Date;
