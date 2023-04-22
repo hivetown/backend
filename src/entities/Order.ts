@@ -33,7 +33,8 @@ export class Order {
 
 	public canCancel(): boolean {
 		for (const i of this.items.getItems()) {
-			if (i.getActualStatus() > 1) {
+			const actualStatus = i.getActualStatus();
+			if (actualStatus > 1 || actualStatus === 4) {
 				return false;
 			}
 		}

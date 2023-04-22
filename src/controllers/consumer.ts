@@ -236,31 +236,23 @@ export class ConsumerController {
 	public async createOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		try {
 			const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
-			if (consumer) {
-				const address = consumer.addresses.getItems().find((address) => address.id === req.body.shippingAddressId);
-				if (address) {
-					if (consumer.cartItems.getItems().length > 0) {
-						const haveStock = consumer.existStockCartItems();
-						if (haveStock) {
-							for (const item of consumer.cartItems.getItems()) {
-								item.producerProduct.stock -= item.quantity;
-							}
-							const newOrder = new Order().create(consumer, address);
-							const populatedNewOrder = await container.orderGateway.createOrder(newOrder); // cria a order
-							const session = await createCheckoutSession(populatedNewOrder);
-							res.status(200).json({ sessionId: session.id, checkout_url: session.url });
-						} else {
-							res.status(400).json({ error: 'Not enough stock ' }); // elaborar melhor esta mensagem para indicar o stock existente
-						}
-					} else {
-						res.status(400).json({ error: 'Cart is empty' });
-					}
-				} else {
-					res.status(404).json({ error: 'Address not found' });
-				}
-			} else {
-				res.status(404).json({ error: 'Consumer not found' });
+			if (!consumer) throw new NotFoundError('Consumer not found');
+
+			const address = consumer.addresses.getItems().find((address) => address.id === req.body.shippingAddressId);
+			if (!address) throw new NotFoundError('Address not found for this consumer');
+
+			if (!(consumer.cartItems.getItems().length > 0)) throw new BadRequestError('Cart is empty');
+			const haveStock = consumer.existStockCartItems();
+
+			if (!haveStock) throw new BadRequestError('Not enough stock for one or more products');
+
+			for (const item of consumer.cartItems.getItems()) {
+				item.producerProduct.stock -= item.quantity;
 			}
+			const newOrder = new Order().create(consumer, address);
+			const populatedNewOrder = await container.orderGateway.createOrder(newOrder); // cria a order
+			const session = await createCheckoutSession(populatedNewOrder);
+			res.status(200).json({ sessionId: session.id, checkout_url: session.url });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -280,13 +272,10 @@ export class ConsumerController {
 	public async successOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		try {
 			const consumer = await container.consumerGateway.findById(consumerId);
-			if (consumer) {
-				// Para já esta a enviar todas as informações mas depois vai ser filtrado com o que é necessário
-				const session = await stripe.checkout.sessions.retrieve(req.query.session_id as string);
-				res.status(200).json(session);
-			} else {
-				res.status(404).json({ error: 'Consumer not found' });
-			}
+			if (!consumer) throw new NotFoundError('Consumer not found');
+			// Para já esta a enviar todas as informações mas depois vai ser filtrado com o que é necessário
+			const session = await stripe.checkout.sessions.retrieve(req.query.session_id as string);
+			res.status(200).json(session);
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -318,14 +307,13 @@ export class ConsumerController {
 		})
 	])
 	public async cancelOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		// Este é o cancelamento da order antes de ser paga (ou seja no frontend voltar para trás)
 		try {
 			const consumer = await container.consumerGateway.findById(consumerId);
-			if (consumer) {
-				await stripe.checkout.sessions.expire(req.query.session_id as string);
-				res.json(`Sessão ${req.query.session_id} cancelada com sucesso.`);
-			} else {
-				res.json({ error: 'Consumer not found' });
-			}
+			if (!consumer) throw new NotFoundError('Consumer not found');
+
+			await stripe.checkout.sessions.expire(req.query.session_id as string);
+			res.json(`Sessão ${req.query.session_id} cancelada com sucesso.`);
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
@@ -402,35 +390,29 @@ export class ConsumerController {
 	public async deleteOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
 		try {
 			const consumer = await container.consumerGateway.findById(consumerId);
-			if (consumer) {
-				const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
-				if (order) {
-					const orderPopulated = await container.orderGateway.findByIdPopulated(order.id);
-					// ele nunca vai ser null mas o typescript não sabe disso - ver se há uma maneira de fazer um pouco melhor, talvez criar um findByConsumerAndOrderPopulated
-					if (orderPopulated?.canCancel()) {
-						for (const item of orderPopulated?.items.getItems()) {
-							item.producerProduct.stock += item.quantity;
-						}
-						order.addShipmentEvent(ShipmentStatus.Canceled, order.shippingAddress);
+			if (!consumer) throw new NotFoundError('Consumer not found');
 
-						await container.orderGateway.updateOrder(order);
+			const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
+			if (!order) throw new NotFoundError('Order not found for this consumer');
+			const orderPopulated = await container.orderGateway.findByIdPopulated(order.id);
+			// ele nunca vai ser null mas o typescript não sabe disso
+			if (!orderPopulated?.canCancel())
+				throw new BadRequestError(`This order can not be canceled because is already at the state: ${order.getGeneralStatus()}`);
 
-						// tratar do refund
-						const refund = await stripe.refunds.create({
-							payment_intent: orderPopulated.payment,
-							reason: 'requested_by_customer' // motivo do reembolso (opcional)
-						});
-
-						res.json({ message: 'Order canceled', refund });
-					} else {
-						res.status(400).json({ error: 'Order can not be canceled' });
-					}
-				} else {
-					res.status(404).json({ error: 'Order not found for this consumer' });
-				}
-			} else {
-				res.status(404).json({ error: 'Consumer not found' });
+			for (const item of orderPopulated?.items.getItems()) {
+				item.producerProduct.stock += item.quantity;
 			}
+			order.addShipmentEvent(ShipmentStatus.Canceled, order.shippingAddress);
+
+			await container.orderGateway.updateOrder(order);
+
+			// tratar do refund
+			const refund = await stripe.refunds.create({
+				payment_intent: orderPopulated.payment,
+				reason: 'requested_by_customer' // motivo do reembolso (opcional)
+			});
+
+			res.json({ message: 'Order canceled', refund });
 		} catch (error) {
 			console.error(error);
 			res.status(500).json({ error: (error as any).message });
