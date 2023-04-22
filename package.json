@@ -24,7 +24,9 @@
 		"prepack": "yarn build && pinst --disable",
 		"postpack": "pinst --enable",
 		"upgrade": "yarn upgrade",
-		"faker": "ts-node -r tsconfig-paths/register ./src/faker"
+		"docker:build": "docker build --no-cache -t luckspt/hivetown-api .",
+		"docker:run": "docker run -p 3000:3000 luckspt/hivetown-api",
+		"docker:push": "docker push luckspt/hivetown-api"
 	},
 	"dependencies": {
 		"@decorators/di": "^2.0.0",

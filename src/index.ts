@@ -27,6 +27,11 @@ import { ConsumerController } from './controllers/consumer';
 import { ProducersController } from './controllers/producers';
 import { AuthController } from './controllers/auth';
 
+// ENV
+import { config } from 'dotenv-cra';
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+config();
+
 export const container = {} as {
 	server: http.Server;
 	orm: MikroORM;
@@ -80,6 +85,10 @@ export const main = async () => {
 	await attachControllers(app, [HelloController]);
 	await attachControllers(app, [ProductsController, CategoryController, ConsumerController]);
 	await attachControllers(app, [AuthController, ProductsController, CategoryController, ConsumerController, ProducersController]);
+
+	app.use('/', (_req, res) => {
+		res.status(200).send('Hello Hivetown!');
+	});
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
