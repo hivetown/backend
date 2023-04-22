@@ -46,4 +46,8 @@ export class CartItemGateway {
 		);
 		return cartItem;
 	}
+
+	public async delete(items: CartItem[]): Promise<void> {
+		await this.repository.removeAndFlush(items);
+	}
 }

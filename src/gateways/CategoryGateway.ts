@@ -64,6 +64,7 @@ export class CategoryGateway {
 	}
 
 	public async remove(category: Category): Promise<void> {
+		// TODO: Soft delete
 		await this.repository.removeAndFlush(category);
 	}
 

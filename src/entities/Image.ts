@@ -20,24 +20,24 @@ export class Image {
 	@Property()
 	public alt!: string;
 
-	@OneToOne()
+	@OneToOne({ hidden: true })
 	public carrier?: Carrier;
 
-	@OneToOne()
+	@OneToOne({ hidden: true })
 	public category?: Category;
 
-	@OneToOne()
+	@OneToOne({ hidden: true })
 	public consumer?: Consumer;
 
-	@OneToOne()
+	@OneToOne({ hidden: true })
 	public producerImage?: Producer;
 
-	@ManyToOne()
+	@ManyToOne({ hidden: true })
 	public producerImages?: Producer;
 
-	@ManyToOne()
+	@ManyToOne({ hidden: true })
 	public productionUnit?: ProductionUnit;
 
-	@ManyToOne()
+	@ManyToOne({ hidden: true })
 	public productSpec?: ProductSpec;
 }

@@ -1,15 +1,14 @@
 import { Injectable } from '@decorators/di';
-import type { Producer } from '../entities';
+import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
+import { Joi, validate } from 'express-validation';
+import * as Express from 'express';
+import { Producer, ShipmentStatus } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { container } from '..';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
-import { ApiError } from '../errors/ApiError';
-import { Controller, Get, Params, Request, Response, Post } from '@decorators/express';
-import * as Express from 'express';
-import { Joi, validate } from 'express-validation';
+import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
-import { ShipmentStatus } from '../enums';
 
 @Controller('/producers')
 @Injectable()
@@ -24,21 +23,19 @@ export class ProducersController {
 		}),
 		AuthMiddleware
 	])
-	public async createProducer(@Response() res: Express.Response, @Request() req: Express.Request): Promise<void> {
+	public async createProducer(@Response() res: Express.Response, @Request() req: Express.Request) {
+		const data: Producer = req.body;
+		data.authId = req.authUser!.uid;
+		data.email = req.authUser!.email!;
+
+		let producer: Producer | null = null;
 		try {
-			const data: Producer = req.body;
-			data.authId = req.authUser!.uid;
-			data.email = req.authUser!.email!;
-
-			const producer = await container.producerGateway.create(data);
-			res.status(201).json(producer);
+			producer = await container.producerGateway.create(data);
 		} catch (error) {
-			if (error instanceof UniqueConstraintViolationException) {
-				throw new ConflictError('Producer already exists');
-			}
-
-			throw new ApiError((error as any).message, 500);
+			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Producer already exists');
 		}
+
+		return res.status(201).json(producer);
 	}
 
 	@Get('/:producerId/orders', [
@@ -54,34 +51,22 @@ export class ProducersController {
 		AuthMiddleware
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
-		try {
-			const producer = await container.producerGateway.findById(producerId);
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
 
-			if (producer) {
-				const orderItems = await container.orderItemGateway.findOrdersByProducer(producerId);
-				if (orderItems.length === 0) {
-					res.status(404).json({ error: 'No orders found' });
-				} else {
-					const ordersId: number[] = new Array(orderItems.length);
-					for (let i = 0; i < orderItems.length; i++) {
-						ordersId[i] = orderItems[i].order.id;
-					}
-
-					const options: PaginatedOptions = {
-						page: Number(req.query.page) || -1,
-						size: Number(req.query.pageSize) || -1
-					};
-
-					const orders = await container.orderGateway.findByIds(ordersId, options);
-					res.status(200).json(orders);
-				}
-			} else {
-				res.status(404).json({ error: 'Producer not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
+		const orderItems = await container.orderItemGateway.findOrdersByProducer(producerId);
+		const ordersId: number[] = new Array(orderItems.length);
+		for (let i = 0; i < orderItems.length; i++) {
+			ordersId[i] = orderItems[i].order.id;
 		}
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const orders = await container.orderGateway.findByIds(ordersId, options);
+		return res.status(200).json(orders);
 	}
 
 	@Get('/:producerId/orders/:orderId', [
@@ -94,25 +79,17 @@ export class ProducersController {
 		AuthMiddleware
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('orderId') orderId: number) {
-		try {
-			const producer = await container.producerGateway.findById(producerId);
-			if (producer) {
-				const orderItem = await container.orderItemGateway.findOrderByProducerAndOrderId(producerId, orderId);
-				if (orderItem) {
-					const order = await container.orderGateway.findByIdWithShippingAddress(orderId);
-					const o = { id: order?.id, shippingAddress: order?.shippingAddress, status: order?.getGeneralStatusForProducer(producerId) };
-					console.log(order?.getGeneralStatusForProducer(producerId));
-					res.status(200).json(o);
-				} else {
-					res.status(404).json({ error: 'Order not found in this Producer' });
-				}
-			} else {
-				res.status(404).json({ error: 'Producer not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const orderItem = await container.orderItemGateway.findOrderByProducerAndOrderId(producerId, orderId);
+		if (!orderItem) throw new NotFoundError('Order not found');
+
+		const order = await container.orderGateway.findByIdWithShippingAddress(orderId);
+		if (!order) throw new NotFoundError('Order not found');
+
+		const orderRes = { id: order.id, shippingAddress: order.shippingAddress, status: order.getGeneralStatusForProducer(producerId) };
+		return res.status(200).json(orderRes);
 	}
 
 	@Get('/:producerId/orders/:orderId/items', [
@@ -134,39 +111,32 @@ export class ProducersController {
 		@Params('producerId') producerId: number,
 		@Params('orderId') orderId: number
 	) {
-		try {
-			const producer = await container.producerGateway.findById(producerId);
-			if (producer) {
-				const options: PaginatedOptions = {
-					page: Number(req.query.page) || -1,
-					size: Number(req.query.pageSize) || -1
-				};
-				const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
-				if (orderItems.totalItems > 0) {
-					// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
 
-					const items = [];
-					for (const orderItem of orderItems.items) {
-						const status = ShipmentStatus[orderItem.shipment.getLastEvent().status];
-						items.push({ producerProduct: orderItem.producerProduct, status, quantity: orderItem.quantity, price: orderItem.price });
-					}
-					res.status(200).json({
-						items,
-						totalItems: orderItems.totalItems,
-						totalPages: orderItems.totalPages,
-						page: orderItems.page,
-						pageSize: orderItems.pageSize
-					});
-				} else {
-					res.status(404).json({ error: 'Order not found for this producer' });
-				}
-			} else {
-				res.status(404).json({ error: 'Producer not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
+		// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
+		if (!orderItems.totalItems) throw new NotFoundError('Order not found');
+
+		const items = new Array(orderItems.items.length);
+		for (let i = 0; i < orderItems.items.length; i++) {
+			const orderItem = orderItems.items[i];
+			const status = ShipmentStatus[orderItem.shipment.getLastEvent().status];
+			items[i] = { producerProduct: orderItem.producerProduct, status, quantity: orderItem.quantity, price: orderItem.price };
 		}
+
+		return res.status(200).json({
+			items,
+			totalItems: orderItems.totalItems,
+			totalPages: orderItems.totalPages,
+			page: orderItems.page,
+			pageSize: orderItems.pageSize
+		});
 	}
 
 	@Get('/:producerId/orders/:orderId/items/:producerProductId', [
@@ -186,39 +156,26 @@ export class ProducersController {
 		@Params('orderId') orderId: number,
 		@Params('producerProductId') producerProductId: number
 	) {
-		try {
-			const producer = await container.producerGateway.findById(producerId);
-			if (producer) {
-				const options: PaginatedOptions = {
-					page: Number(req.query.page) || -1,
-					size: Number(req.query.pageSize) || -1
-				};
-				const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
-				if (orderItems.totalItems > 0) {
-					const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProduct(
-						producerId,
-						orderId,
-						producerProductId
-					);
-					if (orderItem) {
-						res.status(200).json({
-							producerProduct: orderItem.producerProduct,
-							quantity: orderItem.quantity,
-							price: orderItem.price
-						});
-					} else {
-						res.status(404).json({ error: 'Order item not found for this producer or Product not found for this Order Item' });
-					}
-				} else {
-					res.status(404).json({ error: 'Order not found for this producer' });
-				}
-			} else {
-				res.status(404).json({ error: 'Producer not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
+		// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
+		if (!orderItems.totalItems) throw new NotFoundError('Order not found');
+
+		const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProduct(producerId, orderId, producerProductId);
+		if (!orderItem) throw new NotFoundError('Order item not found');
+
+		return res.status(200).json({
+			producerProduct: orderItem.producerProduct,
+			quantity: orderItem.quantity,
+			price: orderItem.price
+		});
 	}
 
 	@Get('/:producerId/orders/:orderId/items/:producerProductId/shipment', [
@@ -238,34 +195,92 @@ export class ProducersController {
 		@Params('orderId') orderId: number,
 		@Params('producerProductId') producerProductId: number
 	) {
-		try {
-			const producer = await container.producerGateway.findById(producerId);
-			if (producer) {
-				const options: PaginatedOptions = {
-					page: Number(req.query.page) || -1,
-					size: Number(req.query.pageSize) || -1
-				};
-				const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
-				if (orderItems.totalItems > 0) {
-					const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProductWithShipment(
-						producerId,
-						orderId,
-						producerProductId
-					);
-					if (orderItem) {
-						res.status(200).json(orderItem.shipment);
-					} else {
-						res.status(404).json({ error: 'Order item not found for this producer' });
-					}
-				} else {
-					res.status(404).json({ error: 'Order not found for this producer' });
-				}
-			} else {
-				res.status(404).json({ error: 'Producer not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
+		// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
+		if (!orderItems.totalItems) throw new NotFoundError('Order not found');
+
+		const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProductWithShipment(
+			producerId,
+			orderId,
+			producerProductId
+		);
+
+		if (!orderItem) throw new NotFoundError('Order item not found');
+
+		return res.status(200).json(orderItem.shipment);
+	}
+
+	@Get('/:producerId/units', [
+		validate({
+			params: Joi.object({ producerId: Joi.number().required() })
+		}),
+		AuthMiddleware
+	])
+	public async getUnits(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const units = await container.productionUnitGateway.findFromProducer(producer.id, options);
+		return res.status(200).json(units);
+	}
+
+	@Get('/:producerId/units/:unitId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			})
+		})
+	])
+	public async getUnit(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('unitId') unitId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findById(unitId);
+		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+
+		return res.status(200).json(productionUnit);
+	}
+
+	@Get('/:producerId/units/:unitId/products', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			})
+		})
+	])
+	public async getProductionUnitProducts(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number,
+		@Request() req: Express.Request
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findById(unitId);
+		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const products = await container.producerProductGateway.findFromProductionUnit(productionUnit.id, options);
+		return res.status(200).json(products);
 	}
 }

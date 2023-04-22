@@ -11,11 +11,6 @@ export class ProducerGateway {
 		this.repository = orm.em.getRepository(Producer);
 	}
 
-	public async findById(id: number): Promise<Producer | null> {
-		const producer = await this.repository.findOne(id);
-		return producer;
-	}
-
 	public async findAll(): Promise<Producer[]> {
 		const producers = await this.repository.findAll();
 		return producers;
@@ -25,6 +20,10 @@ export class ProducerGateway {
 		const data = this.repository.create(producer);
 		await this.repository.persistAndFlush(data);
 		return producer;
+	}
+
+	public async findById(id: number): Promise<Producer | null> {
+		return this.repository.findOne(id);
 	}
 
 	public async findByAuthId(authId: string): Promise<Producer | null> {
@@ -41,7 +40,7 @@ export class ProducerGateway {
 				.where({ 'pp.product_spec_id': id })
 				.limit(pagination.limit)
 				.offset(pagination.offset)
-				.execute(),
+				.getResultList(),
 			this.repository
 				.createQueryBuilder('p')
 				.select('p.*', true)

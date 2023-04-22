@@ -12,13 +12,14 @@ import {
 	FieldGateway,
 	OrderItemGateway,
 	ProducerGateway,
-	ProductGateway,
+	ProducerProductGateway,
 	ProductSpecGateway,
 	ProductSpecCategoryGateway,
 	ProductSpecFieldGateway,
 	AddressGateway,
 	ConsumerGateway,
-	OrderGateway
+	OrderGateway,
+	ProductionUnitGateway
 } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
@@ -38,7 +39,7 @@ export const container = {} as {
 	em: EntityManager;
 	addressGateway: AddressGateway;
 	producerGateway: ProducerGateway;
-	productGateway: ProductGateway;
+	producerProductGateway: ProducerProductGateway;
 	productSpecCategoryGateway: ProductSpecCategoryGateway;
 	categoryGateway: CategoryGateway;
 	productSpecGatway: ProductSpecGateway;
@@ -49,6 +50,7 @@ export const container = {} as {
 	productSpecFieldGateway: ProductSpecFieldGateway;
 	productSpecGateway: ProductSpecGateway;
 	cartItemGateway: CartItemGateway;
+	productionUnitGateway: ProductionUnitGateway;
 };
 
 export const app = express();
@@ -58,7 +60,7 @@ export const main = async () => {
 	container.em = container.orm.em;
 	container.addressGateway = new AddressGateway(container.orm);
 	container.producerGateway = new ProducerGateway(container.orm);
-	container.productGateway = new ProductGateway(container.orm);
+	container.producerProductGateway = new ProducerProductGateway(container.orm);
 	container.productSpecCategoryGateway = new ProductSpecCategoryGateway(container.orm);
 	container.categoryGateway = new CategoryGateway(container.orm);
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
@@ -69,6 +71,7 @@ export const main = async () => {
 	container.productSpecFieldGateway = new ProductSpecFieldGateway(container.orm);
 	container.productSpecGateway = new ProductSpecGateway(container.orm);
 	container.cartItemGateway = new CartItemGateway(container.orm);
+	container.productionUnitGateway = new ProductionUnitGateway(container.orm);
 	container.orderItemGateway = new OrderItemGateway(container.orm);
 	container.orderGateway = new OrderGateway(container.orm);
 

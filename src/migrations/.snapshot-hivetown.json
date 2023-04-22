@@ -424,12 +424,12 @@
 				},
 				"vat": {
 					"name": "vat",
-					"type": "double",
+					"type": "varchar(255)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "double"
+					"mappedType": "string"
 				},
 				"auth_id": {
 					"name": "auth_id",
@@ -534,12 +534,12 @@
 				},
 				"vat": {
 					"name": "vat",
-					"type": "double",
+					"type": "varchar(255)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "double"
+					"mappedType": "string"
 				},
 				"auth_id": {
 					"name": "auth_id",

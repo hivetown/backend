@@ -13,7 +13,7 @@ export class Producer extends User {
 
 	@Property({ persist: false })
 	public get type() {
-		return UserType.Consumer;
+		return UserType.Producer;
 	}
 
 	@OneToMany('ProductionUnit', 'producer')

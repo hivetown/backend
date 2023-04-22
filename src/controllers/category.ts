@@ -5,6 +5,9 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import { AuthMiddleware } from '../middlewares/auth';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { NotFoundError } from '../errors/NotFoundError';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
+import { ConflictError } from '../errors/ConflictError';
 
 @Controller('/categories')
 @Injectable()
@@ -18,18 +21,13 @@ export class CategoryController {
 		})
 	])
 	public async allParentCategories(@Response() res: Express.Response, @Request() req: Express.Request) {
-		try {
-			const options: PaginatedOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1
-			};
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
 
-			const items = await container.categoryGateway.findAllRoot(options);
-			res.status(200).json(items);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const items = await container.categoryGateway.findAllRoot(options);
+		return res.status(200).json(items);
 	}
 
 	@Post('/', [
@@ -47,13 +45,8 @@ export class CategoryController {
 		AuthMiddleware
 	])
 	public async createCategory(@Response() res: Express.Response, @Request() req: Express.Request) {
-		try {
-			const category = await container.categoryGateway.create(req.body);
-			res.status(201).json(category);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const category = await container.categoryGateway.create(req.body);
+		return res.status(201).json(category);
 	}
 
 	@Get('/:categoryId', [
@@ -64,17 +57,10 @@ export class CategoryController {
 		})
 	])
 	public async categoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
-		try {
-			const category = await container.categoryGateway.findById(categoryId);
-			if (category) {
-				res.status(200).json(category);
-			} else {
-				res.status(404).json({ error: 'Category not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		return res.status(200).json(category);
 	}
 
 	@Put('/:categoryId', [
@@ -95,21 +81,16 @@ export class CategoryController {
 		AuthMiddleware
 	])
 	public async updateCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
-		try {
-			const category = await container.categoryGateway.findById(categoryId);
-			if (category) {
-				category.name = req.body.name;
-				category.parent = req.body.parent;
-				category.image = req.body.image;
-				const categoryUpdated = await container.categoryGateway.update(category);
-				res.status(201).json(categoryUpdated);
-			} else {
-				res.status(404).json({ error: 'Category not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const category = await container.categoryGateway.findById(categoryId);
+
+		if (!category) throw new NotFoundError('Category not found');
+
+		category.name = req.body.name;
+		category.parent = req.body.parent;
+		category.image = req.body.image;
+
+		const categoryUpdated = await container.categoryGateway.update(category);
+		return res.status(201).json(categoryUpdated);
 	}
 
 	@Delete('/:categoryId', [
@@ -121,18 +102,12 @@ export class CategoryController {
 		AuthMiddleware
 	])
 	public async deleteCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
-		try {
-			const categoryTBremoved = await container.categoryGateway.findById(categoryId);
-			if (categoryTBremoved) {
-				await container.categoryGateway.remove(categoryTBremoved);
-				res.status(204).json({ message: 'Category removed' });
-			} else {
-				res.status(404).json({ error: 'Category not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const categoryToRemove = await container.categoryGateway.findById(categoryId);
+
+		if (!categoryToRemove) throw new NotFoundError('Category not found');
+		await container.categoryGateway.remove(categoryToRemove);
+
+		return res.status(204).send();
 	}
 
 	@Get('/:categoryId/categories', [
@@ -147,22 +122,16 @@ export class CategoryController {
 		})
 	])
 	public async categoryCategories(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
-		try {
-			const category = await container.categoryGateway.findById(categoryId);
-			if (category) {
-				const options: PaginatedOptions = {
-					page: Number(req.query.page) || -1,
-					size: Number(req.query.pageSize) || -1
-				};
-				const items = await container.categoryGateway.findAllChildrenOfCategory(categoryId, options);
-				res.status(200).json(items);
-			} else {
-				res.status(404).json({ error: 'Category not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const items = await container.categoryGateway.findAllChildrenOfCategory(categoryId, options);
+		return res.status(200).json(items);
 	}
 
 	@Get('/:categoryId/fields', [
@@ -177,23 +146,16 @@ export class CategoryController {
 		})
 	])
 	public async allFieldsByCategoryId(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
-		try {
-			const category = await container.categoryGateway.findById(categoryId);
-			if (category) {
-				const options: PaginatedOptions = {
-					page: Number(req.query.page) || -1,
-					size: Number(req.query.pageSize) || -1
-				};
-				const items = await container.fieldGateway.findFieldsByCategoryId(categoryId, options);
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
 
-				res.status(200).json(items);
-			} else {
-				res.status(404).json({ error: 'Category not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const items = await container.fieldGateway.findFieldsByCategoryId(categoryId, options);
+		return res.status(200).json(items);
 	}
 
 	@Get('/:categoryId/fields/:fieldId', [
@@ -209,28 +171,16 @@ export class CategoryController {
 		@Params('categoryId') categoryId: number,
 		@Params('fieldId') fieldId: number
 	) {
-		try {
-			const category = await container.categoryGateway.findById(categoryId);
-			if (category) {
-				const field = await container.fieldGateway.findById(fieldId);
-				if (field) {
-					const f = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
 
-					if (f) {
-						res.status(200).json(f);
-					} else {
-						res.status(404).json({ error: 'Field not found in this category' });
-					}
-				} else {
-					res.status(404).json({ error: 'Field not found' });
-				}
-			} else {
-				res.status(404).json({ error: 'Category not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const field = await container.fieldGateway.findById(fieldId);
+		if (!field) throw new NotFoundError('Field not found');
+
+		const categoryField = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
+		if (!categoryField) throw new NotFoundError('Field not found in category');
+
+		return res.status(200).json(categoryField);
 	}
 
 	@Put('/:categoryId/fields/:fieldId', [
@@ -243,25 +193,20 @@ export class CategoryController {
 		AuthMiddleware
 	])
 	public async addFieldToCategory(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Params('fieldId') fieldId: number) {
-		try {
-			const category = await container.categoryGateway.findById(categoryId);
-			const field = await container.fieldGateway.findById(fieldId);
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
 
-			if (category) {
-				if (field) {
-					category.fields.add(field);
-					await container.categoryGateway.update(category);
-					res.status(201).json(field);
-				} else {
-					res.status(404).json({ error: 'Field not found' });
-				}
-			} else {
-				res.status(404).json({ error: 'Category not found' });
-			}
+		const field = await container.fieldGateway.findById(fieldId);
+		if (!field) throw new NotFoundError('Field not found');
+
+		try {
+			category.fields.add(field);
+			await container.categoryGateway.update(category);
 		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
+			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Field already exists in category');
 		}
+
+		return res.status(201).json(field);
 	}
 
 	@Delete('/:categoryId/fields/:fieldId', [
@@ -278,28 +223,18 @@ export class CategoryController {
 		@Params('categoryId') categoryId: number,
 		@Params('fieldId') fieldId: number
 	) {
-		try {
-			const category = await container.categoryGateway.findByIdWithFields(categoryId);
-			if (category) {
-				const field = await container.fieldGateway.findById(fieldId);
-				if (field) {
-					const f = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
-					if (f) {
-						category.fields.remove(f);
-						await container.categoryGateway.update(category);
-						res.status(204).json('The field was removed from the category');
-					} else {
-						res.status(404).json({ error: 'Field not found in this category' });
-					}
-				} else {
-					res.status(404).json({ error: 'Field not found' });
-				}
-			} else {
-				res.status(404).json({ error: 'Category or field not found' });
-			}
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const category = await container.categoryGateway.findByIdWithFields(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const field = await container.fieldGateway.findById(fieldId);
+		if (!field) throw new NotFoundError('Field not found');
+
+		const categoryField = await container.fieldGateway.findFieldByCategoryId(categoryId, fieldId);
+		if (!categoryField) throw new NotFoundError('Field not found in category');
+
+		category.fields.remove(categoryField);
+		await container.categoryGateway.update(category);
+
+		return res.status(204).send();
 	}
 }
