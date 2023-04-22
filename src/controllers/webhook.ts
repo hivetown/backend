@@ -49,7 +49,7 @@ export class WebhookController {
 					const consumerId = order.consumer.id;
 					const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
 					if (consumer) {
-						await container.consumerGateway.deleteCart(consumer);
+						await container.cartItemGateway.delete(consumer.cartItems.getItems());
 						order.addShipmentEvent(ShipmentStatus.Paid, order.shippingAddress);
 						order.payment = session.payment_intent as string;
 						await container.orderGateway.updateOrder(order);
