@@ -27,4 +27,10 @@ export class ProductionUnit {
 
 	@OneToMany('Image', 'productionUnit')
 	public images = new Collection<Image>(this);
+
+	public constructor(name: string, address: Address, producer: Producer) {
+		this.name = name;
+		this.address = address;
+		this.producer = producer;
+	}
 }

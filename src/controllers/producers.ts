@@ -2,7 +2,7 @@ import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
 import { Joi, validate } from 'express-validation';
 import * as Express from 'express';
-import { Producer, ShipmentStatus } from '../entities';
+import { Producer, ProductionUnit, ShipmentStatus } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { container } from '..';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
@@ -253,6 +253,29 @@ export class ProducersController {
 		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
 
 		return res.status(200).json(productionUnit);
+	}
+
+	@Post('/:producerId/units', [
+		validate({
+			params: Joi.object({ producerId: Joi.number().required() }),
+			body: Joi.object({
+				name: Joi.string().required(),
+				address: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async createProductionUnit(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findByIdWithUnits(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const address = await container.addressGateway.findById(req.body.address);
+		if (!address) throw new NotFoundError('Address not found');
+
+		const newUnit = new ProductionUnit(req.body.name, address, producer);
+		await container.productionUnitGateway.create(newUnit);
+
+		return res.status(201).json(newUnit);
 	}
 
 	@Get('/:producerId/units/:unitId/products', [

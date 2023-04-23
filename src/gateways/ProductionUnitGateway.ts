@@ -36,11 +36,16 @@ export class ProductionUnitGateway {
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
 		return {
-			totalItems,
 			items: productionUnits,
+			totalItems,
 			totalPages,
 			page,
 			pageSize: pagination.limit
 		};
+	}
+
+	public async create(productionUnit: ProductionUnit): Promise<ProductionUnit> {
+		await this.repository.persistAndFlush(productionUnit);
+		return productionUnit;
 	}
 }

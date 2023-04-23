@@ -44,4 +44,9 @@ export class AddressGateway {
 			pageSize: pagination.limit
 		};
 	}
+
+	public async findById(id: number): Promise<Address | null> {
+		const address = await this.repository.findOne(id);
+		return address;
+	}
 }
