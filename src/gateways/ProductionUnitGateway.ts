@@ -22,7 +22,7 @@ export class ProductionUnitGateway {
 		const qb = this.repository
 			.createQueryBuilder('pu')
 			.select('*')
-			.where({ producer: { id: producerId } })
+			.where({ producer: { id: producerId }, deletedAt: null })
 			.leftJoinAndSelect('pu.address', 'a');
 
 		const totalItemsQb = qb.clone();
@@ -48,5 +48,9 @@ export class ProductionUnitGateway {
 		await this.repository.persistAndFlush(productionUnit);
 		await this.repository.populate(productionUnit, ['address']);
 		return productionUnit;
+	}
+
+	public async delete(productionUnit: ProductionUnit): Promise<void> {
+		await this.repository.removeAndFlush(productionUnit);
 	}
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Post, Put, Request, Response } from '@decorators/express';
+import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import { Joi, validate } from 'express-validation';
 import * as Express from 'express';
 import { Producer, ProductionUnit, ShipmentStatus } from '../entities';
@@ -312,6 +312,27 @@ export class ProducersController {
 		const pu = await container.productionUnitGateway.createOrUpdate(productionUnit);
 
 		return res.status(200).json(pu);
+	}
+
+	@Delete('/:producerId/units/:unitId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async deleteProductionUnit(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('unitId') unitId: number) {
+		const producer = await container.producerGateway.findByIdWithUnits(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = producer.productionUnits.getItems().find((unit) => unit.id === Number(unitId));
+		if (!productionUnit) throw new NotFoundError('Production unit not found for this producer');
+
+		await container.productionUnitGateway.delete(productionUnit);
+
+		return res.status(204).send();
 	}
 
 	@Get('/:producerId/units/:unitId/products', [

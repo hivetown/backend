@@ -43,6 +43,7 @@
 		"express-validation": "^4.1.0",
 		"firebase-admin": "^11.5.0",
 		"lodash": "^4.17.21",
+		"mikro-orm-soft-delete": "^0.1.0",
 		"mysql2": "^2.3.3",
 		"tslib": "^2.4.0"
 	},
