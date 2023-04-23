@@ -363,4 +363,39 @@ export class ProducersController {
 		const products = await container.producerProductGateway.findFromProductionUnit(productionUnit.id, options);
 		return res.status(200).json(products);
 	}
+
+	@Get('/:producerId/units/:unitId/carriers/inTransit', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			}),
+			query: Joi.object({
+				page: Joi.number().optional(),
+				pageSize: Joi.number().optional()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async getProductionUnitCarriersInTransitOfProductionUnit(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findById(unitId);
+		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const carriers = await container.carrierGateway.findAllinTranstit(productionUnit.id, options);
+
+		return res.status(200).json(carriers);
+	}
 }
