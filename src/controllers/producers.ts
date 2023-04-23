@@ -2,13 +2,15 @@ import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
 import { Joi, validate } from 'express-validation';
 import * as Express from 'express';
-import { Producer, ShipmentStatus } from '../entities';
+import { Producer, ShipmentEvent, ShipmentStatus } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { container } from '..';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { CarrierStatus } from '../enums';
+import { BadRequestError } from '../errors/BadRequestError';
 
 @Controller('/producers')
 @Injectable()
@@ -283,4 +285,50 @@ export class ProducersController {
 		const products = await container.producerProductGateway.findFromProductionUnit(productionUnit.id, options);
 		return res.status(200).json(products);
 	}
+
+	@Post('/:producerId/units/:unitId/carriers/:carrierId/shipments', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required(),
+				carrierId: Joi.number().required()
+			}),
+			body: Joi.object({
+				shipmentId: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async associateShipment(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number,
+		@Params('carrierId') carrierId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findByIdPopulated(unitId);
+		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+
+		const carrier = productionUnit.carriers.getItems().find((c) => c.id === Number(carrierId));
+		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		if (carrier.status === CarrierStatus.Unavailable) throw new BadRequestError('Carrier is unavailable');
+
+		const shipment = await container.shipmentGateway.findById(req.body.shipmentId);
+		if (!shipment) throw new NotFoundError('Shipment not found');
+
+		shipment.carrier = carrier;
+		const newEvent = new ShipmentEvent().create(shipment, ShipmentStatus.Shipped, productionUnit.address);
+		shipment.events.add(newEvent);
+
+		await container.shipmentGateway.update(shipment);
+
+		return res.status(200).json(shipment);
+	}
+
+	// RF25 e RF26 que é quando a shipment já está associada ao carrier
+	// @Post('/:producerId/units/:unitId/carriers/:carrierId/shipments/:shipmentId/events')
 }
