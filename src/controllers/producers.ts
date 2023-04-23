@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
+import { Controller, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import { Joi, validate } from 'express-validation';
 import * as Express from 'express';
 import { Producer, ProductionUnit, ShipmentStatus } from '../entities';
@@ -273,9 +273,45 @@ export class ProducersController {
 		if (!address) throw new NotFoundError('Address not found');
 
 		const newUnit = new ProductionUnit(req.body.name, address, producer);
-		await container.productionUnitGateway.create(newUnit);
+		await container.productionUnitGateway.createOrUpdate(newUnit);
 
 		return res.status(201).json(newUnit);
+	}
+
+	@Put('/:producerId/units/:unitId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				address: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async updateProductionUnit(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number
+	) {
+		const producer = await container.producerGateway.findByIdWithUnits(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = producer.productionUnits.getItems().find((unit) => unit.id === Number(unitId));
+		if (!productionUnit) throw new NotFoundError('Production unit not found for this producer');
+
+		const address = await container.addressGateway.findById(req.body.address);
+		if (!address) throw new NotFoundError('Address not found');
+
+		productionUnit.name = req.body.name;
+		productionUnit.address = address;
+
+		const pu = await container.productionUnitGateway.createOrUpdate(productionUnit);
+
+		return res.status(200).json(pu);
 	}
 
 	@Get('/:producerId/units/:unitId/products', [

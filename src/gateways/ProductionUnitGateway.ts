@@ -44,8 +44,9 @@ export class ProductionUnitGateway {
 		};
 	}
 
-	public async create(productionUnit: ProductionUnit): Promise<ProductionUnit> {
+	public async createOrUpdate(productionUnit: ProductionUnit): Promise<ProductionUnit> {
 		await this.repository.persistAndFlush(productionUnit);
+		await this.repository.populate(productionUnit, ['address']);
 		return productionUnit;
 	}
 }
