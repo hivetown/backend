@@ -48,19 +48,14 @@ export class ProducersController {
 		})
 	])
 	public async producerProducts(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
-		try {
-			const options: ProducerProductOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1,
-				populate: ['productSpec', 'productionUnit']
-			};
+		const options: ProducerProductOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1,
+			populate: ['productSpec', 'productionUnit']
+		};
 
-			const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);
-			res.json(producerProducts);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);
+		res.status(200).json(producerProducts);
 	}
 
 	@Get('/:producerId/orders', [
