@@ -11,6 +11,10 @@ export class AddressGateway {
 		this.repository = orm.em.getRepository(Address);
 	}
 
+	public async findById(id: number): Promise<Address | null> {
+		return this.repository.findOne(id);
+	}
+
 	public async create(address: Address): Promise<Address> {
 		const data = this.repository.create(address);
 		await this.repository.persistAndFlush(data);

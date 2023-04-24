@@ -220,6 +220,62 @@ export class ProducersController {
 		return res.status(200).json(orderItem.shipment);
 	}
 
+	@Post('/:producerId/orders/:orderId/items/:producerProductId/shipment/events', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				orderId: Joi.number().min(1).required(),
+				producerProductId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				status: Joi.string()
+					.valid(...Object.keys(ShipmentStatus)) // Processing, Shipped, Delivered
+					.required(),
+				addressId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async createOrderItemShipmentEvent(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('orderId') orderId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
+		// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
+		if (!orderItems.totalItems) throw new NotFoundError('Order not found');
+
+		const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProductWithShipment(
+			producerId,
+			orderId,
+			producerProductId
+		);
+
+		if (!orderItem) throw new NotFoundError('Order item not found');
+
+		const address = await container.addressGateway.findById(req.body.addressId);
+		if (!address) throw new NotFoundError('Address not found');
+
+		const status = ShipmentStatus[req.body.status as keyof typeof ShipmentStatus];
+
+		const newEvent = new ShipmentEvent().create(orderItem.shipment, status, address);
+		orderItem.shipment.events.add(newEvent);
+
+		await container.shipmentGateway.update(orderItem.shipment);
+
+		return res.status(200).json(orderItem.shipment);
+	}
+
 	@Get('/:producerId/units', [
 		validate({
 			params: Joi.object({ producerId: Joi.number().required() })
@@ -328,7 +384,4 @@ export class ProducersController {
 
 		return res.status(200).json(shipment);
 	}
-
-	// RF25 e RF26 que é quando a shipment já está associada ao carrier
-	// @Post('/:producerId/units/:unitId/carriers/:carrierId/shipments/:shipmentId/events')
 }
