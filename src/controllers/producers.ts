@@ -48,6 +48,9 @@ export class ProducersController {
 		})
 	])
 	public async producerProducts(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
 		const options: ProducerProductOptions = {
 			page: Number(req.query.page) || -1,
 			size: Number(req.query.pageSize) || -1,
