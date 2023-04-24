@@ -15,29 +15,6 @@ const producerIdParam = Joi.number().min(1).required();
 @Controller('/producers')
 @Injectable()
 export class ProducersController {
-	@Get('/:producerId/products', [
-		validate({
-			params: Joi.object({
-				producerId: producerIdParam
-			})
-		})
-	])
-	public async producerProducts(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
-		try {
-			const options: ProducerProductOptions = {
-				page: Number(req.query.page) || -1,
-				size: Number(req.query.pageSize) || -1,
-				populate: ['productSpec', 'productionUnit']
-			};
-
-			const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);
-			res.json(producerProducts);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
-	}
-
 	@Post('/', [
 		validate({
 			body: Joi.object({
@@ -61,6 +38,29 @@ export class ProducersController {
 		}
 
 		return res.status(201).json(producer);
+	}
+
+	@Get('/:producerId/products', [
+		validate({
+			params: Joi.object({
+				producerId: producerIdParam
+			})
+		})
+	])
+	public async producerProducts(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
+		try {
+			const options: ProducerProductOptions = {
+				page: Number(req.query.page) || -1,
+				size: Number(req.query.pageSize) || -1,
+				populate: ['productSpec', 'productionUnit']
+			};
+
+			const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);
+			res.json(producerProducts);
+		} catch (error) {
+			console.error(error);
+			res.status(500).json({ error: (error as any).message });
+		}
 	}
 
 	@Get('/:producerId/orders', [
