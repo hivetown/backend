@@ -1,6 +1,7 @@
 import type { EntityRepository, MikroORM, QueryBuilder } from '@mikro-orm/mysql';
 import { isEmpty } from 'lodash';
 import { ProductSpec } from '../entities';
+import type { BaseItems } from '../interfaces/BaseItems';
 import type { ProductSpecFilters } from '../interfaces/ProductSpecFilters';
 import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import { paginate } from '../utils/paginate';
@@ -13,10 +14,7 @@ export class ProductSpecGateway {
 		this.repository = orm.em.getRepository(ProductSpec);
 	}
 
-	public async findAll(
-		filter?: ProductSpecFilters,
-		options?: ProductSpecOptions
-	): Promise<{ items: ProductSpec[]; totalItems: number; totalPages: number; page: number; pageSize: number }> {
+	public async findAll(filter?: ProductSpecFilters, options?: ProductSpecOptions): Promise<BaseItems<ProductSpec>> {
 		const pagination = paginate(options);
 		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');
 
@@ -42,12 +40,13 @@ export class ProductSpecGateway {
 		}
 
 		// Calculate items count before grouping and paginating
-		const totalItems = await qb.clone().getCount();
+		const totalItemsQb = qb.clone();
 
 		// Add producers count, min and max price
 		void qb
+			.leftJoinAndSelect('spec.images', 'image')
 			.leftJoin('spec.producerProducts', 'producerProduct')
-			.groupBy('spec.id')
+			.groupBy(['spec.id', 'image.id'])
 			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
 			.addSelect('MAX(producerProduct.current_price) as maxPrice');
@@ -56,26 +55,24 @@ export class ProductSpecGateway {
 		void qb.offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
-		const productSpecs = (await qb.execute()).map((raw: any) => {
-			const spec: any = { ...this.repository.map(raw) };
-			spec.producersCount = raw.producersCount;
-			spec.minPrice = raw.minPrice || -1;
-			spec.maxPrice = raw.maxPrice || -1;
-
-			// Remove unnecessary fields
-			delete spec.categories;
-			delete spec.producerProducts;
-
-			return spec;
-		});
+		const [totalItems, productSpecs] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
-		return { items: productSpecs, totalItems, totalPages, page, pageSize: pagination.limit };
+		return { items: productSpecs, totalItems, totalPages, page, pageSize: productSpecs.length };
 	}
 
 	public async findById(id: number): Promise<ProductSpec | null> {
-		const productSpec = await this.repository.findOne(id, { fields: ['id', 'name', 'description', 'images', 'producerProducts.producer'] });
-		return productSpec;
+		return this.repository
+			.createQueryBuilder('spec')
+			.select('*')
+			.where({ id })
+			.leftJoinAndSelect('spec.images', 'image')
+			.leftJoin('spec.producerProducts', 'producerProduct')
+			.groupBy(['spec.id', 'image.id'])
+			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
+			.addSelect('MIN(producerProduct.current_price) as minPrice')
+			.addSelect('MAX(producerProduct.current_price) as maxPrice')
+			.getSingleResult();
 	}
 }

@@ -1,5 +1,8 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
-import { ProductSpecCategory } from '../entities';
+import { Category, ProductSpecCategory } from '../entities';
+import type { BaseItems } from '../interfaces/BaseItems';
+import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { paginate } from '../utils/paginate';
 export class ProductSpecCategoryGateway {
 	private repository: EntityRepository<ProductSpecCategory>;
 
@@ -7,31 +10,31 @@ export class ProductSpecCategoryGateway {
 		this.repository = orm.em.getRepository(ProductSpecCategory);
 	}
 
-	public async findCategoriesBySpecificationId(id: number, page: number): Promise<{ categories: ProductSpecCategory[]; totalResults: number }> {
-		const [categories, totalResults] = await Promise.all([
+	public async findCategoriesBySpecificationId(id: number, options: PaginatedOptions): Promise<BaseItems<Category>> {
+		const pagination = paginate(options);
+		const [productSpecCategories, totalResults] = await Promise.all([
 			this.repository
 				.createQueryBuilder('e')
 				.leftJoinAndSelect('e.category', 'category')
+				.leftJoinAndSelect('category.image', 'image')
 				.where({ productSpec: id })
-				.limit(24)
-				.offset((page - 1) * 24)
+				.limit(pagination.limit)
+				.offset(pagination.offset)
 				.getResult(),
-			// this.repository.count({ productSpec: id })
 			this.repository.createQueryBuilder('e').leftJoinAndSelect('e.category', 'category').where({ productSpec: id }).count()
 		]);
-
-		return { categories, totalResults };
+		const c = productSpecCategories.map(({ category }) => category);
+		return {
+			items: c,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: c.length
+		};
 	}
 
-	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory[]> {
-		// const category = await this.repository
-		// 	.createQueryBuilder('e')
-		// 	.leftJoinAndSelect('e.category', 'category')
-		// 	.select('e.field, e.value')
-		// 	.where({ productSpec: id, category: categoryId })
-		// 	.getResult();
-		// await this.repository.populate(category, ['fields.field']);
-		const category = await this.repository.find({ productSpec: id, category: categoryId }, { populate: ['category', 'fields'] });
+	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory | null> {
+		const category = await this.repository.findOne({ productSpec: id, category: categoryId }, { populate: ['category', 'category.image'] });
 		return category;
 	}
 }
