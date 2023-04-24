@@ -377,7 +377,7 @@ export class ProducersController {
 		if (!shipment) throw new NotFoundError('Shipment not found');
 
 		shipment.carrier = carrier;
-		const newEvent = new ShipmentEvent().create(shipment, ShipmentStatus.Shipped, productionUnit.address);
+		const newEvent = new ShipmentEvent().create(shipment, ShipmentStatus.Processing, productionUnit.address);
 		shipment.events.add(newEvent);
 
 		await container.shipmentGateway.update(shipment);
