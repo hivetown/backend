@@ -111,38 +111,4 @@ export class ProducerProductGateway {
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
 		return { items: producerProducts, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
-
-	// Pesquisa todos os produtos populacionando o produtor
-	public async findAllWithProducer(page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
-		const [products, totalResults] = await Promise.all([
-			this.repository.findAll({ populate: ['producer'], limit: 24, offset: (page - 1) * 24 }),
-			this.repository.count()
-		]);
-		return { products, totalResults };
-	}
-
-	// Pesquisa produtos pelo id de uma categoria
-	public async findByCategoryId(id: number, page: number): Promise<{ products: ProducerProduct[]; totalResults: number }> {
-		const [products, totalResults] = await Promise.all([
-			this.repository
-				.createQueryBuilder('p')
-				.select('p.*', true)
-				.leftJoin('p.productSpec', 's')
-				.leftJoin('s.categories', 'sc')
-				.where(`sc.category_id = '${id}' and p.product_spec_id = sc.product_spec_id`)
-				.limit(24)
-				.offset((page - 1) * 24)
-				.getResult(),
-			this.repository
-				.createQueryBuilder('p')
-				.select('p.*', true)
-				.leftJoin('p.productSpec', 's')
-				.leftJoin('s.categories', 'sc')
-				.where(`sc.category_id = '${id}' and p.product_spec_id = sc.product_spec_id`)
-				.count()
-		]);
-		await this.repository.populate(products, ['producer', 'productionUnit', 'productSpec']); // ver se há outra forma de fazer
-		console.log(products.length);
-		return { products, totalResults };
-	}
 }
