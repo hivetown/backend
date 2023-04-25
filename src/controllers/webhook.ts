@@ -25,15 +25,8 @@ export class WebhookController {
 			secret: endpointSecret
 		});
 
-		let event;
+		const event = await stripe.webhooks.constructEvent(payloadString, header, endpointSecret);
 
-		try {
-			event = await stripe.webhooks.constructEvent(payloadString, header, endpointSecret);
-		} catch (err: any) {
-			console.log(err);
-			res.status(400).send(`Webhook Error: ${err.message}`);
-			return;
-		}
 		// console.log('OLA');
 
 		// Handle the event
