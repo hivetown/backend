@@ -373,30 +373,29 @@ export class ConsumerController {
 		AuthMiddleware
 	])
 	public async deleteOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
-		try {
-			const consumer = await container.consumerGateway.findById(consumerId);
-			if (!consumer) throw new NotFoundError('Consumer not found');
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
 
-			const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
-			if (!order) throw new NotFoundError('Order not found for this consumer');
-			const orderPopulated = (await container.orderGateway.findByIdPopulated(order.id))!;
-			if (!orderPopulated.canCancel())
-				throw new BadRequestError(`This order can not be canceled because is already at the state: ${order.getGeneralStatus()}`);
+		const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
+		if (!order) throw new NotFoundError('Order not found for this consumer');
+		const orderPopulated = (await container.orderGateway.findByIdPopulated(order.id))!;
+		if (!orderPopulated.canCancel())
+			throw new BadRequestError(`This order can not be canceled because is already at the state: ${order.getGeneralStatus()}`);
 
-			for (const item of orderPopulated.items.getItems()) {
-				item.producerProduct.stock += item.quantity;
-			}
-			order.addShipmentEvent(ShipmentStatus.Canceled, order.shippingAddress);
+		for (const item of orderPopulated.items.getItems()) {
+			item.producerProduct.stock += item.quantity;
+		}
+		order.addShipmentEvent(ShipmentStatus.Canceled, order.shippingAddress);
 
-			await container.orderGateway.updateOrder(order);
+		await container.orderGateway.updateOrder(order);
 
-			// tratar do refund
-			const refund = await stripe.refunds.create({
-				payment_intent: orderPopulated.payment,
-				reason: 'requested_by_customer' // motivo do reembolso (opcional)
-			});
+		// tratar do refund
+		const refund = await stripe.refunds.create({
+			payment_intent: orderPopulated.payment,
+			reason: 'requested_by_customer' // motivo do reembolso (opcional)
+		});
 
-			res.json({ message: 'Order canceled', refund });
+		res.json({ message: 'Order canceled', refund });
 	}
 
 	@Get('/:consumerId/orders/:orderId/items', [

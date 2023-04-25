@@ -5,6 +5,7 @@ import { stripe } from '../stripe/key';
 import type Stripe from 'stripe';
 import { container } from '..';
 import { ShipmentStatus } from '../enums';
+import { NotFoundError } from '../errors/NotFoundError';
 
 @Controller('/webhook')
 @Injectable()
@@ -54,10 +55,10 @@ export class WebhookController {
 						order.payment = session.payment_intent as string;
 						await container.orderGateway.updateOrder(order);
 					} else {
-						console.log('Consumer not found');
+						throw new NotFoundError('Consumer not found');
 					}
 				} else {
-					console.log('Order not found');
+					throw new NotFoundError('Order not found');
 				}
 
 				break;
@@ -79,7 +80,7 @@ export class WebhookController {
 						}
 						await container.consumerGateway.updateCart(consumer);
 					} else {
-						console.log('Consumer not found');
+						throw new NotFoundError('Consumer not found');
 					}
 				}
 
