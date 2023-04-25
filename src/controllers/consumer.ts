@@ -234,29 +234,24 @@ export class ConsumerController {
 		AuthMiddleware
 	])
 	public async createOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
-		try {
-			const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
-			if (!consumer) throw new NotFoundError('Consumer not found');
+		const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
 
-			const address = consumer.addresses.getItems().find((address) => address.id === req.body.shippingAddressId);
-			if (!address) throw new NotFoundError('Address not found for this consumer');
+		const address = consumer.addresses.getItems().find((address) => address.id === req.body.shippingAddressId);
+		if (!address) throw new NotFoundError('Address not found for this consumer');
 
-			if (!(consumer.cartItems.getItems().length > 0)) throw new BadRequestError('Cart is empty');
-			const haveStock = consumer.existStockCartItems();
+		if (!(consumer.cartItems.getItems().length > 0)) throw new BadRequestError('Cart is empty');
+		const haveStock = consumer.existStockCartItems();
 
-			if (!haveStock) throw new BadRequestError('Not enough stock for one or more products');
+		if (!haveStock) throw new BadRequestError('Not enough stock for one or more products');
 
-			for (const item of consumer.cartItems.getItems()) {
-				item.producerProduct.stock -= item.quantity;
-			}
-			const newOrder = new Order().create(consumer, address);
-			const populatedNewOrder = await container.orderGateway.createOrder(newOrder); // cria a order
-			const session = await createCheckoutSession(populatedNewOrder);
-			res.status(200).json({ sessionId: session.id, checkout_url: session.url });
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
+		for (const item of consumer.cartItems.getItems()) {
+			item.producerProduct.stock -= item.quantity;
 		}
+		const newOrder = new Order().create(consumer, address);
+		const populatedNewOrder = await container.orderGateway.createOrder(newOrder); // cria a order
+		const session = await createCheckoutSession(populatedNewOrder);
+		res.status(200).json({ sessionId: session.id, checkout_url: session.url });
 	}
 
 	@Get('/:consumerId/orders/success', [
