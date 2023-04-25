@@ -379,12 +379,11 @@ export class ConsumerController {
 
 			const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
 			if (!order) throw new NotFoundError('Order not found for this consumer');
-			const orderPopulated = await container.orderGateway.findByIdPopulated(order.id);
-			// ele nunca vai ser null mas o typescript não sabe disso
-			if (!orderPopulated?.canCancel())
+			const orderPopulated = (await container.orderGateway.findByIdPopulated(order.id))!;
+			if (!orderPopulated.canCancel())
 				throw new BadRequestError(`This order can not be canceled because is already at the state: ${order.getGeneralStatus()}`);
 
-			for (const item of orderPopulated?.items.getItems()) {
+			for (const item of orderPopulated.items.getItems()) {
 				item.producerProduct.stock += item.quantity;
 			}
 			order.addShipmentEvent(ShipmentStatus.Canceled, order.shippingAddress);
