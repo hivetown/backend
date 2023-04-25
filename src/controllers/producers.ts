@@ -1,15 +1,17 @@
 import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
-import { Joi, validate } from 'express-validation';
 import * as Express from 'express';
+import { Joi, validate } from 'express-validation';
+import { container } from '..';
+import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Producer, ShipmentStatus } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
-import { container } from '..';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 
+const producerIdParam = Joi.number().min(1).required();
 @Controller('/producers')
 @Injectable()
 export class ProducersController {
@@ -36,6 +38,27 @@ export class ProducersController {
 		}
 
 		return res.status(201).json(producer);
+	}
+
+	@Get('/:producerId/products', [
+		validate({
+			params: Joi.object({
+				producerId: producerIdParam
+			})
+		})
+	])
+	public async producerProducts(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const options: ProducerProductOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1,
+			populate: ['productSpec', 'productionUnit']
+		};
+
+		const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);
+		res.status(200).json(producerProducts);
 	}
 
 	@Get('/:producerId/orders', [
