@@ -311,7 +311,7 @@ export class ProducersController {
 
 		const pu = await container.productionUnitGateway.createOrUpdate(productionUnit);
 
-		return res.status(200).json(pu);
+		return res.status(201).json(pu);
 	}
 
 	@Delete('/:producerId/units/:unitId', [
