@@ -3,7 +3,10 @@ import type { ConsumerMetadata } from '../interfaces/ConsumerMetadata';
 import type { LineItem } from '../interfaces/LineItem';
 import { stripe } from '../stripe/key';
 import { metadataAddress } from './metadataAddress';
-
+// ENV
+import { config } from 'dotenv-cra';
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+config();
 export async function createCheckoutSession(order: Order) {
 	const lineItems: LineItem[] = order.items.getItems().map((item) => ({
 		price_data: {

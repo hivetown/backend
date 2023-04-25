@@ -18,6 +18,9 @@ export class ServerErrorMiddleware implements ErrorMiddleware {
 		}
 
 		if (error instanceof Stripe.errors.StripeError) {
+			if (isNaN(Number(error.code))) {
+				return res.json({ error: error.message, statusCode: 500 });
+			}
 			return res.status(Number(error.code)).json({ error: error.message, statusCode: error.code });
 		}
 

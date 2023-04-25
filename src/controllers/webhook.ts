@@ -7,6 +7,11 @@ import { container } from '..';
 import { ShipmentStatus } from '../enums';
 import { NotFoundError } from '../errors/NotFoundError';
 
+// ENV
+import { config } from 'dotenv-cra';
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+config();
+
 @Controller('/webhook')
 @Injectable()
 export class WebhookController {
@@ -17,8 +22,8 @@ export class WebhookController {
 
 	@Post('/', [Express.raw({ type: 'application/json' })])
 	public async receiveStripeWebhook(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
-		// const sig = req.headers['stripe-signature'] as string;
+		const endpointSecret = process.env.STRIPE_WEBHOOK as string;
+
 		const payloadString = JSON.stringify(req.body, null, 2);
 		const header = stripe.webhooks.generateTestHeaderString({
 			payload: payloadString,
@@ -26,8 +31,6 @@ export class WebhookController {
 		});
 
 		const event = await stripe.webhooks.constructEvent(payloadString, header, endpointSecret);
-
-		// console.log('OLA');
 
 		// Handle the event
 		// console.log(event.type);
