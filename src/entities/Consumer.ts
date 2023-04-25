@@ -28,4 +28,16 @@ export class Consumer extends User {
 
 	@OneToOne()
 	public image?: Image;
+
+	public existStockCartItems(): boolean {
+		return this.cartItems.getItems().every((item) => item.producerProduct.stock >= item.quantity);
+	}
+
+	public getProductsOutOfStock(): string {
+		return this.cartItems
+			.getItems()
+			.filter((item) => item.producerProduct.stock < item.quantity)
+			.map((item) => item.producerProduct.id)
+			.join(', ');
+	}
 }

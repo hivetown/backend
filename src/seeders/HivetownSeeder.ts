@@ -204,14 +204,9 @@ export class HivetownSeeder extends Seeder {
 					orderFactory
 						.each((order) => {
 							console.log(`Adding order`);
-							// 25% chance of address being different from consumer address
-							const amount = faker.datatype.number(100);
-							if (amount < 25) {
-								order.shippingAddress = addressFactory.makeOne();
-							} else {
-								// Otherwise we use one of the consumer addresses
-								order.shippingAddress = faker.helpers.arrayElement(consumer.addresses.getItems());
-							}
+
+							// Otherwise we use one of the consumer addresses
+							order.shippingAddress = faker.helpers.arrayElement(consumer.addresses.getItems());
 						})
 						.make(faker.datatype.number({ min: 1, max: 13 }))
 				);

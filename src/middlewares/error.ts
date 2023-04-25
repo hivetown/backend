@@ -3,6 +3,7 @@ import { ErrorMiddleware, ERROR_MIDDLEWARE } from '@decorators/express';
 import type { NextFunction, Request, Response } from 'express';
 import { ValidationError } from 'express-validation';
 import { ApiError } from '../errors/ApiError';
+import Stripe from 'stripe';
 
 @Injectable()
 export class ServerErrorMiddleware implements ErrorMiddleware {
@@ -14,6 +15,13 @@ export class ServerErrorMiddleware implements ErrorMiddleware {
 		if (error instanceof ApiError) {
 			// TODO add details?
 			return res.status(error.statusCode).json({ error: error.message, statusCode: error.statusCode });
+		}
+
+		if (error instanceof Stripe.errors.StripeError) {
+			if (isNaN(Number(error.code))) {
+				return res.json({ error: error.message, statusCode: 500 });
+			}
+			return res.status(Number(error.code)).json({ error: error.message, statusCode: error.code });
 		}
 
 		console.log(error);

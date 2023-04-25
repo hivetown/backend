@@ -90,4 +90,40 @@ export class OrderGateway {
 		);
 		return order;
 	}
+
+	public async createOrder(order: Order): Promise<Order> {
+		await this.repository.persistAndFlush(order);
+		await this.repository.populate(order, [
+			'items',
+			'items.producerProduct',
+			'items.producerProduct.productSpec',
+			'items.producerProduct.productSpec.images',
+			'shippingAddress'
+		]);
+		return order;
+	}
+
+	public async deleteOrder(order: Order): Promise<void> {
+		await this.repository.removeAndFlush(order);
+	}
+
+	public async updateOrder(order: Order): Promise<void> {
+		await this.repository.persistAndFlush(order);
+	}
+
+	public async findByIdPopulated(orderId: number): Promise<Order | null> {
+		const order = await this.repository.findOne(orderId, {
+			populate: [
+				'items',
+				'items.shipment',
+				'items.shipment.events',
+				'items.shipment.events.status',
+				'shippingAddress',
+				'items.producerProduct',
+				'items.producerProduct.productionUnit',
+				'items.producerProduct.productionUnit.address'
+			]
+		});
+		return order;
+	}
 }

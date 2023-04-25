@@ -1065,6 +1065,15 @@
 					"primary": false,
 					"nullable": false,
 					"mappedType": "integer"
+				},
+				"payment": {
+					"name": "payment",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "string"
 				}
 			},
 			"name": "order",
@@ -1082,6 +1091,13 @@
 					"keyName": "order_shipping_address_id_index",
 					"primary": false,
 					"unique": false
+				},
+				{
+					"columnNames": ["payment"],
+					"composite": false,
+					"keyName": "order_payment_unique",
+					"primary": false,
+					"unique": true
 				},
 				{
 					"keyName": "PRIMARY",
@@ -1522,7 +1538,7 @@
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": false,
+					"nullable": true,
 					"mappedType": "integer"
 				}
 			},
@@ -1551,6 +1567,7 @@
 					"localTableName": "shipment",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "carrier",
+					"deleteRule": "set null",
 					"updateRule": "cascade"
 				}
 			}
@@ -1642,6 +1659,7 @@
 					"localTableName": "order_item",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "order",
+					"deleteRule": "cascade",
 					"updateRule": "cascade"
 				},
 				"order_item_producer_product_id_foreign": {
@@ -1743,6 +1761,7 @@
 					"localTableName": "shipment_event",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "shipment",
+					"deleteRule": "cascade",
 					"updateRule": "cascade"
 				},
 				"shipment_event_address_id_foreign": {

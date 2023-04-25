@@ -67,6 +67,12 @@ export class ProducerProductGateway {
 		};
 	}
 
+	// para dar update no stock do produto
+	public async updateProduct(product: ProducerProduct): Promise<ProducerProduct> {
+		await this.repository.persistAndFlush(product);
+		return product;
+	}
+
 	public async findAll(
 		filter?: ProducerProductFilters,
 		options?: ProducerProductOptions
