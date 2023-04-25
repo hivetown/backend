@@ -34,7 +34,7 @@ export class Order {
 	public canCancel(): boolean {
 		for (const i of this.items.getItems()) {
 			const actualStatus = i.getActualStatus();
-			if (actualStatus > 1 || actualStatus === 4) {
+			if (actualStatus > ShipmentStatus.Processing || actualStatus === ShipmentStatus.Canceled) {
 				return false;
 			}
 		}
