@@ -298,16 +298,11 @@ export class ConsumerController {
 	])
 	public async cancelOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		// Este é o cancelamento da order antes de ser paga (ou seja no frontend voltar para trás)
-		try {
-			const consumer = await container.consumerGateway.findById(consumerId);
-			if (!consumer) throw new NotFoundError('Consumer not found');
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
 
-			await stripe.checkout.sessions.expire(req.query.session_id as string);
-			res.json(`Sessão ${req.query.session_id} cancelada com sucesso.`);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		await stripe.checkout.sessions.expire(req.query.session_id as string);
+		res.json(`Sessão ${req.query.session_id} cancelada com sucesso.`);
 	}
 
 	@Get('/:consumerId/orders/export', [
