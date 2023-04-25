@@ -243,7 +243,7 @@ export class ConsumerController {
 		if (!(consumer.cartItems.getItems().length > 0)) throw new BadRequestError('Cart is empty');
 		const haveStock = consumer.existStockCartItems();
 
-		if (!haveStock) throw new BadRequestError('Not enough stock for one or more products');
+		if (!haveStock) throw new BadRequestError(`Not enough stock for the products with id: ${consumer.getProductsOutOfStock()}`);
 
 		for (const item of consumer.cartItems.getItems()) {
 			item.producerProduct.stock -= item.quantity;
