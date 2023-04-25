@@ -265,16 +265,11 @@ export class ConsumerController {
 		})
 	])
 	public async successOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
-		try {
-			const consumer = await container.consumerGateway.findById(consumerId);
-			if (!consumer) throw new NotFoundError('Consumer not found');
-			// Para já esta a enviar todas as informações mas depois vai ser filtrado com o que é necessário
-			const session = await stripe.checkout.sessions.retrieve(req.query.session_id as string);
-			res.status(200).json(session);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+		// Para já esta a enviar todas as informações mas depois vai ser filtrado com o que é necessário
+		const session = await stripe.checkout.sessions.retrieve(req.query.session_id as string);
+		res.status(200).json(session);
 	}
 
 	@Get('/:consumerId/orders/cancel', [
