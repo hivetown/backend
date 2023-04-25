@@ -16,7 +16,7 @@ export class WebhookController {
 
 	@Post('/', [Express.raw({ type: 'application/json' })])
 	public async receiveStripeWebhook(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const endpointSecret = 'whsec_86ca517c5f6f74f3f24a84154185dcf570ba92454bf8a45b47af518b130d7779'; // hardcoded for now, should be in .env
+		const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 		// const sig = req.headers['stripe-signature'] as string;
 		const payloadString = JSON.stringify(req.body, null, 2);
 		const header = stripe.webhooks.generateTestHeaderString({

@@ -29,8 +29,8 @@ export async function createCheckoutSession(order: Order) {
 		payment_method_types: ['card'],
 		line_items: lineItems,
 		mode: 'payment',
-		success_url: `http://localhost:5173/orders/${order.id}/success?session_id={CHECKOUT_SESSION_ID}`,
-		cancel_url: `http://localhost:5173/orders/${order.id}/cancel?session_id={CHECKOUT_SESSION_ID}`,
+		success_url: `${process.env.FRONTEND_URL}/orders/${order.id}/success?session_id={CHECKOUT_SESSION_ID}`,
+		cancel_url: `${process.env.FRONTEND_URL}/orders/${order.id}/cancel?session_id={CHECKOUT_SESSION_ID}`,
 		metadata: {
 			customer_name: consumer.name,
 			customer_email: consumer.email,
