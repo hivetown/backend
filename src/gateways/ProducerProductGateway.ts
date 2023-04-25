@@ -1,8 +1,11 @@
-import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
+import type { EntityRepository, MikroORM, QueryBuilder } from '@mikro-orm/mysql';
 import { ProducerProduct } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
+import type { ProducerProductFilters } from '../interfaces/ProducerProductFilters';
+import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
+import { stringSearchType } from '../utils/stringSearchType';
 
 export class ProducerProductGateway {
 	private repository: EntityRepository<ProducerProduct>;
@@ -62,5 +65,50 @@ export class ProducerProductGateway {
 			page,
 			pageSize: pagination.limit
 		};
+	}
+
+	public async findAll(
+		filter?: ProducerProductFilters,
+		options?: ProducerProductOptions
+	): Promise<{ items: ProducerProduct[]; totalItems: number; totalPages: number; page: number; pageSize: number }> {
+		const pagination = paginate(options);
+		const qb: QueryBuilder<ProducerProduct> = this.repository.createQueryBuilder('producerProduct').select('*');
+
+		if (filter?.producerId) {
+			void qb.leftJoin('producerProduct.producer', 'producer').andWhere({ 'producer.id': filter.producerId });
+		}
+
+		if (filter?.productionUnitId) {
+			void qb.leftJoin('producerProduct.productionUnit', 'productionUnit').andWhere({ 'productionUnit.id': filter.productionUnitId });
+		}
+
+		if (filter?.search) {
+			void qb.leftJoin('producerProduct.specification', 'spec').andWhere({
+				$or: [
+					{ 'lower(spec.name)': { $like: stringSearchType(filter.search) } },
+					{ 'lower(spec.description)': { $like: stringSearchType(filter.search) } }
+				]
+			});
+		}
+
+		// Calculate items count before grouping and paginating
+		const totalItems = await qb.clone().getCount();
+
+		// Paginate
+		void qb.offset(pagination.offset).limit(pagination.limit);
+
+		// Populate
+		if (options?.populate) {
+			options.populate.forEach((field) => {
+				void qb.leftJoinAndSelect(`producerProduct.${field}`, field);
+			});
+		}
+
+		// Fetch results and map them
+		const producerProducts = (await qb.execute()).map((raw: any) => ({ ...this.repository.map(raw) }));
+
+		const totalPages = Math.ceil(totalItems / pagination.limit);
+		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
+		return { items: producerProducts, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
 }
