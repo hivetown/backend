@@ -398,10 +398,6 @@ export class ConsumerController {
 			});
 
 			res.json({ message: 'Order canceled', refund });
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ error: (error as any).message });
-		}
 	}
 
 	@Get('/:consumerId/orders/:orderId/items', [
