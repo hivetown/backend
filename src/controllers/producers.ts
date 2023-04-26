@@ -4,12 +4,14 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Producer, ProductionUnit, ShipmentStatus } from '../entities';
+import { Producer, ProductionUnit, ShipmentEvent, ShipmentStatus } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { CarrierStatus } from '../enums';
+import { BadRequestError } from '../errors/BadRequestError';
 
 const producerIdParam = Joi.number().min(1).required();
 @Controller('/producers')
@@ -241,6 +243,62 @@ export class ProducersController {
 		return res.status(200).json(orderItem.shipment);
 	}
 
+	@Post('/:producerId/orders/:orderId/items/:producerProductId/shipment/events', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				orderId: Joi.number().min(1).required(),
+				producerProductId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				status: Joi.string()
+					.valid(...Object.keys(ShipmentStatus)) // Processing, Shipped, Delivered
+					.required(),
+				addressId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async createOrderItemShipmentEvent(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('orderId') orderId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
+		// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
+		if (!orderItems.totalItems) throw new NotFoundError('Order not found');
+
+		const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProductWithShipment(
+			producerId,
+			orderId,
+			producerProductId
+		);
+
+		if (!orderItem) throw new NotFoundError('Order item not found');
+
+		const address = await container.addressGateway.findById(req.body.addressId);
+		if (!address) throw new NotFoundError('Address not found');
+
+		const status = ShipmentStatus[req.body.status as keyof typeof ShipmentStatus];
+
+		const newEvent = new ShipmentEvent().create(orderItem.shipment, status, address);
+		orderItem.shipment.events.add(newEvent);
+
+		await container.shipmentGateway.update(orderItem.shipment);
+
+		return res.status(201).json(orderItem.shipment);
+	}
+
 	@Get('/:producerId/units', [
 		validate({
 			params: Joi.object({ producerId: Joi.number().required() })
@@ -420,5 +478,48 @@ export class ProducersController {
 		const carriers = await container.carrierGateway.findAllinTranstit(productionUnit.id, options);
 
 		return res.status(200).json(carriers);
+	}
+
+	@Post('/:producerId/units/:unitId/carriers/:carrierId/shipments', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required(),
+				carrierId: Joi.number().required()
+			}),
+			body: Joi.object({
+				shipmentId: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async associateShipment(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number,
+		@Params('carrierId') carrierId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findByIdPopulated(unitId);
+		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+
+		const carrier = productionUnit.carriers.getItems().find((c) => c.id === Number(carrierId));
+		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		if (carrier.status === CarrierStatus.Unavailable) throw new BadRequestError('Carrier is unavailable');
+
+		const shipment = await container.shipmentGateway.findById(req.body.shipmentId);
+		if (!shipment) throw new NotFoundError('Shipment not found');
+
+		shipment.carrier = carrier;
+		const newEvent = new ShipmentEvent().create(shipment, ShipmentStatus.Processing, productionUnit.address);
+		shipment.events.add(newEvent);
+
+		await container.shipmentGateway.update(shipment);
+
+		return res.status(201).json(shipment);
 	}
 }
