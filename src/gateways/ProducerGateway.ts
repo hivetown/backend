@@ -22,6 +22,11 @@ export class ProducerGateway {
 		return producer;
 	}
 
+	public async findByIdWithUnits(id: number): Promise<Producer | null> {
+		const producer = await this.repository.findOne(id, { populate: ['productionUnits'] });
+		return producer;
+	}
+
 	public async findById(id: number): Promise<Producer | null> {
 		return this.repository.findOne(id);
 	}

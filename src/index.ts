@@ -19,7 +19,8 @@ import {
 	AddressGateway,
 	ConsumerGateway,
 	OrderGateway,
-	ProductionUnitGateway
+	ProductionUnitGateway,
+	CarrierGateway
 } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
@@ -52,6 +53,7 @@ export const container = {} as {
 	productSpecGateway: ProductSpecGateway;
 	cartItemGateway: CartItemGateway;
 	productionUnitGateway: ProductionUnitGateway;
+	carrierGateway: CarrierGateway;
 };
 
 export const app = express();
@@ -75,6 +77,7 @@ export const main = async () => {
 	container.productionUnitGateway = new ProductionUnitGateway(container.orm);
 	container.orderItemGateway = new OrderItemGateway(container.orm);
 	container.orderGateway = new OrderGateway(container.orm);
+	container.carrierGateway = new CarrierGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());

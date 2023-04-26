@@ -922,6 +922,7 @@ __metadata:
     jest: ^29.2.1
     lint-staged: ^13.0.3
     lodash: ^4.17.21
+    mikro-orm-soft-delete: ^0.1.0
     mysql2: ^2.3.3
     nodemon: ^2.0.20
     pinst: ^3.0.0
@@ -6819,6 +6820,15 @@ __metadata:
     braces: ^3.0.2
     picomatch: ^2.3.1
   checksum: 02a17b671c06e8fefeeb6ef996119c1e597c942e632a21ef589154f23898c9c6a9858526246abb14f8bca6e77734aa9dcf65476fca47cedfb80d9577d52843fc
+  languageName: node
+  linkType: hard
+
+"mikro-orm-soft-delete@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "mikro-orm-soft-delete@npm:0.1.0"
+  dependencies:
+    tslib: ^2.3.1
+  checksum: aca646f9f663b5a1ccdbc5ee2ba707bea919f7330f205e994fb770d3df6e0449128cfbbc05d420d9af8950d4fc54ba0378b4e117312240771c8a34205a447128
   languageName: node
   linkType: hard
 
