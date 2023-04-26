@@ -103,6 +103,28 @@ export class ProductsController {
 		return res.status(200).json(results);
 	}
 
+	@Get('/:productSpecId/products/:producerProductId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				producerProductId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
+	public async productById(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		const product = await container.producerProductGateway.findOneBySpecificationId(productSpecId, producerProductId);
+		if (!product) throw new NotFoundError('Product not found');
+
+		return res.status(200).json(product);
+	}
+
 	@Get('/:productSpecId/producers', [
 		validate({
 			params: Joi.object({
