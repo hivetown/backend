@@ -1,10 +1,10 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
-import { Producer, ShipmentEvent, ShipmentStatus } from '../entities';
+import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
+import { Producer, ProductionUnit, ShipmentEvent, ShipmentStatus } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
@@ -336,6 +336,86 @@ export class ProducersController {
 		return res.status(200).json(productionUnit);
 	}
 
+	@Post('/:producerId/units', [
+		validate({
+			params: Joi.object({ producerId: Joi.number().required() }),
+			body: Joi.object({
+				name: Joi.string().required(),
+				address: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async createProductionUnit(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findByIdWithUnits(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const address = await container.addressGateway.findById(req.body.address);
+		if (!address) throw new NotFoundError('Address not found');
+
+		const newUnit = new ProductionUnit(req.body.name, address, producer);
+		await container.productionUnitGateway.createOrUpdate(newUnit);
+
+		return res.status(201).json(newUnit);
+	}
+
+	@Put('/:producerId/units/:unitId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				address: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async updateProductionUnit(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number
+	) {
+		const producer = await container.producerGateway.findByIdWithUnits(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = producer.productionUnits.getItems().find((unit) => unit.id === Number(unitId));
+		if (!productionUnit) throw new NotFoundError('Production unit not found for this producer');
+
+		const address = await container.addressGateway.findById(req.body.address);
+		if (!address) throw new NotFoundError('Address not found');
+
+		productionUnit.name = req.body.name;
+		productionUnit.address = address;
+
+		const pu = await container.productionUnitGateway.createOrUpdate(productionUnit);
+
+		return res.status(201).json(pu);
+	}
+
+	@Delete('/:producerId/units/:unitId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async deleteProductionUnit(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('unitId') unitId: number) {
+		const producer = await container.producerGateway.findByIdWithUnits(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = producer.productionUnits.getItems().find((unit) => unit.id === Number(unitId));
+		if (!productionUnit) throw new NotFoundError('Production unit not found for this producer');
+
+		await container.productionUnitGateway.delete(productionUnit);
+
+		return res.status(204).send();
+	}
+
 	@Get('/:producerId/units/:unitId/products', [
 		validate({
 			params: Joi.object({
@@ -363,6 +443,41 @@ export class ProducersController {
 
 		const products = await container.producerProductGateway.findFromProductionUnit(productionUnit.id, options);
 		return res.status(200).json(products);
+	}
+
+	@Get('/:producerId/units/:unitId/carriers/inTransit', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			}),
+			query: Joi.object({
+				page: Joi.number().optional(),
+				pageSize: Joi.number().optional()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async getProductionUnitCarriersInTransitOfProductionUnit(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findById(unitId);
+		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const carriers = await container.carrierGateway.findAllinTranstit(productionUnit.id, options);
+
+		return res.status(200).json(carriers);
 	}
 
 	@Post('/:producerId/units/:unitId/carriers/:carrierId/shipments', [

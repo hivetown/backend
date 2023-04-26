@@ -14,3 +14,4 @@ export * from './OrderItemGateway';
 export * from './AddressGateway';
 export * from './ProductionUnitGateway';
 export * from './ShipmentGateway';
+export * from './CarrierGateway';
