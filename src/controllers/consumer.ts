@@ -251,7 +251,7 @@ export class ConsumerController {
 		const newOrder = new Order().create(consumer, address);
 		const populatedNewOrder = await container.orderGateway.createOrder(newOrder); // cria a order
 		const session = await createCheckoutSession(populatedNewOrder);
-		res.status(200).json({ sessionId: session.id, checkout_url: session.url });
+		res.status(201).json({ sessionId: session.id, checkout_url: session.url });
 	}
 
 	@Get('/:consumerId/orders/success', [
