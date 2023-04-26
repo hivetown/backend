@@ -40,6 +40,14 @@ export class ProducerProductGateway {
 		// { items: productSpecs, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
 
+	public async findOneBySpecificationId(specId: number, producerProductId: number): Promise<ProducerProduct | null> {
+		const product = await this.repository.findOne(
+			{ productSpec: specId, id: producerProductId },
+			{ populate: ['producer', 'productionUnit', 'productionUnit.address', 'productSpec'] }
+		);
+		return product;
+	}
+
 	public async findFromProductionUnit(productionUnitId: number, options: PaginatedOptions): Promise<BaseItems<ProducerProduct> | null> {
 		const pagination = paginate(options);
 
