@@ -296,7 +296,7 @@ export class ProducersController {
 
 		await container.shipmentGateway.update(orderItem.shipment);
 
-		return res.status(200).json(orderItem.shipment);
+		return res.status(201).json(orderItem.shipment);
 	}
 
 	@Get('/:producerId/units', [
@@ -520,6 +520,6 @@ export class ProducersController {
 
 		await container.shipmentGateway.update(shipment);
 
-		return res.status(200).json(shipment);
+		return res.status(201).json(shipment);
 	}
 }
