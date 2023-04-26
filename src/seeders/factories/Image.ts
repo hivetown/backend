@@ -8,7 +8,7 @@ export class ImageFactory extends Factory<Image> {
 	protected definition(faker: Faker): EntityData<Image> {
 		return {
 			name: faker.random.words(3),
-			url: faker.image.imageUrl(640, 480, 'cat', true),
+			url: faker.image.imageUrl(640, 48, 'cat', true),
 			alt: faker.lorem.words(7)
 		};
 	}

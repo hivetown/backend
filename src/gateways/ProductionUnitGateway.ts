@@ -12,8 +12,13 @@ export class ProductionUnitGateway {
 	}
 
 	public async findById(id: number): Promise<ProductionUnit | null> {
-		const product = await this.repository.findOne(id, { populate: ['address'] });
-		return product;
+		const productionUnit = await this.repository.findOne(id, { populate: ['address'] });
+		return productionUnit;
+	}
+
+	public async findByIdPopulated(id: number): Promise<ProductionUnit | null> {
+		const productionUnit = await this.repository.findOne(id, { populate: ['address', 'producer', 'carriers'] });
+		return productionUnit;
 	}
 
 	public async findFromProducer(producerId: number, options: PaginatedOptions): Promise<BaseItems<ProductionUnit>> {
