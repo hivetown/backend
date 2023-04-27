@@ -176,6 +176,35 @@ export class ConsumerController {
 		return res.status(200).json(updatedItem);
 	}
 
+	@Delete('/:consumerId/cart/:producerProductId', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1),
+				producerProductId: Joi.number().integer().min(1)
+			})
+		}),
+		AuthMiddleware
+	])
+	public async deleteCartItem(
+		@Response() res: Express.Response,
+		@Params('consumerId') consumerId: number,
+		@Params('producerProductId') _producerProductId: string
+	) {
+		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		const producerProductId = Number(_producerProductId);
+		const product = await container.producerProductGateway.findById(producerProductId);
+		if (!product) throw new NotFoundError('Product not found');
+
+		const items = consumer.cartItems.getItems();
+		const item = items.find((item) => item.producerProduct.id === producerProductId);
+		if (!item) throw new NotFoundError('Item not found');
+
+		await container.cartItemGateway.deleteOne(item);
+		return res.status(204).send();
+	}
+
 	// -------------------------------------------------------------------- ORDERS --------------------------------------------------------------------
 
 	@Get('/:consumerId/orders', [

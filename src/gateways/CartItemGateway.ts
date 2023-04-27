@@ -50,4 +50,8 @@ export class CartItemGateway {
 	public async delete(items: CartItem[]): Promise<void> {
 		await this.repository.removeAndFlush(items);
 	}
+
+	public async deleteOne(item: CartItem): Promise<void> {
+		await this.repository.removeAndFlush(item);
+	}
 }
