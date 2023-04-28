@@ -15,4 +15,9 @@ export class ProductSpecCategory {
 
 	@OneToMany(() => ProductSpecField, (field) => field.productSpecCategory)
 	public fields = new Collection<ProductSpecField>(this);
+
+	public constructor(productSpec: ProductSpec, category: Category) {
+		this.productSpec = productSpec;
+		this.category = category;
+	}
 }

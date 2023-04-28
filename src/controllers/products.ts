@@ -10,7 +10,8 @@ import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import type { FieldTypeType } from '../types/FieldType';
 import { Joi, validate } from 'express-validation';
 import { NotFoundError } from '../errors/NotFoundError';
-import { ProductSpec } from '../entities';
+import { ProductSpec, ProductSpecCategory } from '../entities';
+import { BadRequestError } from '../errors/BadRequestError';
 
 @Controller('/products')
 @Injectable()
@@ -260,6 +261,34 @@ export class ProductsController {
 		if (!productSpecCategory) throw new NotFoundError('Category not found on product specification');
 
 		return res.status(200).json(productSpecCategory.category);
+	}
+
+	@Put('/:productSpecId/categories/:categoryId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
+	public async addCategoryToProductSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number
+	) {
+		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const productSpecCategory = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+		if (productSpecCategory) throw new BadRequestError('Category already added to product specification');
+
+		const newProductSpecCategory = new ProductSpecCategory(productSpec, category);
+		await container.productSpecCategoryGateway.createOrUpdate(newProductSpecCategory);
+
+		res.status(200).json(newProductSpecCategory);
 	}
 
 	@Get('/:productSpecId/categories/:categoryId/fields', [
