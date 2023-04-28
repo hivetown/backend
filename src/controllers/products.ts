@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Post, Put, Request, Response } from '@decorators/express';
+import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { isEmpty } from 'lodash';
 import { container } from '..';
@@ -113,6 +113,21 @@ export class ProductsController {
 
 		await container.productSpecGatway.createOrUpdate(productSpec);
 		return res.status(200).json(productSpec);
+	}
+
+	@Delete('/:productSpecId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
+	public async deleteProductSpec(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
+		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		await container.productSpecGatway.delete(productSpec);
+		return res.status(204).json();
 	}
 
 	@Get('/:productSpecId/products', [

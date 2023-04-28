@@ -18,6 +18,10 @@ export class ProductSpecGateway {
 		return this.repository.persistAndFlush(productSpec);
 	}
 
+	public async delete(productSpec: ProductSpec) {
+		return this.repository.removeAndFlush(productSpec);
+	}
+
 	public async findAll(filter?: ProductSpecFilters, options?: ProductSpecOptions): Promise<BaseItems<ProductSpec>> {
 		const pagination = paginate(options);
 		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');

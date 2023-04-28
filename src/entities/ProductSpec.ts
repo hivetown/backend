@@ -2,7 +2,9 @@ import { Collection, Entity, OneToMany, PrimaryKey, Property } from '@mikro-orm/
 import type { ProducerProduct } from './ProducerProduct';
 import type { ProductSpecCategory } from './ProductSpecCategory';
 import type { Image } from './Image';
+import { SoftDeletable } from 'mikro-orm-soft-delete';
 
+@SoftDeletable(() => ProductSpec, 'deletedAt', () => new Date())
 @Entity()
 export class ProductSpec {
 	@PrimaryKey()
@@ -34,6 +36,9 @@ export class ProductSpec {
 
 	@OneToMany('ProducerProduct', 'productSpec')
 	public producerProducts = new Collection<ProducerProduct>(this);
+
+	@Property({ nullable: true })
+	public deletedAt?: Date;
 
 	public constructor(name: string, description: string) {
 		this.name = name;
