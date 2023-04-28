@@ -14,6 +14,10 @@ export class ProducerProductGateway {
 		this.repository = orm.em.getRepository(ProducerProduct);
 	}
 
+	public async createOrUpdate(producerProduct: ProducerProduct) {
+		return this.repository.persistAndFlush(producerProduct);
+	}
+
 	// Pesquisa o produto pelo id dele mesmo
 	public async findById(id: number): Promise<ProducerProduct | null> {
 		const product = await this.repository.findOne(id, { populate: ['producer', 'productionUnit', 'productSpec'] });
