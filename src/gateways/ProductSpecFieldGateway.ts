@@ -15,6 +15,10 @@ export class ProductSpecFieldGateway {
 		return this.repository.persistAndFlush(productSpecField);
 	}
 
+	public async delete(productSpecField: ProductSpecField) {
+		return this.repository.removeAndFlush(productSpecField);
+	}
+
 	public async findAllFieldsByProductSpecIdAndCategoryId(
 		productSpecId: number,
 		categoryId: number,
