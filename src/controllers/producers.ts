@@ -96,6 +96,70 @@ export class ProducersController {
 		return res.status(201).json(producerProduct);
 	}
 
+	@Put('/:producerId/products/:producerProductId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				producerProductId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				currentPrice: Joi.number().required(),
+				productionDate: Joi.date().required(),
+				stock: Joi.number().required(),
+				productionUnitId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async updateProducerProduct(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('producerId') producerId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const producerProduct = await container.producerProductGateway.findById(producerProductId);
+		if (!producerProduct) throw new NotFoundError('Producer product not found');
+
+		const productionUnit = await container.productionUnitGateway.findById(req.body.productionUnitId);
+		if (!productionUnit) throw new NotFoundError('Production unit not found');
+
+		producerProduct.currentPrice = req.body.currentPrice;
+		producerProduct.productionDate = new Date(req.body.productionDate);
+		producerProduct.stock = req.body.stock;
+		producerProduct.productionUnit = productionUnit;
+
+		await container.producerProductGateway.createOrUpdate(producerProduct);
+
+		return res.status(200).json(producerProduct);
+	}
+
+	@Delete('/:producerId/products/:producerProductId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				producerProductId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async deleteProducerProduct(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const producerProduct = await container.producerProductGateway.findById(producerProductId);
+		if (!producerProduct) throw new NotFoundError('Producer product not found');
+
+		await container.producerProductGateway.delete(producerProduct);
+		return res.status(204).json();
+	}
+
 	@Get('/:producerId/orders', [
 		validate({
 			params: Joi.object({

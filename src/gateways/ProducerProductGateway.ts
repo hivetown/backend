@@ -18,6 +18,10 @@ export class ProducerProductGateway {
 		return this.repository.persistAndFlush(producerProduct);
 	}
 
+	public async delete(producerProduct: ProducerProduct) {
+		return this.repository.removeAndFlush(producerProduct);
+	}
+
 	// Pesquisa o produto pelo id dele mesmo
 	public async findById(id: number): Promise<ProducerProduct | null> {
 		const product = await this.repository.findOne(id, { populate: ['producer', 'productionUnit', 'productSpec'] });
