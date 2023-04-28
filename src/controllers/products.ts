@@ -291,6 +291,33 @@ export class ProductsController {
 		res.status(200).json(newProductSpecCategory);
 	}
 
+	@Delete('/:productSpecId/categories/:categoryId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
+	public async removeCategoryFromProductSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number
+	) {
+		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const productSpecCategory = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+		if (!productSpecCategory) throw new NotFoundError('Category not found on product specification');
+
+		await container.productSpecCategoryGateway.delete(productSpecCategory);
+
+		res.status(204).json(productSpecCategory);
+	}
+
 	@Get('/:productSpecId/categories/:categoryId/fields', [
 		validate({
 			params: Joi.object({
