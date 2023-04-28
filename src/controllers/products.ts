@@ -71,7 +71,8 @@ export class ProductsController {
 		})
 	])
 	public async createProductSpec(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const productSpec = await container.productSpecGateway.createOrUpdate(new ProductSpec(req.body.name, req.body.description));
+		const productSpec = new ProductSpec(req.body.name, req.body.description);
+		await container.productSpecGateway.createOrUpdate(productSpec);
 		return res.status(201).json(productSpec);
 	}
 
