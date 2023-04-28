@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
+import { Controller, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { isEmpty } from 'lodash';
 import { container } from '..';
@@ -71,7 +71,7 @@ export class ProductsController {
 		})
 	])
 	public async createProductSpec(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const productSpec = await container.productSpecGateway.create(new ProductSpec(req.body.name, req.body.description));
+		const productSpec = await container.productSpecGateway.createOrUpdate(new ProductSpec(req.body.name, req.body.description));
 		return res.status(201).json(productSpec);
 	}
 
@@ -86,6 +86,32 @@ export class ProductsController {
 		const productSpec = await container.productSpecGatway.findById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
+		return res.status(200).json(productSpec);
+	}
+
+	@Put('/:productSpecId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required()
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				description: Joi.string().required()
+			})
+		})
+	])
+	public async updateProductSpec(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Request() req: Express.Request
+	) {
+		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		productSpec.name = req.body.name;
+		productSpec.description = req.body.description;
+
+		await container.productSpecGatway.createOrUpdate(productSpec);
 		return res.status(200).json(productSpec);
 	}
 

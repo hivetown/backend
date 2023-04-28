@@ -14,7 +14,7 @@ export class ProductSpecGateway {
 		this.repository = orm.em.getRepository(ProductSpec);
 	}
 
-	public async create(productSpec: ProductSpec) {
+	public async createOrUpdate(productSpec: ProductSpec) {
 		return this.repository.persistAndFlush(productSpec);
 	}
 
