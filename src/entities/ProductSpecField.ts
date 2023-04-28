@@ -14,4 +14,10 @@ export class ProductSpecField {
 
 	@Property()
 	public value!: string;
+
+	public constructor(productSpecCategory: ProductSpecCategory, field: Field, value: string) {
+		this.productSpecCategory = productSpecCategory;
+		this.field = field;
+		this.value = value;
+	}
 }

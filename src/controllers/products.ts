@@ -10,7 +10,7 @@ import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import type { FieldTypeType } from '../types/FieldType';
 import { Joi, validate } from 'express-validation';
 import { NotFoundError } from '../errors/NotFoundError';
-import { ProductSpec, ProductSpecCategory } from '../entities';
+import { ProductSpec, ProductSpecCategory, ProductSpecField } from '../entities';
 import { BadRequestError } from '../errors/BadRequestError';
 
 @Controller('/products')
@@ -379,5 +379,47 @@ export class ProductsController {
 		if (!productSpecCategoryField) throw new NotFoundError('Field not found on category of product spec');
 
 		return res.status(200).json(productSpecCategoryField);
+	}
+
+	@Put('/:productSpecId/categories/:categoryId/fields/:fieldId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required(),
+				fieldId: Joi.number().integer().min(1).required()
+			}),
+			body: Joi.object({
+				value: Joi.string().required()
+			})
+		})
+	])
+	public async addFieldToCategoryOfProductSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number,
+		@Params('fieldId') fieldId: number,
+		@Request() req: Express.Request
+	) {
+		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const field = await container.fieldGateway.findById(fieldId);
+		if (!field) throw new NotFoundError('Field not found');
+
+		const productSpecCategory = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+		if (!productSpecCategory) throw new NotFoundError('Category not found on product specification');
+
+		const productSpecCategoryField = await container.productSpecFieldGateway.findFieldBySpecAndCategory(productSpecId, categoryId, fieldId);
+		if (productSpecCategoryField) {
+			productSpecCategoryField.value = req.body.value;
+			await container.productSpecFieldGateway.createOrUpdate(productSpecCategoryField);
+			return res.status(200).json(productSpecCategoryField);
+		}
+		const newProductSpecCategoryField = new ProductSpecField(productSpecCategory, field, req.body.value);
+		await container.productSpecFieldGateway.createOrUpdate(newProductSpecCategoryField);
+		return res.status(201).json(newProductSpecCategoryField);
 	}
 }
