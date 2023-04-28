@@ -14,6 +14,10 @@ export class ProductSpecGateway {
 		this.repository = orm.em.getRepository(ProductSpec);
 	}
 
+	public async create(productSpec: ProductSpec) {
+		return this.repository.persistAndFlush(productSpec);
+	}
+
 	public async findAll(filter?: ProductSpecFilters, options?: ProductSpecOptions): Promise<BaseItems<ProductSpec>> {
 		const pagination = paginate(options);
 		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');

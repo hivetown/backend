@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Request, Response } from '@decorators/express';
+import { Controller, Get, Params, Post, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { isEmpty } from 'lodash';
 import { container } from '..';
@@ -10,6 +10,7 @@ import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import type { FieldTypeType } from '../types/FieldType';
 import { Joi, validate } from 'express-validation';
 import { NotFoundError } from '../errors/NotFoundError';
+import { ProductSpec } from '../entities';
 
 @Controller('/products')
 @Injectable()
@@ -59,6 +60,19 @@ export class ProductsController {
 		// console.log(productsSpec);
 
 		return res.status(200).json(productsSpec);
+	}
+
+	@Post('/', [
+		validate({
+			body: Joi.object({
+				name: Joi.string().required(),
+				description: Joi.string().required()
+			})
+		})
+	])
+	public async createProductSpec(@Response() res: Express.Response, @Request() req: Express.Request) {
+		const productSpec = await container.productSpecGateway.create(new ProductSpec(req.body.name, req.body.description));
+		return res.status(201).json(productSpec);
 	}
 
 	@Get('/:productSpecId', [

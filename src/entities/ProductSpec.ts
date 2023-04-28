@@ -34,4 +34,9 @@ export class ProductSpec {
 
 	@OneToMany('ProducerProduct', 'productSpec')
 	public producerProducts = new Collection<ProducerProduct>(this);
+
+	public constructor(name: string, description: string) {
+		this.name = name;
+		this.description = description;
+	}
 }
