@@ -40,7 +40,7 @@ export class ProducerGateway {
 		const [producers, totalResults] = await Promise.all([
 			this.repository
 				.createQueryBuilder('p')
-				.select('p.*', true)
+				.select(['p.*'], true)
 				.leftJoin('p.producerProducts', 'pp')
 				.where({ 'pp.product_spec_id': id })
 				.limit(pagination.limit)
