@@ -42,6 +42,17 @@ export class ProducersController {
 		return res.status(201).json(producer);
 	}
 
+	@Get('/', [AuthMiddleware])
+	public async getProducers(@Response() res: Express.Response, @Request() req: Express.Request) {
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const producers = await container.producerGateway.findAll(options);
+		return res.json(producers);
+	}
+
 	@Get('/:producerId/products', [
 		validate({
 			params: Joi.object({

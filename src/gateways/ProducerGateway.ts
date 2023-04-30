@@ -11,9 +11,20 @@ export class ProducerGateway {
 		this.repository = orm.em.getRepository(Producer);
 	}
 
-	public async findAll(): Promise<Producer[]> {
-		const producers = await this.repository.findAll();
-		return producers;
+	public async findAll(options: PaginatedOptions): Promise<BaseItems<Producer>> {
+		const pagination = paginate(options);
+		const [producers, totalResults] = await Promise.all([
+			this.repository.find({}, { limit: pagination.limit, offset: pagination.offset }),
+			this.repository.count()
+		]);
+
+		return {
+			items: producers,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: producers.length
+		};
 	}
 
 	public async create(producer: Producer): Promise<Producer> {

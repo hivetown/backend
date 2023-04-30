@@ -22,8 +22,13 @@ import { stripe } from '../stripe/key';
 @Injectable()
 export class ConsumerController {
 	@Get('/', [AuthMiddleware])
-	public async getConsumers(@Response() res: Express.Response) {
-		const consumers = await container.consumerGateway.findAll();
+	public async getConsumers(@Response() res: Express.Response, @Request() req: Express.Request) {
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const consumers = await container.consumerGateway.findAll(options);
 		return res.json(consumers);
 	}
 
