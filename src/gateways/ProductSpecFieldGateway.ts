@@ -12,11 +12,11 @@ export class ProductSpecFieldGateway {
 	}
 
 	public async createOrUpdate(productSpecField: ProductSpecField) {
-		return this.repository.persistAndFlush(productSpecField);
+		return this.repository.upsert(productSpecField);
 	}
 
 	public async delete(productSpecField: ProductSpecField) {
-		return this.repository.removeAndFlush(productSpecField);
+		return this.repository.nativeDelete(productSpecField);
 	}
 
 	public async findAllFieldsByProductSpecIdAndCategoryId(
