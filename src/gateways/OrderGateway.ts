@@ -44,7 +44,7 @@ export class OrderGateway {
 		const pagination = paginate(options);
 		const [orders, totalResults] = await Promise.all([
 			this.repository.find(
-				{ consumer: consumerId },
+				{ consumer: { user: consumerId } },
 				{
 					populate: ['items', 'items.shipment.events.status', 'shippingAddress'],
 					fields: ['shippingAddress'],
@@ -52,7 +52,7 @@ export class OrderGateway {
 					offset: pagination.offset
 				}
 			),
-			this.repository.count({ consumer: consumerId })
+			this.repository.count({ consumer: { user: consumerId } })
 		]);
 
 		return {
@@ -66,7 +66,7 @@ export class OrderGateway {
 
 	public async findByIdsToExport(orderIds: number[], consumerId: number): Promise<Order[]> {
 		const orders = await this.repository.find(
-			{ id: { $in: orderIds }, consumer: consumerId },
+			{ id: { $in: orderIds }, consumer: { user: consumerId } },
 			{
 				populate: [
 					'items',
@@ -85,7 +85,7 @@ export class OrderGateway {
 
 	public async findByConsumerAndOrder(consumerId: number, orderId: number): Promise<Order | null> {
 		const order = await this.repository.findOne(
-			{ consumer: consumerId, id: orderId },
+			{ consumer: { user: consumerId }, id: orderId },
 			{ populate: ['items', 'items.shipment.events.status', 'shippingAddress'] }
 		);
 		return order;

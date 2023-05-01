@@ -15,9 +15,9 @@ export const convertExportOrderItem = (orderItems: Collection<OrderItem>): any[]
 				currentPrice: producerProduct.currentPrice,
 				productionDate: producerProduct.productionDate,
 				producer: {
-					name: producerProduct.producer.name,
-					email: producerProduct.producer.email,
-					phone: producerProduct.producer.phone
+					name: producerProduct.producer.user.name,
+					email: producerProduct.producer.user.email,
+					phone: producerProduct.producer.user.phone
 				},
 				productionUnit: {
 					name: producerProduct.productionUnit.name,

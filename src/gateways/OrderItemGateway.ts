@@ -23,7 +23,7 @@ export class OrderItemGateway {
 	}
 
 	public async findOrderByProducerAndOrderId(producerId: number, orderId: number): Promise<OrderItem | null> {
-		const orderItem = await this.repository.findOne({ order: orderId, producerProduct: { producer: producerId } });
+		const orderItem = await this.repository.findOne({ order: orderId, producerProduct: { producer: { user: producerId } } });
 		return orderItem;
 	}
 
@@ -32,7 +32,7 @@ export class OrderItemGateway {
 
 		const [orderItems, totalResults] = await Promise.all([
 			this.repository.find(
-				{ order: orderId, producerProduct: { producer: producerId } },
+				{ order: orderId, producerProduct: { producer: { user: producerId } } },
 				{
 					populate: [
 						'producerProduct',
@@ -46,7 +46,7 @@ export class OrderItemGateway {
 					offset: pagination.offset
 				}
 			),
-			this.repository.count({ order: orderId, producerProduct: { producer: producerId } })
+			this.repository.count({ order: orderId, producerProduct: { producer: { user: producerId } } })
 		]);
 		return {
 			items: orderItems,
@@ -59,7 +59,7 @@ export class OrderItemGateway {
 
 	public async findByProducerAndOrderAndProducerProduct(producerId: number, orderId: number, producerProductId: number): Promise<OrderItem | null> {
 		const orderItem = await this.repository.findOne(
-			{ order: orderId, producerProduct: { producer: producerId, id: producerProductId } },
+			{ order: orderId, producerProduct: { producer: { user: producerId }, id: producerProductId } },
 			{
 				populate: [
 					'producerProduct',
@@ -79,7 +79,7 @@ export class OrderItemGateway {
 		producerProductId: number
 	): Promise<OrderItem | null> {
 		const orderItem = await this.repository.findOne(
-			{ order: orderId, producerProduct: { producer: producerId, id: producerProductId } },
+			{ order: orderId, producerProduct: { producer: { user: producerId }, id: producerProductId } },
 			{ populate: ['shipment', 'shipment.carrier', 'shipment.events.address'] }
 		);
 		return orderItem;
@@ -89,7 +89,7 @@ export class OrderItemGateway {
 		const pagination = paginate(options);
 		const [orderItems, totalResults] = await Promise.all([
 			this.repository.find(
-				{ order: { id: orderId, consumer: { id: consumerId } } },
+				{ order: { id: orderId, consumer: { user: consumerId } } },
 				{
 					populate: [
 						'producerProduct',
@@ -103,7 +103,7 @@ export class OrderItemGateway {
 					offset: pagination.offset
 				}
 			),
-			this.repository.count({ order: { id: orderId, consumer: { id: consumerId } } })
+			this.repository.count({ order: { id: orderId, consumer: { user: consumerId } } })
 		]);
 
 		return {
@@ -117,7 +117,7 @@ export class OrderItemGateway {
 
 	public async findByConsumerIdOrderIdProducerProductId(consumerId: number, orderId: number, producerProductId: number): Promise<OrderItem | null> {
 		const q2 = await this.repository.findOne(
-			{ order: { id: orderId, consumer: { id: consumerId } }, producerProduct: { id: producerProductId } },
+			{ order: { id: orderId, consumer: { user: consumerId } }, producerProduct: { id: producerProductId } },
 			{
 				populate: [
 					'producerProduct',

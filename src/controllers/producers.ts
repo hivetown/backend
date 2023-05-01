@@ -29,8 +29,8 @@ export class ProducersController {
 	])
 	public async createProducer(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const data: Producer = req.body;
-		data.authId = req.authUser!.uid;
-		data.email = req.authUser!.email!;
+		data.user.authId = req.authUser!.uid;
+		data.user.email = req.authUser!.email!;
 
 		let producer: Producer | null = null;
 		try {
@@ -314,7 +314,7 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const units = await container.productionUnitGateway.findFromProducer(producer.id, options);
+		const units = await container.productionUnitGateway.findFromProducer(producer.user.id, options);
 		return res.status(200).json(units);
 	}
 
@@ -331,7 +331,7 @@ export class ProducersController {
 		if (!producer) throw new NotFoundError('Producer not found');
 
 		const productionUnit = await container.productionUnitGateway.findById(unitId);
-		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+		if (!productionUnit || productionUnit.producer.user.id !== producer.user.id) throw new NotFoundError('Production unit not found');
 
 		return res.status(200).json(productionUnit);
 	}
@@ -434,7 +434,7 @@ export class ProducersController {
 		if (!producer) throw new NotFoundError('Producer not found');
 
 		const productionUnit = await container.productionUnitGateway.findById(unitId);
-		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+		if (!productionUnit || productionUnit.producer.user.id !== producer.user.id) throw new NotFoundError('Production unit not found');
 
 		const options: PaginatedOptions = {
 			page: Number(req.query.page) || -1,
@@ -468,7 +468,7 @@ export class ProducersController {
 		if (!producer) throw new NotFoundError('Producer not found');
 
 		const productionUnit = await container.productionUnitGateway.findById(unitId);
-		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+		if (!productionUnit || productionUnit.producer.user.id !== producer.user.id) throw new NotFoundError('Production unit not found');
 
 		const options: PaginatedOptions = {
 			page: Number(req.query.page) || -1,
@@ -504,7 +504,7 @@ export class ProducersController {
 		if (!producer) throw new NotFoundError('Producer not found');
 
 		const productionUnit = await container.productionUnitGateway.findByIdPopulated(unitId);
-		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+		if (!productionUnit || productionUnit.producer.user.id !== producer.user.id) throw new NotFoundError('Production unit not found');
 
 		const carrier = productionUnit.carriers.getItems().find((c) => c.id === Number(carrierId));
 		if (!carrier) throw new NotFoundError('Carrier not found');

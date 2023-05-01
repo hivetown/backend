@@ -39,8 +39,8 @@ export class ConsumerController {
 	])
 	public async createConsumer(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const data: Consumer = req.body;
-		data.authId = req.authUser!.uid;
-		data.email = req.authUser!.email!;
+		data.user.authId = req.authUser!.uid;
+		data.user.email = req.authUser!.email!;
 
 		let consumer: Consumer | null = null;
 		try {
@@ -495,7 +495,7 @@ export class ConsumerController {
 
 		const order = await container.orderGateway.findById(orderId);
 		if (!order) throw new NotFoundError('Order not found');
-		if (order.consumer.id !== consumer.id) throw new NotFoundError('Order not found for this consumer');
+		if (order.consumer.user.id !== consumer.user.id) throw new NotFoundError('Order not found for this consumer');
 
 		const item = await container.orderItemGateway.findByConsumerIdOrderIdProducerProductId(consumerId, orderId, producerProductId);
 		if (!item) throw new NotFoundError('Order item not found');
@@ -525,7 +525,7 @@ export class ConsumerController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const addresses = await container.addressGateway.findFromConsumer(consumer.id, options);
+		const addresses = await container.addressGateway.findFromConsumer(consumer.user.id, options);
 		return res.status(200).json(addresses);
 	}
 

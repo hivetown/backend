@@ -17,9 +17,9 @@ import { ShipmentEventFactory } from './factories/ShipmentEvent';
 import { ProducerFactory } from './factories/Producer';
 import { CarrierFactory } from './factories/Carrier';
 import { UserFactory } from './factories/User';
-import { Image, ProducerProduct, ProductSpecField, User } from '../entities';
+import { ProducerProduct, ProductSpecField } from '../entities';
 import { createFields } from './factories/Field';
-import { generateImage, generateImageUrl, generateValueFromField } from './helpers';
+import { generateImageUrl, generateValueFromField } from './helpers';
 
 export class HivetownSeeder extends Seeder {
 	public async run(em: EntityManager): Promise<void> {
