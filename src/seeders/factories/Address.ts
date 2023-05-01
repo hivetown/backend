@@ -8,7 +8,6 @@ const baseValidDoors = ['Esquerda', 'Direita', 'Frente', 'Trás'];
 const validDoors = baseValidDoors
 	.concat(baseValidDoors.map((door) => door.slice(0, 3).concat('.')))
 	.concat(baseValidDoors.map((door) => door.slice(0, 1).concat('.')));
-console.log(validDoors);
 
 export class AddressFactory extends Factory<Address> {
 	public model = Address;

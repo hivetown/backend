@@ -1,5 +1,4 @@
-import { Factory, Faker } from '@mikro-orm/seeder';
-import type { EntityData } from '@mikro-orm/core';
+import type { EntityManager } from '@mikro-orm/core';
 import { Field, FieldPossibleValue } from '../../entities';
 import { FieldType } from '../../enums';
 
@@ -11,7 +10,7 @@ type OmittedFieldPossibleValue = Omit<FieldPossibleValue, 'id' | 'field'>;
  * - https://www.worten.pt/produtos/aspirador-vertical-dyson-v15-detect-absolute-autonomia-60-min-770-ml-7453359
  * - https://www.worten.pt/produtos/racao-para-caes-advance-7-5kg-seca-porte-pequeno-adulto-sabor-frango-e-arroz-mrkean-8410650150192
  */
-const baseFields: Omit<PartialBy<Field, 'possibleValues'>, 'categories' | 'id'>[] = [
+const baseFields = [
 	{
 		name: 'Cor',
 		unit: '',
@@ -326,12 +325,6 @@ const baseFields: Omit<PartialBy<Field, 'possibleValues'>, 'categories' | 'id'>[
 			}
 		] as OmittedFieldPossibleValue[] as any
 	}
-];
+] as Omit<PartialBy<Field, 'possibleValues'>, 'categories' | 'id'>[];
 
-export class FieldFactory extends Factory<Field> {
-	public model = Field;
-
-	protected definition(faker: Faker): EntityData<Field> {
-		return faker.helpers.arrayElement(baseFields);
-	}
-}
+export const createFields = (em: EntityManager) => baseFields.map((field) => em.create(Field, field));

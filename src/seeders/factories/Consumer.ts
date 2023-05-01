@@ -13,8 +13,8 @@ export class ConsumerFactory extends Factory<Consumer> {
 		return {
 			name: `${firstName} ${lastName}`,
 			email: faker.internet.email(firstName, lastName),
-			phone: faker.phone.number('9########'),
-			vat: faker.phone.number('2########'), // It's fine to use phone number generator for vat
+			phone: faker.phone.number('96#######'),
+			vat: faker.phone.number('26#######'), // It's fine to use phone number generator for vat
 			authId: faker.datatype.uuid(),
 			image: generateImage('avatar')
 		};
