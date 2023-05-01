@@ -149,21 +149,22 @@ export class ProductsController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const r = [];
+		// const r = [];
 		const results = await container.producerGateway.findFromProductSpecId(productSpecId, options);
 
-		for (const producer of results.items) {
-			const units = await container.productionUnitGateway.findAllFromProductSpec(productSpecId, producer.id);
-			r.push({ producer, units });
-		}
+		// for (const producer of results.items) {
+		// 	const units = await container.productionUnitGateway.findAllFromProductSpec(productSpecId, producer.id);
+		// 	r.push({ producer, units });
+		// }
 
-		return res.status(200).json({
-			items: r,
-			totalItems: results.totalItems,
-			totalPages: results.totalPages,
-			page: results.page,
-			pageSize: results.pageSize
-		});
+		// return res.status(200).json({
+		// 	items: r,
+		// 	totalItems: results.totalItems,
+		// 	totalPages: results.totalPages,
+		// 	page: results.page,
+		// 	pageSize: results.pageSize
+		// });
+		return res.status(200).json(results);
 	}
 
 	@Get('/:productSpecId/categories', [

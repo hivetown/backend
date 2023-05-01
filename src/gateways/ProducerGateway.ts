@@ -41,6 +41,7 @@ export class ProducerGateway {
 			this.repository
 				.createQueryBuilder('p')
 				.select(['p.*'], true)
+				.leftJoinAndSelect('p.productionUnits', 'pu')
 				.leftJoin('p.producerProducts', 'pp')
 				.where({ 'pp.product_spec_id': id })
 				.limit(pagination.limit)
@@ -48,7 +49,8 @@ export class ProducerGateway {
 				.getResultList(),
 			this.repository
 				.createQueryBuilder('p')
-				.select('p.*', true)
+				.select(['p.*'], true)
+				.leftJoinAndSelect('p.productionUnits', 'pu')
 				.leftJoin('p.producerProducts', 'pp')
 				.where({ 'pp.product_spec_id': id })
 				.count()
