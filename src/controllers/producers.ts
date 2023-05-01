@@ -53,6 +53,31 @@ export class ProducersController {
 		return res.json(producers);
 	}
 
+	@Delete('/:producerId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async deleteProducer(@Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findByIdPopulated(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		for (const productionUnit of producer.productionUnits) {
+			await container.productionUnitGateway.delete(productionUnit);
+		}
+
+		for (const producerProduct of producer.producerProducts) {
+			await container.producerProductGateway.delete(producerProduct);
+		}
+
+		await container.producerGateway.delete(producer);
+
+		res.status(204).json();
+	}
+
 	@Get('/:producerId/products', [
 		validate({
 			params: Joi.object({

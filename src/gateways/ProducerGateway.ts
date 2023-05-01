@@ -73,4 +73,12 @@ export class ProducerGateway {
 			pageSize: producers.length
 		};
 	}
+
+	public async delete(producer: Producer): Promise<void> {
+		await this.repository.removeAndFlush(producer);
+	}
+
+	public async findByIdPopulated(id: number): Promise<Producer | null> {
+		return this.repository.findOne(id, { populate: ['productionUnits', 'producerProducts'] });
+	}
 }

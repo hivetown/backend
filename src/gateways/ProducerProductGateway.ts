@@ -125,4 +125,8 @@ export class ProducerProductGateway {
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
 		return { items: producerProducts, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
+
+	public async delete(ProducerProduct: ProducerProduct): Promise<void> {
+		await this.repository.removeAndFlush(ProducerProduct);
+	}
 }

@@ -3,6 +3,7 @@ import { OrderItem } from '../entities';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import type { BaseItems } from '../interfaces/BaseItems';
 import { paginate } from '../utils/paginate';
+import { SOFT_DELETABLE_FILTER } from 'mikro-orm-soft-delete';
 
 export class OrderItemGateway {
 	private repository: EntityRepository<OrderItem>;
@@ -100,7 +101,8 @@ export class OrderItemGateway {
 						'shipment.events.status'
 					],
 					limit: pagination.limit,
-					offset: pagination.offset
+					offset: pagination.offset,
+					filters: { [SOFT_DELETABLE_FILTER]: false }
 				}
 			),
 			this.repository.count({ order: { id: orderId, consumer: { id: consumerId } } })
@@ -117,7 +119,10 @@ export class OrderItemGateway {
 
 	public async findByConsumerIdOrderIdProducerProductId(consumerId: number, orderId: number, producerProductId: number): Promise<OrderItem | null> {
 		const q2 = await this.repository.findOne(
-			{ order: { id: orderId, consumer: { id: consumerId } }, producerProduct: { id: producerProductId } },
+			{
+				order: { id: orderId, consumer: { id: consumerId } },
+				producerProduct: { id: producerProductId }
+			},
 			{
 				populate: [
 					'producerProduct',
@@ -125,7 +130,8 @@ export class OrderItemGateway {
 					'producerProduct.productionUnit',
 					'producerProduct.productSpec',
 					'producerProduct.productSpec.images'
-				]
+				],
+				filters: { [SOFT_DELETABLE_FILTER]: false }
 			}
 		);
 		return q2;
