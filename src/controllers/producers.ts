@@ -12,6 +12,7 @@ import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { CarrierStatus } from '../enums';
 import { BadRequestError } from '../errors/BadRequestError';
+import { Authentication } from '../external/Authentication';
 
 @Controller('/producers')
 @Injectable()
@@ -83,6 +84,8 @@ export class ProducersController {
 
 		await container.producerGateway.delete(producer);
 
+		await Authentication.updateUserStatus(true, producer);
+
 		res.status(204).json();
 	}
 
@@ -100,6 +103,8 @@ export class ProducersController {
 
 		producer.deletedAt = undefined;
 		await container.producerGateway.update(producer);
+
+		await Authentication.updateUserStatus(false, producer);
 
 		for (const productionUnit of producer.productionUnits) {
 			productionUnit.deletedAt = undefined;
