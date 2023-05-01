@@ -21,6 +21,7 @@ import { ProducerFactory } from './factories/Producer';
 import { CarrierFactory } from './factories/Carrier';
 import { ImageFactory } from './factories/Image';
 import type { ProducerProduct } from '../entities';
+import { UserFactory } from './factories/User';
 
 export class HivetownSeeder extends Seeder {
 	public async run(em: EntityManager): Promise<void> {
@@ -42,6 +43,7 @@ export class HivetownSeeder extends Seeder {
 		const shipmentEventFactory = new ShipmentEventFactory(em);
 		const carrierFactory = new CarrierFactory(em);
 		const imageFactory = new ImageFactory(em);
+		const userFactory = new UserFactory(em);
 
 		console.log('Seeding Hivetown...');
 		console.log('Generating fields...');
@@ -95,34 +97,36 @@ export class HivetownSeeder extends Seeder {
 			});
 		});
 
+		console.log('Generating users...');
+		// We create some users
+		const users = await userFactory.create(1000);
+
 		console.log('Generating producers...');
+		const producerUsers = users.splice(0, 400);
 		// We create some producers
-		const producers = await producerFactory
-			.each((producer) => {
-				producer.image = imageFactory.makeOne();
-				producer.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
 
-				producer.productionUnits.set(
-					productionUnitFactory
-						.each((pUnit) => {
-							pUnit.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
-							pUnit.address = addressFactory.makeOne();
-							pUnit.carriers.set(
-								carrierFactory
-									.each((carrier) => {
-										carrier.image = imageFactory.makeOne();
-									})
-									.make(faker.datatype.number({ min: 0, max: 10 }))
-							);
-						})
-						.make(faker.datatype.number({ min: 0, max: 8 }))
-				);
-			})
-			.create(300);
+		const producers = producerUsers.map((user) => {
+			const producer = producerFactory.makeOne({
+				user: user.id
+			});
 
-		console.log("Generating producers' products...");
-		// We wait for the production units to be created so we can create some producer products
-		producers.forEach((producer) => {
+			producer.imageShowcase.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
+			producer.productionUnits.set(
+				productionUnitFactory
+					.each((pUnit) => {
+						pUnit.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
+						pUnit.address = addressFactory.makeOne();
+						pUnit.carriers.set(
+							carrierFactory
+								.each((carrier) => {
+									carrier.image = imageFactory.makeOne();
+								})
+								.make(faker.datatype.number({ min: 0, max: 10 }))
+						);
+					})
+					.make(faker.datatype.number({ min: 0, max: 8 }))
+			);
+
 			producer.productionUnits.getItems().forEach((pUnit) => {
 				pUnit.products.set(
 					producerProductFactory
@@ -133,7 +137,45 @@ export class HivetownSeeder extends Seeder {
 						.make(faker.datatype.number({ min: 0, max: 70 }))
 				);
 			});
+			return producer;
 		});
+
+		// const producers = await producerFactory
+		// 	.each((producer) => {
+		// 		producer.imageShowcase.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
+
+		// 		producer.productionUnits.set(
+		// 			productionUnitFactory
+		// 				.each((pUnit) => {
+		// 					pUnit.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
+		// 					pUnit.address = addressFactory.makeOne();
+		// 					pUnit.carriers.set(
+		// 						carrierFactory
+		// 							.each((carrier) => {
+		// 								carrier.image = imageFactory.makeOne();
+		// 							})
+		// 							.make(faker.datatype.number({ min: 0, max: 10 }))
+		// 					);
+		// 				})
+		// 				.make(faker.datatype.number({ min: 0, max: 8 }))
+		// 		);
+		// 	})
+		// 	.create(300);
+
+		console.log("Generating producers' products...");
+		// We wait for the production units to be created so we can create some producer products
+		// producers.forEach((producer) => {
+		// 	producer.productionUnits.getItems().forEach((pUnit) => {
+		// 		pUnit.products.set(
+		// 			producerProductFactory
+		// 				.each((pProduct) => {
+		// 					pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
+		// 					pProduct.producer = producer;
+		// 				})
+		// 				.make(faker.datatype.number({ min: 0, max: 70 }))
+		// 		);
+		// 	});
+		// });
 		await em.persistAndFlush(producers);
 
 		// Filter for producers that have products
@@ -148,7 +190,7 @@ export class HivetownSeeder extends Seeder {
 					.getItems()
 					.filter((pUnit) => pUnit.products.getItems().length > 0 && pUnit.carriers.getItems().length > 0)
 			}));
-		console.log(`Found ${producersWithProducts.length} producers with products.`);
+		console.log(`Found ${producersWithProducts.length}/${producers.length} producers with products.`);
 
 		// If there are no producers with products, we create one
 		if (!producersWithProducts.length) {
@@ -194,7 +236,6 @@ export class HivetownSeeder extends Seeder {
 		const consumers = await consumerFactory
 			.each((consumer) => {
 				consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 1, max: 5 })));
-				consumer.image = imageFactory.makeOne();
 
 				// Keep track of the cart items so we don't have collisions
 				console.log(`Generating cart items for ${consumer.name}`);
