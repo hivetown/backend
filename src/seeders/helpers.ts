@@ -5,11 +5,11 @@ import { FieldType } from '../enums';
 /**
  * loremflickr image types
  */
-type ImageTypes = 'dog' | 'cat' | 'food' | 'avatar' | 'shop' | 'car' | 'department' | 'mcdonalds' | 'factory';
+type ImageTypes = 'dog' | 'cat' | 'food' | 'shopper' | 'shop' | 'car' | 'department' | 'mcdonalds' | 'factory';
 export const generateImage = (type: ImageTypes): Omit<Image, 'id'> => ({
 	alt: faker.git.commitMessage(),
 	name: faker.name.jobTitle(),
-	url: faker.image.imageUrl(640, 480, type, true)
+	url: generateImageUrl(type)
 });
 
 export const generateValueFromField = (field: Field) => {
@@ -34,3 +34,5 @@ export const generateValueFromField = (field: Field) => {
 
 	return value;
 };
+
+export const generateImageUrl = (type: ImageTypes) => faker.image.imageUrl(640, 480, type, true);
