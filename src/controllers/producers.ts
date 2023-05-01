@@ -13,7 +13,6 @@ import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { CarrierStatus } from '../enums';
 import { BadRequestError } from '../errors/BadRequestError';
 
-const producerIdParam = Joi.number().min(1).required();
 @Controller('/producers')
 @Injectable()
 export class ProducersController {
@@ -109,7 +108,7 @@ export class ProducersController {
 	@Get('/:producerId/products', [
 		validate({
 			params: Joi.object({
-				producerId: producerIdParam
+				producerId: Joi.number().min(1).required()
 			})
 		})
 	])
