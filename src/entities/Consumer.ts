@@ -8,7 +8,7 @@ export { UserType };
 
 @Entity()
 export class Consumer {
-	@OneToOne({ primary: true })
+	@OneToOne({ primary: true, name: 'id' })
 	public user!: User;
 
 	@Property({ persist: false })

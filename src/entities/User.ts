@@ -1,8 +1,9 @@
-import { Entity, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, Enum, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import type { Image } from './Image';
+import type { UserType } from '../enums';
 
 @Entity()
-export abstract class User {
+export class User {
 	@PrimaryKey()
 	public id!: number;
 
@@ -20,6 +21,9 @@ export abstract class User {
 
 	@Property({ type: 'string' })
 	public vat!: string;
+
+	@Enum()
+	public type!: UserType;
 
 	@OneToOne()
 	public image?: Image;

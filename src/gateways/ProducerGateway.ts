@@ -23,16 +23,12 @@ export class ProducerGateway {
 	}
 
 	public async findByIdWithUnits(id: number): Promise<Producer | null> {
-		const producer = await this.repository.findOne(id, { populate: ['productionUnits'] });
+		const producer = await this.repository.findOne({ user: id }, { populate: ['productionUnits'] });
 		return producer;
 	}
 
 	public async findById(id: number): Promise<Producer | null> {
 		return this.repository.findOne(id);
-	}
-
-	public async findByAuthId(authId: string): Promise<Producer | null> {
-		return this.repository.findOne({ authId });
 	}
 
 	public async findFromProductSpecId(id: number, options: PaginatedOptions): Promise<BaseItems<Producer>> {

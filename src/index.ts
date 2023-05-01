@@ -21,7 +21,8 @@ import {
 	OrderGateway,
 	ProductionUnitGateway,
 	ShipmentGateway,
-	CarrierGateway
+	CarrierGateway,
+	UserGateway
 } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
@@ -56,6 +57,7 @@ export const container = {} as {
 	productionUnitGateway: ProductionUnitGateway;
 	shipmentGateway: ShipmentGateway;
 	carrierGateway: CarrierGateway;
+	userGateway: UserGateway;
 };
 
 export const app = express();

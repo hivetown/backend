@@ -212,6 +212,16 @@
 					"nullable": false,
 					"mappedType": "string"
 				},
+				"type": {
+					"name": "type",
+					"type": "enum('CONSUMER', 'PRODUCER')",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"enumItems": ["CONSUMER", "PRODUCER"],
+					"mappedType": "enum"
+				},
 				"image_id": {
 					"name": "image_id",
 					"type": "int",
@@ -261,8 +271,8 @@
 		},
 		{
 			"columns": {
-				"user_id": {
-					"name": "user_id",
+				"id": {
+					"name": "id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -275,7 +285,7 @@
 			"indexes": [
 				{
 					"keyName": "PRIMARY",
-					"columnNames": ["user_id"],
+					"columnNames": ["id"],
 					"composite": false,
 					"primary": true,
 					"unique": true
@@ -283,9 +293,9 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"producer_user_id_foreign": {
-					"constraintName": "producer_user_id_foreign",
-					"columnNames": ["user_id"],
+				"producer_id_foreign": {
+					"constraintName": "producer_id_foreign",
+					"columnNames": ["id"],
 					"localTableName": "producer",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "user",
@@ -296,8 +306,8 @@
 		},
 		{
 			"columns": {
-				"user_id": {
-					"name": "user_id",
+				"id": {
+					"name": "id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -310,7 +320,7 @@
 			"indexes": [
 				{
 					"keyName": "PRIMARY",
-					"columnNames": ["user_id"],
+					"columnNames": ["id"],
 					"composite": false,
 					"primary": true,
 					"unique": true
@@ -318,9 +328,9 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"consumer_user_id_foreign": {
-					"constraintName": "consumer_user_id_foreign",
-					"columnNames": ["user_id"],
+				"consumer_id_foreign": {
+					"constraintName": "consumer_id_foreign",
+					"columnNames": ["id"],
 					"localTableName": "consumer",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "user",
@@ -439,8 +449,8 @@
 					"nullable": false,
 					"mappedType": "double"
 				},
-				"consumer_user_id": {
-					"name": "consumer_user_id",
+				"consumer_id": {
+					"name": "consumer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -452,9 +462,9 @@
 			"name": "address",
 			"indexes": [
 				{
-					"columnNames": ["consumer_user_id"],
+					"columnNames": ["consumer_id"],
 					"composite": false,
-					"keyName": "address_consumer_user_id_index",
+					"keyName": "address_consumer_id_index",
 					"primary": false,
 					"unique": false
 				},
@@ -468,11 +478,11 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"address_consumer_user_id_foreign": {
-					"constraintName": "address_consumer_user_id_foreign",
-					"columnNames": ["consumer_user_id"],
+				"address_consumer_id_foreign": {
+					"constraintName": "address_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
 					"localTableName": "address",
-					"referencedColumnNames": ["user_id"],
+					"referencedColumnNames": ["id"],
 					"referencedTableName": "consumer",
 					"deleteRule": "set null",
 					"updateRule": "cascade"
@@ -508,8 +518,8 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"producer_user_id": {
-					"name": "producer_user_id",
+				"producer_id": {
+					"name": "producer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -538,9 +548,9 @@
 					"unique": false
 				},
 				{
-					"columnNames": ["producer_user_id"],
+					"columnNames": ["producer_id"],
 					"composite": false,
-					"keyName": "production_unit_producer_user_id_index",
+					"keyName": "production_unit_producer_id_index",
 					"primary": false,
 					"unique": false
 				},
@@ -562,11 +572,11 @@
 					"referencedTableName": "address",
 					"updateRule": "cascade"
 				},
-				"production_unit_producer_user_id_foreign": {
-					"constraintName": "production_unit_producer_user_id_foreign",
-					"columnNames": ["producer_user_id"],
+				"production_unit_producer_id_foreign": {
+					"constraintName": "production_unit_producer_id_foreign",
+					"columnNames": ["producer_id"],
 					"localTableName": "production_unit",
-					"referencedColumnNames": ["user_id"],
+					"referencedColumnNames": ["id"],
 					"referencedTableName": "producer",
 					"updateRule": "cascade"
 				}
@@ -611,8 +621,8 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"producer_user_id": {
-					"name": "producer_user_id",
+				"producer_id": {
+					"name": "producer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -642,9 +652,9 @@
 			"name": "producer_product",
 			"indexes": [
 				{
-					"columnNames": ["producer_user_id"],
+					"columnNames": ["producer_id"],
 					"composite": false,
-					"keyName": "producer_product_producer_user_id_index",
+					"keyName": "producer_product_producer_id_index",
 					"primary": false,
 					"unique": false
 				},
@@ -672,11 +682,11 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"producer_product_producer_user_id_foreign": {
-					"constraintName": "producer_product_producer_user_id_foreign",
-					"columnNames": ["producer_user_id"],
+				"producer_product_producer_id_foreign": {
+					"constraintName": "producer_product_producer_id_foreign",
+					"columnNames": ["producer_id"],
 					"localTableName": "producer_product",
-					"referencedColumnNames": ["user_id"],
+					"referencedColumnNames": ["id"],
 					"referencedTableName": "producer",
 					"updateRule": "cascade"
 				},
@@ -709,8 +719,8 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"consumer_user_id": {
-					"name": "consumer_user_id",
+				"consumer_id": {
+					"name": "consumer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -738,15 +748,15 @@
 					"unique": false
 				},
 				{
-					"columnNames": ["consumer_user_id"],
+					"columnNames": ["consumer_id"],
 					"composite": false,
-					"keyName": "cart_item_consumer_user_id_index",
+					"keyName": "cart_item_consumer_id_index",
 					"primary": false,
 					"unique": false
 				},
 				{
 					"keyName": "PRIMARY",
-					"columnNames": ["producer_product_id", "consumer_user_id"],
+					"columnNames": ["producer_product_id", "consumer_id"],
 					"composite": true,
 					"primary": true,
 					"unique": true
@@ -762,11 +772,11 @@
 					"referencedTableName": "producer_product",
 					"updateRule": "cascade"
 				},
-				"cart_item_consumer_user_id_foreign": {
-					"constraintName": "cart_item_consumer_user_id_foreign",
-					"columnNames": ["consumer_user_id"],
+				"cart_item_consumer_id_foreign": {
+					"constraintName": "cart_item_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
 					"localTableName": "cart_item",
-					"referencedColumnNames": ["user_id"],
+					"referencedColumnNames": ["id"],
 					"referencedTableName": "consumer",
 					"updateRule": "cascade"
 				}
@@ -1067,8 +1077,8 @@
 					"nullable": true,
 					"mappedType": "integer"
 				},
-				"consumer_user_id": {
-					"name": "consumer_user_id",
+				"consumer_id": {
+					"name": "consumer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1076,8 +1086,8 @@
 					"nullable": true,
 					"mappedType": "integer"
 				},
-				"producer_image_user_id": {
-					"name": "producer_image_user_id",
+				"producer_image_id": {
+					"name": "producer_image_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1085,8 +1095,8 @@
 					"nullable": true,
 					"mappedType": "integer"
 				},
-				"producer_images_user_id": {
-					"name": "producer_images_user_id",
+				"producer_images_id": {
+					"name": "producer_images_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1130,23 +1140,23 @@
 					"unique": true
 				},
 				{
-					"columnNames": ["consumer_user_id"],
+					"columnNames": ["consumer_id"],
 					"composite": false,
-					"keyName": "image_consumer_user_id_unique",
+					"keyName": "image_consumer_id_unique",
 					"primary": false,
 					"unique": true
 				},
 				{
-					"columnNames": ["producer_image_user_id"],
+					"columnNames": ["producer_image_id"],
 					"composite": false,
-					"keyName": "image_producer_image_user_id_unique",
+					"keyName": "image_producer_image_id_unique",
 					"primary": false,
 					"unique": true
 				},
 				{
-					"columnNames": ["producer_images_user_id"],
+					"columnNames": ["producer_images_id"],
 					"composite": false,
-					"keyName": "image_producer_images_user_id_index",
+					"keyName": "image_producer_images_id_index",
 					"primary": false,
 					"unique": false
 				},
@@ -1192,29 +1202,29 @@
 					"deleteRule": "set null",
 					"updateRule": "cascade"
 				},
-				"image_consumer_user_id_foreign": {
-					"constraintName": "image_consumer_user_id_foreign",
-					"columnNames": ["consumer_user_id"],
+				"image_consumer_id_foreign": {
+					"constraintName": "image_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
 					"localTableName": "image",
-					"referencedColumnNames": ["user_id"],
+					"referencedColumnNames": ["id"],
 					"referencedTableName": "consumer",
 					"deleteRule": "set null",
 					"updateRule": "cascade"
 				},
-				"image_producer_image_user_id_foreign": {
-					"constraintName": "image_producer_image_user_id_foreign",
-					"columnNames": ["producer_image_user_id"],
+				"image_producer_image_id_foreign": {
+					"constraintName": "image_producer_image_id_foreign",
+					"columnNames": ["producer_image_id"],
 					"localTableName": "image",
-					"referencedColumnNames": ["user_id"],
+					"referencedColumnNames": ["id"],
 					"referencedTableName": "producer",
 					"deleteRule": "set null",
 					"updateRule": "cascade"
 				},
-				"image_producer_images_user_id_foreign": {
-					"constraintName": "image_producer_images_user_id_foreign",
-					"columnNames": ["producer_images_user_id"],
+				"image_producer_images_id_foreign": {
+					"constraintName": "image_producer_images_id_foreign",
+					"columnNames": ["producer_images_id"],
 					"localTableName": "image",
-					"referencedColumnNames": ["user_id"],
+					"referencedColumnNames": ["id"],
 					"referencedTableName": "producer",
 					"deleteRule": "set null",
 					"updateRule": "cascade"
@@ -1550,8 +1560,8 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"consumer_user_id": {
-					"name": "consumer_user_id",
+				"consumer_id": {
+					"name": "consumer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
@@ -1581,9 +1591,9 @@
 			"name": "order",
 			"indexes": [
 				{
-					"columnNames": ["consumer_user_id"],
+					"columnNames": ["consumer_id"],
 					"composite": false,
-					"keyName": "order_consumer_user_id_index",
+					"keyName": "order_consumer_id_index",
 					"primary": false,
 					"unique": false
 				},
@@ -1611,11 +1621,11 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"order_consumer_user_id_foreign": {
-					"constraintName": "order_consumer_user_id_foreign",
-					"columnNames": ["consumer_user_id"],
+				"order_consumer_id_foreign": {
+					"constraintName": "order_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
 					"localTableName": "order",
-					"referencedColumnNames": ["user_id"],
+					"referencedColumnNames": ["id"],
 					"referencedTableName": "consumer",
 					"updateRule": "cascade"
 				},

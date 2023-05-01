@@ -14,10 +14,6 @@ export class ConsumerGateway {
 		return consumer;
 	}
 
-	public async findByAuthId(authId: string): Promise<Consumer | null> {
-		return this.repository.findOne({ authId });
-	}
-
 	public async findById(id: number): Promise<Consumer | null> {
 		const consumer = await this.repository.findOne(id);
 		return consumer;
