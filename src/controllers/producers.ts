@@ -78,6 +78,34 @@ export class ProducersController {
 		res.status(204).json();
 	}
 
+	@Put('/:producerId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async reativateProducer(@Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		producer.deletedAt = undefined;
+		await container.producerGateway.update(producer);
+
+		for (const productionUnit of producer.productionUnits) {
+			productionUnit.deletedAt = undefined;
+			await container.productionUnitGateway.update(productionUnit);
+		}
+
+		for (const producerProduct of producer.producerProducts) {
+			producerProduct.deletedAt = undefined;
+			await container.producerProductGateway.update(producerProduct);
+		}
+
+		res.status(200).json(producer);
+	}
+
 	@Get('/:producerId/products', [
 		validate({
 			params: Joi.object({

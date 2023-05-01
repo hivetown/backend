@@ -58,4 +58,9 @@ export class ProductionUnitGateway {
 	public async delete(productionUnit: ProductionUnit): Promise<void> {
 		await this.repository.removeAndFlush(productionUnit);
 	}
+
+	public async update(productionUnit: ProductionUnit): Promise<ProductionUnit> {
+		await this.repository.persistAndFlush(productionUnit);
+		return productionUnit;
+	}
 }

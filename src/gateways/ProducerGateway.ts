@@ -3,6 +3,7 @@ import { Producer } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
+import { SOFT_DELETABLE_FILTER } from 'mikro-orm-soft-delete';
 
 export class ProducerGateway {
 	private repository: EntityRepository<Producer>;
@@ -80,5 +81,18 @@ export class ProducerGateway {
 
 	public async findByIdPopulated(id: number): Promise<Producer | null> {
 		return this.repository.findOne(id, { populate: ['productionUnits', 'producerProducts'] });
+	}
+
+	public async findByIdWithDeletedAt(id: number): Promise<Producer | null> {
+		const producer = await this.repository.findOne(id, {
+			populate: ['productionUnits', 'producerProducts'],
+			filters: { [SOFT_DELETABLE_FILTER]: false }
+		});
+		return producer;
+	}
+
+	public async update(producer: Producer): Promise<Producer> {
+		await this.repository.persistAndFlush(producer);
+		return producer;
 	}
 }

@@ -129,4 +129,9 @@ export class ProducerProductGateway {
 	public async delete(ProducerProduct: ProducerProduct): Promise<void> {
 		await this.repository.removeAndFlush(ProducerProduct);
 	}
+
+	public async update(ProducerProduct: ProducerProduct): Promise<ProducerProduct> {
+		await this.repository.persistAndFlush(ProducerProduct);
+		return ProducerProduct;
+	}
 }
