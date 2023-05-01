@@ -3,6 +3,7 @@ import { Consumer } from '../entities';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
 import type { BaseItems } from '../interfaces/BaseItems';
+import { SOFT_DELETABLE_FILTER } from 'mikro-orm-soft-delete';
 
 export class ConsumerGateway {
 	private repository: EntityRepository<Consumer>;
@@ -52,8 +53,22 @@ export class ConsumerGateway {
 		return consumer;
 	}
 
-	public async updateCart(consumer: Consumer): Promise<Consumer> {
+	public async update(consumer: Consumer): Promise<Consumer> {
 		await this.repository.persistAndFlush(consumer);
+		return consumer;
+	}
+
+	public async findByIdWithAddress(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id, { populate: ['addresses'] });
+		return consumer;
+	}
+
+	public async delete(consumer: Consumer): Promise<void> {
+		await this.repository.removeAndFlush(consumer);
+	}
+
+	public async findByIdWithDeletedAt(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false } });
 		return consumer;
 	}
 }

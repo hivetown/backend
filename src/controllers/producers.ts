@@ -68,7 +68,6 @@ export class ProducersController {
 		const orderItems = await container.orderItemGateway.findByProducerIdPopulated(producerId);
 		const canDelete = orderItems.every((orderItem) => {
 			const orderStatus = orderItem.getActualStatus();
-			console.log({ orderItem, orderStatus });
 			return orderStatus === ShipmentStatus.Delivered || orderStatus === ShipmentStatus.Canceled;
 		});
 

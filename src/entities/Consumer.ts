@@ -5,8 +5,10 @@ import type { Address } from './Address';
 import type { Order } from './Order';
 import type { Image } from './Image';
 import type { CartItem } from './CartItem';
+import { SoftDeletable } from 'mikro-orm-soft-delete';
 export { UserType };
 
+@SoftDeletable(() => Consumer, 'deletedAt', () => new Date())
 @Entity()
 export class Consumer extends User {
 	@PrimaryKey()
@@ -28,6 +30,9 @@ export class Consumer extends User {
 
 	@OneToOne()
 	public image?: Image;
+
+	@Property({ nullable: true })
+	public deletedAt?: Date;
 
 	public existStockCartItems(): boolean {
 		return this.cartItems.getItems().every((item) => item.producerProduct.stock >= item.quantity);
