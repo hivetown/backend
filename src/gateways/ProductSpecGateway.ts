@@ -83,4 +83,8 @@ export class ProductSpecGateway {
 			.addSelect('MAX(producerProduct.current_price) as maxPrice')
 			.getSingleResult();
 	}
+
+	public async findSimpleById(id: number): Promise<ProductSpec | null> {
+		return this.repository.findOne(id);
+	}
 }

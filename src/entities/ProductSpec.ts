@@ -40,8 +40,9 @@ export class ProductSpec {
 	@Property({ nullable: true })
 	public deletedAt?: Date;
 
-	public constructor(name: string, description: string) {
+	public constructor(name: string, description: string, images: Image[]) {
 		this.name = name;
 		this.description = description;
+		this.images.set(images);
 	}
 }

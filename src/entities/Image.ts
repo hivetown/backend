@@ -40,4 +40,10 @@ export class Image {
 
 	@ManyToOne({ hidden: true })
 	public productSpec?: ProductSpec;
+
+	public constructor(name: string, url: string, alt: string) {
+		this.name = name;
+		this.url = url;
+		this.alt = alt;
+	}
 }
