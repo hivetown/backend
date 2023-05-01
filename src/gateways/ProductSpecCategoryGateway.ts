@@ -16,7 +16,6 @@ export class ProductSpecCategoryGateway {
 			this.repository
 				.createQueryBuilder('e')
 				.leftJoinAndSelect('e.category', 'category')
-				.leftJoinAndSelect('category.image', 'image')
 				.where({ productSpec: id })
 				.limit(pagination.limit)
 				.offset(pagination.offset)
@@ -34,7 +33,7 @@ export class ProductSpecCategoryGateway {
 	}
 
 	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory | null> {
-		const category = await this.repository.findOne({ productSpec: id, category: categoryId }, { populate: ['category', 'category.image'] });
+		const category = await this.repository.findOne({ productSpec: id, category: categoryId }, { populate: ['category'] });
 		return category;
 	}
 }

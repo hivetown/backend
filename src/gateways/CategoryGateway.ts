@@ -17,7 +17,6 @@ export class CategoryGateway {
 			this.repository
 				.createQueryBuilder('category')
 				.where('category.parent_id IS NULL')
-				.leftJoinAndSelect('category.image', 'image')
 				.limit(pagination.limit)
 				.offset(pagination.offset)
 				.getResult(),
@@ -35,10 +34,7 @@ export class CategoryGateway {
 	public async findAllChildrenOfCategory(categoryId: number, options: PaginatedOptions): Promise<BaseItems<Category>> {
 		const pagination = paginate(options);
 		const [categories, totalResults] = await Promise.all([
-			this.repository.find(
-				{ parent: categoryId },
-				{ fields: ['name', 'parent.name', 'image'], limit: pagination.limit, offset: pagination.offset }
-			),
+			this.repository.find({ parent: categoryId }, { fields: ['name', 'parent.name'], limit: pagination.limit, offset: pagination.offset }),
 			this.repository.count({ parent: categoryId })
 		]);
 		return {
@@ -51,7 +47,7 @@ export class CategoryGateway {
 	}
 
 	public async findById(id: number): Promise<Category | null> {
-		const category = await this.repository.findOne(id, { populate: ['parent', 'image'] });
+		const category = await this.repository.findOne(id, { populate: ['parent'] });
 		return category;
 	}
 

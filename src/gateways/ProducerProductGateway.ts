@@ -59,7 +59,7 @@ export class ProducerProductGateway {
 		const totalItemsQb = qb.clone();
 
 		// Paginate
-		void qb.offset(pagination.offset).limit(pagination.limit).leftJoinAndSelect('pp.productSpec', 'ps').leftJoinAndSelect('ps.images', 'i');
+		void qb.offset(pagination.offset).limit(pagination.limit).leftJoinAndSelect('pp.productSpec', 'ps');
 
 		// Fetch results and map them
 		const [totalItems, productionUnits] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);

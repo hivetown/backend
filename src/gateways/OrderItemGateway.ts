@@ -39,7 +39,6 @@ export class OrderItemGateway {
 						'producerProduct.producer',
 						'producerProduct.productionUnit',
 						'producerProduct.productSpec',
-						'producerProduct.productSpec.images',
 						'shipment.events.status'
 					],
 					limit: pagination.limit,
@@ -61,13 +60,7 @@ export class OrderItemGateway {
 		const orderItem = await this.repository.findOne(
 			{ order: orderId, producerProduct: { producer: producerId, id: producerProductId } },
 			{
-				populate: [
-					'producerProduct',
-					'producerProduct.producer',
-					'producerProduct.productionUnit',
-					'producerProduct.productSpec',
-					'producerProduct.productSpec.images'
-				]
+				populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec']
 			}
 		);
 		return orderItem;
@@ -96,7 +89,6 @@ export class OrderItemGateway {
 						'producerProduct.producer',
 						'producerProduct.productionUnit',
 						'producerProduct.productSpec',
-						'producerProduct.productSpec.images',
 						'shipment.events.status'
 					],
 					limit: pagination.limit,
@@ -119,13 +111,7 @@ export class OrderItemGateway {
 		const q2 = await this.repository.findOne(
 			{ order: { id: orderId, consumer: { id: consumerId } }, producerProduct: { id: producerProductId } },
 			{
-				populate: [
-					'producerProduct',
-					'producerProduct.producer',
-					'producerProduct.productionUnit',
-					'producerProduct.productSpec',
-					'producerProduct.productSpec.images'
-				]
+				populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec']
 			}
 		);
 		return q2;
