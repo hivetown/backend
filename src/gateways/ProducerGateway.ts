@@ -43,6 +43,7 @@ export class ProducerGateway {
 				.select(['p.*'], true)
 				.leftJoinAndSelect('p.productionUnits', 'pu')
 				.leftJoin('p.producerProducts', 'pp')
+				.leftJoinAndSelect('producer.image', 'image')
 				.where({ 'pp.product_spec_id': id })
 				.limit(pagination.limit)
 				.offset(pagination.offset)
