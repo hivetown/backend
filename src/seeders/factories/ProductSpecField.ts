@@ -7,6 +7,7 @@ export class ProductSpecFieldFactory extends Factory<ProductSpecField> {
 
 	protected definition(faker: Faker): EntityData<ProductSpecField> {
 		return {
+			// TODO same as category
 			value: faker.random.word()
 		};
 	}

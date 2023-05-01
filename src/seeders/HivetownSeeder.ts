@@ -5,9 +5,8 @@ import { ProductSpecFactory } from './factories/ProductSpec';
 import { ProductSpecCategoryFactory } from './factories/ProductSpecCategory';
 import { CategoryFactory } from './factories/Category';
 import { FieldFactory } from './factories/Field';
-import { FieldType, ShipmentStatus } from '../enums';
+import { ShipmentStatus } from '../enums';
 import { ProductSpecFieldFactory } from './factories/ProductSpecField';
-import { FieldPossibleValueFactory } from './factories/FieldPossibleValue';
 import { ProductionUnitFactory } from './factories/ProductionUnit';
 import { ShipmentFactory } from './factories/Shipment';
 import { ProducerProductFactory } from './factories/ProducerProduct';
@@ -19,7 +18,6 @@ import { OrderItemFactory } from './factories/OrderItem';
 import { ShipmentEventFactory } from './factories/ShipmentEvent';
 import { ProducerFactory } from './factories/Producer';
 import { CarrierFactory } from './factories/Carrier';
-import { ImageFactory } from './factories/Image';
 import type { ProducerProduct } from '../entities';
 
 export class HivetownSeeder extends Seeder {
@@ -41,21 +39,11 @@ export class HivetownSeeder extends Seeder {
 		const shipmentFactory = new ShipmentFactory(em);
 		const shipmentEventFactory = new ShipmentEventFactory(em);
 		const carrierFactory = new CarrierFactory(em);
-		const imageFactory = new ImageFactory(em);
 
 		console.log('Seeding Hivetown...');
 		console.log('Generating fields...');
 		// We create some fields to use on the Categories
-		const fields = await fieldFactory
-			.each((field) => {
-				// 5% chance of having possible values
-				const amount = faker.datatype.number(100);
-				if (amount < 5) {
-					field.type = FieldType.Enum;
-					field.possibleValues.set(new FieldPossibleValueFactory(em).make(faker.datatype.number({ min: 2, max: 5 })));
-				}
-			})
-			.create(120);
+		const fields = await fieldFactory.create(120);
 
 		console.log('Generating categories...');
 		// We create some Categories that use some of the Fields
@@ -63,7 +51,6 @@ export class HivetownSeeder extends Seeder {
 			.each((category) => {
 				// TODO category parents
 				category.fields.set(faker.helpers.arrayElements(fields, faker.datatype.number({ min: 3, max: 8 })));
-				category.image = imageFactory.makeOne();
 			})
 			.create(500);
 
@@ -71,7 +58,6 @@ export class HivetownSeeder extends Seeder {
 		// We create some productSpecs that use some of the Categories
 		const productSpecs = await productSpecFactory
 			.each((spec) => {
-				spec.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 5 })));
 				spec.categories.set(
 					faker.helpers.arrayElements(categories, faker.datatype.number({ min: 3, max: 8 })).map((category) =>
 						productSpecCategoryFactory.makeOne({
@@ -99,21 +85,11 @@ export class HivetownSeeder extends Seeder {
 		// We create some producers
 		const producers = await producerFactory
 			.each((producer) => {
-				producer.image = imageFactory.makeOne();
-				producer.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
-
 				producer.productionUnits.set(
 					productionUnitFactory
 						.each((pUnit) => {
-							pUnit.images.set(imageFactory.make(faker.datatype.number({ min: 0, max: 10 })));
 							pUnit.address = addressFactory.makeOne();
-							pUnit.carriers.set(
-								carrierFactory
-									.each((carrier) => {
-										carrier.image = imageFactory.makeOne();
-									})
-									.make(faker.datatype.number({ min: 0, max: 10 }))
-							);
+							pUnit.carriers.set(carrierFactory.make(faker.datatype.number({ min: 0, max: 10 })));
 						})
 						.make(faker.datatype.number({ min: 0, max: 8 }))
 				);
@@ -194,7 +170,6 @@ export class HivetownSeeder extends Seeder {
 		const consumers = await consumerFactory
 			.each((consumer) => {
 				consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 1, max: 5 })));
-				consumer.image = imageFactory.makeOne();
 
 				// Keep track of the cart items so we don't have collisions
 				console.log(`Generating cart items for ${consumer.name}`);
