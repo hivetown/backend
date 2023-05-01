@@ -4,13 +4,13 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Producer, ProductionUnit, ShipmentEvent, ShipmentStatus } from '../entities';
+import { Producer, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
-import { CarrierStatus } from '../enums';
+import { CarrierStatus, UserType } from '../enums';
 import { BadRequestError } from '../errors/BadRequestError';
 
 const producerIdParam = Joi.number().min(1).required();
@@ -28,18 +28,19 @@ export class ProducersController {
 		AuthMiddleware
 	])
 	public async createProducer(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const data: Producer = req.body;
-		data.user.authId = req.authUser!.uid;
-		data.user.email = req.authUser!.email!;
+		const data: User = req.body;
+		data.authId = req.authUser!.uid;
+		data.email = req.authUser!.email!;
 
-		let producer: Producer | null = null;
+		data.type = UserType.Producer;
+
 		try {
-			producer = await container.producerGateway.create(data);
+			const user = await container.producerGateway.create({ user: data } as Producer);
+			return res.status(201).json(user);
 		} catch (error) {
 			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Producer already exists');
+			throw error;
 		}
-
-		return res.status(201).json(producer);
 	}
 
 	@Get('/:producerId/products', [

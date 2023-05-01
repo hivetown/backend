@@ -4,8 +4,8 @@ import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { Address, CartItem, Consumer, Order } from '../entities';
-import { ShipmentStatus } from '../enums';
+import { Address, CartItem, Consumer, Order, User } from '../entities';
+import { ShipmentStatus, UserType } from '../enums';
 import { ConflictError } from '../errors/ConflictError';
 import { AuthMiddleware } from '../middlewares/auth';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
@@ -38,18 +38,19 @@ export class ConsumerController {
 		AuthMiddleware
 	])
 	public async createConsumer(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const data: Consumer = req.body;
-		data.user.authId = req.authUser!.uid;
-		data.user.email = req.authUser!.email!;
+		const data: User = req.body;
+		data.authId = req.authUser!.uid;
+		data.email = req.authUser!.email!;
 
-		let consumer: Consumer | null = null;
+		data.type = UserType.Consumer;
+
 		try {
-			consumer = await container.consumerGateway.create(data);
+			const user = await container.consumerGateway.create({ user: data } as Consumer);
+			return res.status(201).json(user);
 		} catch (error) {
 			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Consumer already exists');
+			throw error;
 		}
-
-		return res.status(201).json(consumer);
 	}
 
 	// -------------------------------------------------------------------- CART --------------------------------------------------------------------
