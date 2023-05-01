@@ -3,6 +3,7 @@ import { Producer } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
+import type { ProducerOptions } from '../interfaces/ProducerOptions';
 
 export class ProducerGateway {
 	private repository: EntityRepository<Producer>;
@@ -27,8 +28,8 @@ export class ProducerGateway {
 		return producer;
 	}
 
-	public async findById(id: number): Promise<Producer | null> {
-		return this.repository.findOne({ user: id });
+	public async findById(id: number, options?: ProducerOptions): Promise<Producer | null> {
+		return this.repository.findOne({ user: id }, { populate: options?.populate });
 	}
 
 	public async findFromProductSpecId(id: number, options: PaginatedOptions): Promise<BaseItems<Producer>> {

@@ -1,4 +1,4 @@
-import { Collection, Entity, OneToMany, OneToOne, Property } from '@mikro-orm/core';
+import { Collection, Entity, OneToMany, OneToOne } from '@mikro-orm/core';
 import { UserType } from '../enums/UserType';
 import type { Address } from './Address';
 import type { Order } from './Order';
@@ -8,13 +8,8 @@ export { UserType };
 
 @Entity()
 export class Consumer {
-	@OneToOne({ primary: true, name: 'id' })
+	@OneToOne({ primary: true, name: 'id', eager: true })
 	public user!: User;
-
-	@Property({ persist: false })
-	public get type() {
-		return UserType.Consumer;
-	}
 
 	@OneToMany('CartItem', 'consumer')
 	public cartItems = new Collection<CartItem>(this);

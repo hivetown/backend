@@ -349,6 +349,7 @@ export class ConsumerController {
 	public async exportOrders(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Query('id') ids: number[]) {
 		const consumer = await container.consumerGateway.findById(consumerId);
 		if (!consumer) throw new NotFoundError('Consumer not found');
+		console.log(consumer);
 
 		const orders = await container.orderGateway.findByIdsToExport(ids, consumerId);
 		if (!orders) throw new NotFoundError('Orders not found');

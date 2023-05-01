@@ -25,6 +25,6 @@ export class User {
 	@Enum()
 	public type!: UserType;
 
-	@OneToOne()
+	@OneToOne({ eager: true })
 	public image?: Image;
 }

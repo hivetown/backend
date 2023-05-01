@@ -83,6 +83,7 @@ export const main = async () => {
 	container.orderGateway = new OrderGateway(container.orm);
 	container.shipmentGateway = new ShipmentGateway(container.orm);
 	container.carrierGateway = new CarrierGateway(container.orm);
+	container.userGateway = new UserGateway(container.orm);
 
 	app.use(express.json());
 	app.use(cors());
