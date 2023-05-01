@@ -29,27 +29,24 @@ export class ProducerGateway {
 	}
 
 	public async findById(id: number, options?: ProducerOptions): Promise<Producer | null> {
-		return this.repository.findOne({ user: id }, { populate: options?.populate });
+		return this.repository.findOne({ user: id }, { populate: options?.populate as any });
 	}
 
 	public async findFromProductSpecId(id: number, options: PaginatedOptions): Promise<BaseItems<Producer>> {
 		const pagination = paginate(options);
 		const [producers, totalResults] = await Promise.all([
-			this.repository
-				.createQueryBuilder('producer')
-				.select('producer.*', true)
-				.leftJoin('producer.producerProducts', 'producerProduct')
-				.where({ 'producerProduct.product_spec_id': id })
-				.leftJoinAndSelect('producer.image', 'image')
-				.limit(pagination.limit)
-				.offset(pagination.offset)
-				.getResultList(),
-			this.repository
-				.createQueryBuilder('producer')
-				.select('producer.*', true)
-				.leftJoin('producer.producerProducts', 'producerProduct')
-				.where({ 'producerProduct.product_spec_id': id })
-				.count()
+			this.repository.find(
+				{
+					producerProducts: { productSpec: id }
+				},
+				{
+					limit: pagination.limit,
+					offset: pagination.offset
+				}
+			),
+			this.repository.count({
+				producerProducts: { productSpec: id }
+			})
 		]);
 
 		return {
