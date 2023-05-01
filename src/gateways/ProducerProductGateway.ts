@@ -48,18 +48,25 @@ export class ProducerProductGateway {
 		return product;
 	}
 
-	public async findFromProductionUnit(productionUnitId: number, options: PaginatedOptions): Promise<BaseItems<ProducerProduct> | null> {
+	public async findFromProductionUnit(productionUnitId: number, options: ProducerProductOptions): Promise<BaseItems<ProducerProduct> | null> {
 		const pagination = paginate(options);
 
 		const qb = this.repository
-			.createQueryBuilder('pp')
+			.createQueryBuilder('producerProduct')
 			.select('*')
 			.where({ productionUnit: { id: productionUnitId } });
 
 		const totalItemsQb = qb.clone();
 
 		// Paginate
-		void qb.offset(pagination.offset).limit(pagination.limit).leftJoinAndSelect('pp.productSpec', 'ps');
+		void qb.offset(pagination.offset).limit(pagination.limit);
+
+		// Populate
+		if (options?.populate) {
+			options.populate.forEach((field) => {
+				void qb.leftJoinAndSelect(field, field.replaceAll('.', '_'));
+			});
+		}
 
 		// Fetch results and map them
 		const [totalItems, productionUnits] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
@@ -114,7 +121,7 @@ export class ProducerProductGateway {
 		// Populate
 		if (options?.populate) {
 			options.populate.forEach((field) => {
-				void qb.leftJoinAndSelect(`producerProduct.${field}`, field);
+				void qb.leftJoinAndSelect(field, field.replaceAll('.', '_'));
 			});
 		}
 
