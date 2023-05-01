@@ -1,16 +1,15 @@
-import { Collection, Entity, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Collection, Entity, OneToMany, OneToOne, Property } from '@mikro-orm/core';
 import { UserType } from '../enums/UserType';
-import { User } from './User';
 import type { Address } from './Address';
 import type { Order } from './Order';
-import type { Image } from './Image';
 import type { CartItem } from './CartItem';
+import type { User } from './User';
 export { UserType };
 
 @Entity()
-export class Consumer extends User {
-	@PrimaryKey()
-	public id!: number;
+export class Consumer {
+	@OneToOne({ primary: true })
+	public user!: User;
 
 	@Property({ persist: false })
 	public get type() {
@@ -25,9 +24,6 @@ export class Consumer extends User {
 
 	@OneToMany('Address', 'consumer')
 	public addresses = new Collection<Address>(this);
-
-	@OneToOne()
-	public image?: Image;
 
 	public existStockCartItems(): boolean {
 		return this.cartItems.getItems().every((item) => item.producerProduct.stock >= item.quantity);

@@ -1,7 +1,14 @@
-import { Entity, Property } from '@mikro-orm/core';
+import { Entity, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import type { Image } from './Image';
 
-@Entity({ abstract: true })
+@Entity()
 export abstract class User {
+	@PrimaryKey()
+	public id!: number;
+
+	@Property({ unique: true, hidden: true })
+	public authId!: string;
+
 	@Property()
 	public name!: string;
 
@@ -11,9 +18,9 @@ export abstract class User {
 	@Property({ type: 'string' })
 	public phone!: string;
 
-	@Property({ type: 'string', unique: true })
+	@Property({ type: 'string' })
 	public vat!: string;
 
-	@Property({ unique: true, hidden: true })
-	public authId!: string;
+	@OneToOne()
+	public image?: Image;
 }
