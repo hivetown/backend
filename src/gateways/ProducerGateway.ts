@@ -28,7 +28,7 @@ export class ProducerGateway {
 	}
 
 	public async findById(id: number): Promise<Producer | null> {
-		return this.repository.findOne(id);
+		return this.repository.findOne({ user: id });
 	}
 
 	public async findFromProductSpecId(id: number, options: PaginatedOptions): Promise<BaseItems<Producer>> {

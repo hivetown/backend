@@ -15,7 +15,7 @@ export class ConsumerGateway {
 	}
 
 	public async findById(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id);
+		const consumer = await this.repository.findOne({ user: id });
 		return consumer;
 	}
 
@@ -25,12 +25,12 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithCart(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { populate: ['cartItems'] });
+		const consumer = await this.repository.findOne({ user: id }, { populate: ['cartItems'] });
 		return consumer;
 	}
 
 	public async findByIdWithCartAndProducts(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { populate: ['cartItems', 'cartItems.producerProduct', 'addresses'] });
+		const consumer = await this.repository.findOne({ user: id }, { populate: ['cartItems', 'cartItems.producerProduct', 'addresses'] });
 		return consumer;
 	}
 
