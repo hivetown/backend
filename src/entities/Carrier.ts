@@ -21,6 +21,6 @@ export class Carrier {
 	@OneToMany(() => Shipment, (shipment) => shipment.carrier)
 	public shipments = new Collection<Shipment>(this);
 
-	@OneToOne()
+	@OneToOne({ eager: true })
 	public image?: Image;
 }

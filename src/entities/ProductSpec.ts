@@ -26,7 +26,7 @@ export class ProductSpec {
 	// -----------------
 
 	// Max 5 images
-	@OneToMany('Image', 'productSpec')
+	@OneToMany('Image', 'productSpec', { eager: true })
 	public images = new Collection<Image>(this);
 
 	@OneToMany('ProductSpecCategory', 'productSpec')

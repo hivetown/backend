@@ -14,14 +14,19 @@ export class ProductSpecCategoryGateway {
 		const pagination = paginate(options);
 		const [productSpecCategories, totalResults] = await Promise.all([
 			this.repository
-				.createQueryBuilder('e')
-				.leftJoinAndSelect('e.category', 'category')
-				.leftJoinAndSelect('category.image', 'image')
+				.createQueryBuilder('productSpecCategory')
+				.leftJoinAndSelect('productSpecCategory.category', 'category')
 				.where({ productSpec: id })
+				.leftJoinAndSelect('category.image', 'image')
+				.leftJoinAndSelect('category.parent', 'parent')
 				.limit(pagination.limit)
 				.offset(pagination.offset)
 				.getResult(),
-			this.repository.createQueryBuilder('e').leftJoinAndSelect('e.category', 'category').where({ productSpec: id }).count()
+			this.repository
+				.createQueryBuilder('productSpecCategory')
+				.leftJoinAndSelect('productSpecCategory.category', 'category')
+				.where({ productSpec: id })
+				.count()
 		]);
 		const c = productSpecCategories.map(({ category }) => category);
 		return {
@@ -34,7 +39,7 @@ export class ProductSpecCategoryGateway {
 	}
 
 	public async findCategoryBySpecificationId(id: number, categoryId: number): Promise<ProductSpecCategory | null> {
-		const category = await this.repository.findOne({ productSpec: id, category: categoryId }, { populate: ['category', 'category.image'] });
+		const category = await this.repository.findOne({ productSpec: id, category: categoryId }, { populate: ['category'] });
 		return category;
 	}
 }
