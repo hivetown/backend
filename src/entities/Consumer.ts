@@ -26,7 +26,7 @@ export class Consumer extends User {
 	@OneToMany('Address', 'consumer')
 	public addresses = new Collection<Address>(this);
 
-	@OneToOne()
+	@OneToOne({ eager: true })
 	public image?: Image;
 
 	public existStockCartItems(): boolean {

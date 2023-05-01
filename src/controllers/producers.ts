@@ -56,7 +56,7 @@ export class ProducersController {
 		const options: ProducerProductOptions = {
 			page: Number(req.query.page) || -1,
 			size: Number(req.query.pageSize) || -1,
-			populate: ['productSpec', 'productionUnit']
+			populate: ['producerProduct.productSpec', 'producerProduct.productionUnit', 'producerProduct_productSpec.images']
 		};
 
 		const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);
@@ -436,9 +436,10 @@ export class ProducersController {
 		const productionUnit = await container.productionUnitGateway.findById(unitId);
 		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
 
-		const options: PaginatedOptions = {
+		const options: ProducerProductOptions = {
 			page: Number(req.query.page) || -1,
-			size: Number(req.query.pageSize) || -1
+			size: Number(req.query.pageSize) || -1,
+			populate: ['producerProduct.productSpec', 'producerProduct_productSpec.images']
 		};
 
 		const products = await container.producerProductGateway.findFromProductionUnit(productionUnit.id, options);
