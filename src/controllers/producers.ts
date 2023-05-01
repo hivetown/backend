@@ -64,6 +64,15 @@ export class ProducersController {
 		const producer = await container.producerGateway.findByIdPopulated(producerId);
 		if (!producer) throw new NotFoundError('Producer not found');
 
+		const orderItems = await container.orderItemGateway.findByProducerIdPopulated(producerId);
+		const canDelete = orderItems.every((orderItem) => {
+			const orderStatus = orderItem.getActualStatus();
+			console.log({ orderItem, orderStatus });
+			return orderStatus === ShipmentStatus.Delivered || orderStatus === ShipmentStatus.Canceled;
+		});
+
+		if (!canDelete) throw new BadRequestError('Producer has active orders');
+
 		for (const productionUnit of producer.productionUnits) {
 			await container.productionUnitGateway.delete(productionUnit);
 		}

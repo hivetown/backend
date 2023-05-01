@@ -136,4 +136,14 @@ export class OrderItemGateway {
 		);
 		return q2;
 	}
+
+	public async findByProducerIdPopulated(producerId: number): Promise<OrderItem[]> {
+		const products = await this.repository.find(
+			{ producerProduct: { producer: producerId } },
+			{
+				populate: ['shipment', 'shipment.events', 'shipment.events.status']
+			}
+		);
+		return products;
+	}
 }
