@@ -16,6 +16,6 @@ export class Category {
 	@ManyToMany(() => Field, (field) => field.categories, { owner: true })
 	public fields = new Collection<Field>(this);
 
-	@OneToOne()
+	@OneToOne({ eager: true })
 	public image?: Image;
 }

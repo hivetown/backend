@@ -40,7 +40,6 @@ export class OrderItemGateway {
 						'producerProduct.producer',
 						'producerProduct.productionUnit',
 						'producerProduct.productSpec',
-						'producerProduct.productSpec.images',
 						'shipment.events.status'
 					],
 					limit: pagination.limit,
@@ -62,13 +61,7 @@ export class OrderItemGateway {
 		const orderItem = await this.repository.findOne(
 			{ order: orderId, producerProduct: { producer: producerId, id: producerProductId } },
 			{
-				populate: [
-					'producerProduct',
-					'producerProduct.producer',
-					'producerProduct.productionUnit',
-					'producerProduct.productSpec',
-					'producerProduct.productSpec.images'
-				]
+				populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec']
 			}
 		);
 		return orderItem;
@@ -97,7 +90,6 @@ export class OrderItemGateway {
 						'producerProduct.producer',
 						'producerProduct.productionUnit',
 						'producerProduct.productSpec',
-						'producerProduct.productSpec.images',
 						'shipment.events.status'
 					],
 					limit: pagination.limit,
@@ -124,13 +116,7 @@ export class OrderItemGateway {
 				producerProduct: { id: producerProductId }
 			},
 			{
-				populate: [
-					'producerProduct',
-					'producerProduct.producer',
-					'producerProduct.productionUnit',
-					'producerProduct.productSpec',
-					'producerProduct.productSpec.images'
-				],
+				populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec'],
 				filters: { [SOFT_DELETABLE_FILTER]: false }
 			}
 		);

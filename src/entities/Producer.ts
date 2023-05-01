@@ -24,10 +24,10 @@ export class Producer extends User {
 	@OneToMany('ProducerProduct', 'producer')
 	public producerProducts = new Collection<ProducerProduct>(this);
 
-	@OneToOne()
+	@OneToOne({ eager: true })
 	public image?: Image;
 
-	@OneToMany('Image', 'producerImages')
+	@OneToMany('Image', 'producerImages', { eager: true })
 	public images = new Collection<Image>(this);
 
 	@Property({ nullable: true })
