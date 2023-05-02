@@ -1,5 +1,6 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { User } from '../entities';
+import type { UserOptions } from '../interfaces/UserOptions';
 
 export class UserGateway {
 	private repository: EntityRepository<User>;
@@ -14,8 +15,8 @@ export class UserGateway {
 		return user;
 	}
 
-	public async findByAuthId(authId: string): Promise<User | null> {
-		return this.repository.findOne({ authId });
+	public async findByAuthId(authId: string, options?: UserOptions): Promise<User | null> {
+		return this.repository.findOne({ authId }, { populate: options?.populate as any });
 	}
 
 	public async findById(id: number): Promise<User | null> {
