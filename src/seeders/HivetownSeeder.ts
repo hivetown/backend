@@ -20,6 +20,7 @@ import { UserFactory } from './factories/User';
 import { ProducerProduct, ProductSpecField } from '../entities';
 import { createFields } from './factories/Field';
 import { generateImageUrl, generateValueFromField } from './helpers';
+import { createRoles } from './factories/Role';
 
 export class HivetownSeeder extends Seeder {
 	public async run(em: EntityManager): Promise<void> {
@@ -41,6 +42,11 @@ export class HivetownSeeder extends Seeder {
 		const userFactory = new UserFactory(em);
 
 		console.log('Seeding Hivetown...');
+		console.log('Generating roles...');
+		// We create some roles
+		const roles = createRoles(em);
+		await em.persistAndFlush(roles);
+
 		console.log('Generating fields...');
 		// We create some fields to use on the Categories
 		const fields = createFields(em);

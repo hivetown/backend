@@ -268,7 +268,7 @@
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": false,
+					"nullable": true,
 					"mappedType": "integer"
 				},
 				"type": {
@@ -330,6 +330,7 @@
 					"localTableName": "user",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "role",
+					"deleteRule": "set null",
 					"updateRule": "cascade"
 				},
 				"user_image_id_foreign": {
