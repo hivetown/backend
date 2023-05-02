@@ -74,7 +74,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -107,7 +109,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -151,7 +155,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -181,7 +187,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -225,7 +233,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -267,7 +277,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -318,7 +330,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -358,7 +372,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -385,7 +401,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -413,7 +431,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -458,7 +478,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -486,7 +508,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -533,7 +557,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -585,7 +611,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -625,7 +653,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' addresses", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' addresses", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])
@@ -667,7 +697,9 @@ export class ConsumerController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.consumerId) ||
-					throwError(new ForbiddenError("User may not interact with others' addresses", { user: user.id, consumer: req.params.consumerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' addresses", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
 			]
 		})
 	])

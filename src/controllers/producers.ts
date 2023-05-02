@@ -83,7 +83,9 @@ export class ProducersController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
 			]
 		})
 	])
@@ -119,7 +121,9 @@ export class ProducersController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
 			]
 		})
 	])
@@ -154,7 +158,9 @@ export class ProducersController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
 			]
 		})
 	])
@@ -206,7 +212,9 @@ export class ProducersController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
 			]
 		})
 	])
@@ -253,7 +261,9 @@ export class ProducersController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
 			]
 		})
 	])
@@ -307,7 +317,9 @@ export class ProducersController {
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
-					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
 			]
 		})
 	])
@@ -402,7 +414,10 @@ export class ProducersController {
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
 					throwError(
-						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
 					)
 			]
 		})
@@ -438,7 +453,10 @@ export class ProducersController {
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
 					throwError(
-						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
 					)
 			]
 		})
@@ -480,7 +498,10 @@ export class ProducersController {
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
 					throwError(
-						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
 					)
 			]
 		})
@@ -545,7 +566,10 @@ export class ProducersController {
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
 					throwError(
-						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
 					)
 			]
 		})
@@ -590,7 +614,10 @@ export class ProducersController {
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
 					throwError(
-						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
 					)
 			]
 		})
