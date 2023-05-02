@@ -5,13 +5,14 @@ import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import { Producer, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
-import { authenticationMiddleware } from '../middlewares';
+import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { CarrierStatus, UserType } from '../enums';
 import { BadRequestError } from '../errors/BadRequestError';
+import { Permission } from '../enums/Permission';
 
 const producerIdParam = Joi.number().min(1).required();
 @Controller('/producers')
@@ -74,7 +75,11 @@ export class ProducersController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -102,7 +107,11 @@ export class ProducersController {
 				orderId: Joi.number().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('orderId') orderId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -129,7 +138,11 @@ export class ProducersController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
@@ -173,7 +186,11 @@ export class ProducersController {
 				producerProductId: Joi.number().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async getOrderItem(
 		@Response() res: Express.Response,
@@ -212,7 +229,11 @@ export class ProducersController {
 				producerProductId: Joi.number().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async getOrderItemShipment(
 		@Response() res: Express.Response,
@@ -258,7 +279,11 @@ export class ProducersController {
 				addressId: Joi.number().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async createOrderItemShipmentEvent(
 		@Request() req: Express.Request,
@@ -303,8 +328,7 @@ export class ProducersController {
 	@Get('/:producerId/units', [
 		validate({
 			params: Joi.object({ producerId: Joi.number().required() })
-		}),
-		authenticationMiddleware
+		})
 	])
 	public async getUnits(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -345,7 +369,11 @@ export class ProducersController {
 				address: Joi.number().required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async createProductionUnit(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findByIdWithUnits(producerId);
@@ -371,7 +399,11 @@ export class ProducersController {
 				address: Joi.number().required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async updateProductionUnit(
 		@Request() req: Express.Request,
@@ -403,7 +435,11 @@ export class ProducersController {
 				unitId: Joi.number().required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async deleteProductionUnit(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('unitId') unitId: number) {
 		const producer = await container.producerGateway.findByIdWithUnits(producerId);
@@ -458,7 +494,11 @@ export class ProducersController {
 				pageSize: Joi.number().optional()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async getProductionUnitCarriersInTransitOfProductionUnit(
 		@Response() res: Express.Response,
@@ -493,7 +533,11 @@ export class ProducersController {
 				shipmentId: Joi.number().required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+		})
 	])
 	public async associateShipment(
 		@Request() req: Express.Request,

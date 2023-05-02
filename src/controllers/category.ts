@@ -3,11 +3,12 @@ import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { authenticationMiddleware } from '../middlewares';
+import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { NotFoundError } from '../errors/NotFoundError';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
+import { Permission } from '../enums/Permission';
 
 @Controller('/categories')
 @Injectable()
@@ -42,7 +43,8 @@ export class CategoryController {
 				})
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({ permissions: Permission.WRITE_CATEGORY })
 	])
 	public async createCategory(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const category = await container.categoryGateway.create(req.body);
@@ -78,7 +80,8 @@ export class CategoryController {
 				})
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({ permissions: Permission.WRITE_CATEGORY })
 	])
 	public async updateCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
 		const category = await container.categoryGateway.findById(categoryId);
@@ -99,7 +102,8 @@ export class CategoryController {
 				categoryId: Joi.number().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({ permissions: Permission.DELETE_CATEGORY })
 	])
 	public async deleteCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
 		const categoryToRemove = await container.categoryGateway.findById(categoryId);
@@ -190,7 +194,8 @@ export class CategoryController {
 				fieldId: Joi.number().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({ permissions: Permission.WRITE_CATEGORY })
 	])
 	public async addFieldToCategory(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Params('fieldId') fieldId: number) {
 		const category = await container.categoryGateway.findById(categoryId);
@@ -216,7 +221,8 @@ export class CategoryController {
 				fieldId: Joi.number().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({ permissions: Permission.WRITE_CATEGORY })
 	])
 	public async removeFieldFromCategory(
 		@Response() res: Express.Response,

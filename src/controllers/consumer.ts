@@ -7,7 +7,7 @@ import { container } from '..';
 import { Address, CartItem, Consumer, Order, User } from '../entities';
 import { ShipmentStatus, UserType } from '../enums';
 import { ConflictError } from '../errors/ConflictError';
-import { authenticationMiddleware } from '../middlewares';
+import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { convertExportOrderItem } from '../utils/convertExportOrderItem';
 import type { ExportOrder } from '../interfaces/ExportOrder';
@@ -17,11 +17,12 @@ import { NotFoundError } from '../errors/NotFoundError';
 import { BadRequestError } from '../errors/BadRequestError';
 import { createCheckoutSession } from '../utils/createCheckoutSession';
 import { stripe } from '../stripe/key';
+import { Permission } from '../enums/Permission';
 
 @Controller('/consumers')
 @Injectable()
 export class ConsumerController {
-	@Get('/', [authenticationMiddleware])
+	@Get('/', [authenticationMiddleware, authorizationMiddleware({ permissions: Permission.READ_OTHER_CONSUMER })])
 	public async getConsumers(@Response() res: Express.Response) {
 		const consumers = await container.consumerGateway.findAll();
 		return res.json(consumers);
@@ -65,7 +66,11 @@ export class ConsumerController {
 				pageSize: Joi.number().integer().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async getCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Request() req: Express.Request) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -90,7 +95,11 @@ export class ConsumerController {
 				quantity: Joi.number().integer().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async addCartItem(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -126,7 +135,11 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.DELETE_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async deleteCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -148,7 +161,11 @@ export class ConsumerController {
 				quantity: Joi.number().integer().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async updateQuantityCartItem(
 		@Response() res: Express.Response,
@@ -184,7 +201,11 @@ export class ConsumerController {
 				producerProductId: Joi.number().integer().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async deleteCartItem(
 		@Response() res: Express.Response,
@@ -218,7 +239,11 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -261,7 +286,11 @@ export class ConsumerController {
 				shippingAddressId: Joi.number().integer().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async createOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
@@ -292,6 +321,11 @@ export class ConsumerController {
 			query: Joi.object({
 				session_id: Joi.string().required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
 		})
 	])
 	public async successOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -302,20 +336,6 @@ export class ConsumerController {
 		res.status(200).json(session);
 	}
 
-	@Get('/:consumerId/orders/cancel', [
-		validate({
-			params: Joi.object({
-				consumerId: Joi.number().integer().min(1)
-			}),
-			query: Joi.object({
-				session_id: Joi.string().required()
-			})
-		})
-	])
-	public PageCancelOrder(@Response() res: Express.Response, @Request() req: Express.Request) {
-		res.json(`Sessão ${req.query.session_id} cancelada com sucesso.`);
-	}
-
 	@Post('/:consumerId/orders/cancel', [
 		validate({
 			params: Joi.object({
@@ -324,6 +344,11 @@ export class ConsumerController {
 			query: Joi.object({
 				session_id: Joi.string().required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
 		})
 	])
 	public async cancelOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -344,7 +369,11 @@ export class ConsumerController {
 				id: Joi.array().items(Joi.number().integer().min(1)).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async exportOrders(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Query('id') ids: number[]) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -381,7 +410,11 @@ export class ConsumerController {
 				orderId: Joi.number().integer().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -401,7 +434,11 @@ export class ConsumerController {
 				orderId: Joi.number().integer().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async deleteOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -440,7 +477,11 @@ export class ConsumerController {
 				pageSize: Joi.number().integer().min(1).max(100)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
@@ -484,7 +525,11 @@ export class ConsumerController {
 				producerProductId: Joi.number().integer().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async getOrderItem(
 		@Response() res: Express.Response,
@@ -516,7 +561,11 @@ export class ConsumerController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async getAddresses(@Request() req: Express.Request, @Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -550,7 +599,11 @@ export class ConsumerController {
 				longitude: Joi.number().required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+		})
 	])
 	public async addAddress(@Request() req: Express.Request, @Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
