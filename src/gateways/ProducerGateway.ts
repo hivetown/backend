@@ -39,19 +39,21 @@ export class ProducerGateway {
 		const pagination = paginate(options);
 		const [producers, totalResults] = await Promise.all([
 			this.repository
-				.createQueryBuilder('producer')
-				.select('producer.*', true)
-				.leftJoin('producer.producerProducts', 'producerProduct')
-				.where({ 'producerProduct.product_spec_id': id })
+				.createQueryBuilder('p')
+				.select(['p.*'], true)
+				.leftJoinAndSelect('p.productionUnits', 'pu')
+				.leftJoin('p.producerProducts', 'pp')
 				.leftJoinAndSelect('producer.image', 'image')
+				.where({ 'pp.product_spec_id': id })
 				.limit(pagination.limit)
 				.offset(pagination.offset)
 				.getResultList(),
 			this.repository
-				.createQueryBuilder('producer')
-				.select('producer.*', true)
-				.leftJoin('producer.producerProducts', 'producerProduct')
-				.where({ 'producerProduct.product_spec_id': id })
+				.createQueryBuilder('p')
+				.select(['p.*'], true)
+				.leftJoinAndSelect('p.productionUnits', 'pu')
+				.leftJoin('p.producerProducts', 'pp')
+				.where({ 'pp.product_spec_id': id })
 				.count()
 		]);
 

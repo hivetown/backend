@@ -150,6 +150,7 @@ export class ProductsController {
 		};
 
 		const results = await container.producerGateway.findFromProductSpecId(productSpecId, options);
+
 		return res.status(200).json(results);
 	}
 
