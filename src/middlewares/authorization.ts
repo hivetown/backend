@@ -29,18 +29,24 @@ export const authorizationMiddleware = ({
 
 		// Bitwise AND operator to check if the user has the required permission(s)
 		let hasBasePermission = true;
+		// Default to none if the user has no role
 		const rolePermissions = user.role?.permissions || Permission.NONE;
 		if (permissions) {
 			hasBasePermission = (rolePermissions & permissions) === permissions;
 		}
 
+		// If the user does not have the base permission, check the other validations (if any)
 		if (!hasBasePermission && otherValidations?.length) {
 			for (const validation of otherValidations) {
 				// validation throws an error if the user is not valid
 				validation(user, req);
 			}
+
+			// If the validation did not throw an error, the user has passed all validations
+			hasBasePermission = true;
 		}
 
+		// Show a forbidden error if the user does not have one of the required permissions (base permission or other validations)
 		// need to add "&& permissions" for typescript to be happy
 		if (!hasBasePermission && permissions)
 			throw new ForbiddenError('User does not have enough permissions', {
