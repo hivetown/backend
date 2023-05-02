@@ -1,6 +1,7 @@
-import { Entity, Enum, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, Enum, ManyToOne, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import type { Image } from './Image';
 import type { UserType } from '../enums';
+import type { Role } from './Role';
 
 @Entity()
 export class User {
@@ -22,9 +23,9 @@ export class User {
 	@Property({ type: 'string' })
 	public vat!: string;
 
-	// bitmask permissions
-	@Property({ type: 'number' })
-	public permissions!: number;
+	// Role based access control
+	@ManyToOne()
+	public role!: Role;
 
 	@Enum()
 	public type!: UserType;

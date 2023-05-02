@@ -167,6 +167,56 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
+				"name": {
+					"name": "name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"permissions": {
+					"name": "permissions",
+					"type": "int",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				}
+			},
+			"name": "role",
+			"indexes": [
+				{
+					"columnNames": ["name"],
+					"composite": false,
+					"keyName": "role_name_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": true,
+					"nullable": false,
+					"mappedType": "integer"
+				},
 				"auth_id": {
 					"name": "auth_id",
 					"type": "varchar(255)",
@@ -212,6 +262,15 @@
 					"nullable": false,
 					"mappedType": "string"
 				},
+				"role_id": {
+					"name": "role_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				},
 				"type": {
 					"name": "type",
 					"type": "enum('CONSUMER', 'PRODUCER')",
@@ -242,6 +301,13 @@
 					"unique": true
 				},
 				{
+					"columnNames": ["role_id"],
+					"composite": false,
+					"keyName": "user_role_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
 					"columnNames": ["image_id"],
 					"composite": false,
 					"keyName": "user_image_id_unique",
@@ -258,6 +324,14 @@
 			],
 			"checks": [],
 			"foreignKeys": {
+				"user_role_id_foreign": {
+					"constraintName": "user_role_id_foreign",
+					"columnNames": ["role_id"],
+					"localTableName": "user",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "role",
+					"updateRule": "cascade"
+				},
 				"user_image_id_foreign": {
 					"constraintName": "user_image_id_foreign",
 					"columnNames": ["image_id"],
