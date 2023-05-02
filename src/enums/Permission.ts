@@ -1,0 +1,28 @@
+const MAX_POSITIVE_32_BIT = 0x7fffffff;
+
+/**
+ * Permissions bits for user roles
+ */
+export enum Permission {
+	NONE = 0b0,
+	// Admin
+	CREATE_ADMIN = 0b1,
+	DELETE_ADMIN = 0b10,
+	// Categories
+	WRITE_CATEGORY = 0b100,
+	DELETE_CATEGORY = 0b1000,
+	// Consumers
+	READ_OTHER_CONSUMER = 0b10000,
+	WRITE_OTHER_CONSUMER = 0b100000,
+	DELETE_OTHER_CONSUMER = 0b1000000,
+	// Producers
+	READ_OTHER_PRODUCER = 0b10000000,
+	WRITE_OTHER_PRODUCER = 0b100000000,
+	DELETE_OTHER_PRODUCER = 0b1000000000,
+	// Products
+	WRITE_PRODUCT = 0b10000000000,
+	DELETE_PRODUCT = 0b100000000000,
+
+	// JS bitwise operators only work with 32-bit integers
+	ALL = MAX_POSITIVE_32_BIT
+}

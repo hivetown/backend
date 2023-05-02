@@ -14,7 +14,7 @@ export class ServerErrorMiddleware implements ErrorMiddleware {
 
 		if (error instanceof ApiError) {
 			// TODO add details?
-			return res.status(error.statusCode).json({ error: error.message, statusCode: error.statusCode });
+			return res.status(error.statusCode).json({ error: error.message, statusCode: error.statusCode, details: error.details });
 		}
 
 		if (error instanceof Stripe.errors.StripeError) {
