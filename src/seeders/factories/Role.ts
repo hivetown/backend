@@ -17,6 +17,10 @@ const baseRole = [
 	},
 	{
 		name: 'AccountManager',
+		permissions: Permission.ALL_CONSUMER | Permission.ALL_PRODUCER
+	},
+	{
+		name: 'AccountEditor',
 		permissions: Permission.READ_OTHER_CONSUMER | Permission.WRITE_OTHER_CONSUMER
 	}
 ] as Omit<Role, 'id'>[];
