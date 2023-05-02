@@ -12,7 +12,7 @@ import { NotFoundError } from '../errors/NotFoundError';
  * @throws ForbiddenError if the user is not valid
  * @returns void
  */
-type AuthorizationValidation = (user: User) => void;
+type AuthorizationValidation = (user: User, req: Request) => void;
 
 export const authorizationMiddleware = ({
 	permissions,
@@ -42,7 +42,7 @@ export const authorizationMiddleware = ({
 		if (otherValidations?.length) {
 			for (const validation of otherValidations) {
 				// validation throws an error if the user is not valid
-				validation(user);
+				validation(user, req);
 			}
 		}
 
