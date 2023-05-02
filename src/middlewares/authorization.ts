@@ -3,6 +3,8 @@ import { container } from '..';
 import { UnauthorizedError } from '../errors/UnauthorizedError';
 import type { User } from '../entities';
 import { ForbiddenError } from '../errors/ForbiddenError';
+import { Permission, permissionsFromNumber } from '../enums/Permission';
+import { NotFoundError } from '../errors/NotFoundError';
 
 /**
  * A generic validation function for the authorization middleware
@@ -23,14 +25,17 @@ export const authorizationMiddleware = ({
 		if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
 
 		const user = await container.userGateway.findByAuthId(req.authUser.uid, { populate: ['role'] });
-		if (!user) throw new UnauthorizedError('User is not authenticated');
+		if (!user) throw new NotFoundError('Authenticated user not found');
 
 		// Bitwise AND operator to check if the user has the required permission(s)
 		if (permissions) {
-			const hasBasePermission = (user.role.permissions & permissions) === permissions;
+			const rolePermissions = user.role?.permissions || Permission.NONE;
+
+			const hasBasePermission = (rolePermissions & permissions) === permissions;
 			if (!hasBasePermission)
 				throw new ForbiddenError('User does not have enough permissions', {
-					details: { user: user.role.permissions, required: permissions }
+					user: permissionsFromNumber(rolePermissions),
+					required: permissionsFromNumber(permissions)
 				});
 		}
 

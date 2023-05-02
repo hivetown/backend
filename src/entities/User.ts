@@ -24,8 +24,8 @@ export class User {
 	public vat!: string;
 
 	// Role based access control
-	@ManyToOne()
-	public role!: Role;
+	@ManyToOne({ nullable: true })
+	public role?: Role;
 
 	@Enum()
 	public type!: UserType;

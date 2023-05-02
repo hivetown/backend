@@ -29,3 +29,17 @@ export enum Permission {
 	// ALL
 	ALL = ALL_ADMIN | ALL_CATEGORY | ALL_CONSUMER | ALL_PRODUCER | ALL_PRODUCT
 }
+
+export const permissionsFromNumber = (permissions: number) => {
+	const permissionList: Permission[] = [];
+
+	for (const permission in Permission) {
+		if (isNaN(Number(permission))) continue;
+
+		const permissionNumber = Number(permission);
+		const hasPermission = (permissions & permissionNumber) === permissionNumber;
+		if (hasPermission) permissionList.push(permissionNumber);
+	}
+
+	return permissionList.map((permission) => Permission[permission]);
+};
