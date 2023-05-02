@@ -18,6 +18,8 @@ import { BadRequestError } from '../errors/BadRequestError';
 import { createCheckoutSession } from '../utils/createCheckoutSession';
 import { stripe } from '../stripe/key';
 import { Permission } from '../enums/Permission';
+import { throwError } from '../utils/throw';
+import { ForbiddenError } from '../errors/ForbiddenError';
 
 @Controller('/consumers')
 @Injectable()
@@ -69,7 +71,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async getCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Request() req: Express.Request) {
@@ -98,7 +104,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async addCartItem(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -138,7 +148,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.DELETE_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async deleteCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
@@ -164,7 +178,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async updateQuantityCartItem(
@@ -204,7 +222,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async deleteCartItem(
@@ -242,7 +264,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -289,7 +315,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async createOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -325,7 +355,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async successOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -348,7 +382,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async cancelOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -372,7 +410,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async exportOrders(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Query('id') ids: number[]) {
@@ -413,7 +455,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
@@ -437,7 +483,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async deleteOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
@@ -480,7 +530,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async getOrderItems(
@@ -528,7 +582,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async getOrderItem(
@@ -564,7 +622,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' addresses", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async getAddresses(@Request() req: Express.Request, @Response() res: Express.Response, @Params('consumerId') consumerId: number) {
@@ -602,7 +664,11 @@ export class ConsumerController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_CONSUMER,
-			otherValidations: [(user, req) => user.id === Number(req.params.consumerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(new ForbiddenError("User may not interact with others' addresses", { user: user.id, consumer: req.params.consumerId }))
+			]
 		})
 	])
 	public async addAddress(@Request() req: Express.Request, @Response() res: Express.Response, @Params('consumerId') consumerId: number) {

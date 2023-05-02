@@ -13,6 +13,8 @@ import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { CarrierStatus, UserType } from '../enums';
 import { BadRequestError } from '../errors/BadRequestError';
 import { Permission } from '../enums/Permission';
+import { throwError } from '../utils/throw';
+import { ForbiddenError } from '../errors/ForbiddenError';
 
 const producerIdParam = Joi.number().min(1).required();
 @Controller('/producers')
@@ -78,7 +80,11 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+			]
 		})
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
@@ -110,7 +116,11 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+			]
 		})
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('orderId') orderId: number) {
@@ -141,7 +151,11 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+			]
 		})
 	])
 	public async getOrderItems(
@@ -189,7 +203,11 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+			]
 		})
 	])
 	public async getOrderItem(
@@ -232,7 +250,11 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+			]
 		})
 	])
 	public async getOrderItemShipment(
@@ -282,7 +304,11 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: req.params.producerId }))
+			]
 		})
 	])
 	public async createOrderItemShipmentEvent(
@@ -372,7 +398,13 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+					)
+			]
 		})
 	])
 	public async createProductionUnit(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
@@ -402,7 +434,13 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+					)
+			]
 		})
 	])
 	public async updateProductionUnit(
@@ -438,7 +476,13 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.WRITE_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+					)
+			]
 		})
 	])
 	public async deleteProductionUnit(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('unitId') unitId: number) {
@@ -497,7 +541,13 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+					)
+			]
 		})
 	])
 	public async getProductionUnitCarriersInTransitOfProductionUnit(
@@ -536,7 +586,13 @@ export class ProducersController {
 		authenticationMiddleware,
 		authorizationMiddleware({
 			permissions: Permission.READ_OTHER_PRODUCER,
-			otherValidations: [(user, req) => user.id === Number(req.params.producerId)]
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", { user: user.id, producer: req.params.producerId })
+					)
+			]
 		})
 	])
 	public async associateShipment(
