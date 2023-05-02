@@ -3,14 +3,13 @@ import { Injectable } from '@decorators/di';
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { authorizationMiddleware } from '../middlewares';
 
 // Create the controller
 @Controller('/hello')
 @Injectable()
 export class HelloController {
 	// Create a GET route
-	@Get('/world', [authorizationMiddleware(1)])
+	@Get('/world')
 	public index(@Response() res: Express.Response) {
 		res.send('Hello World!');
 	}
