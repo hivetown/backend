@@ -28,23 +28,25 @@ export const authorizationMiddleware = ({
 		if (!user) throw new NotFoundError('Authenticated user not found');
 
 		// Bitwise AND operator to check if the user has the required permission(s)
+		let hasBasePermission = true;
+		const rolePermissions = user.role?.permissions || Permission.NONE;
 		if (permissions) {
-			const rolePermissions = user.role?.permissions || Permission.NONE;
-
-			const hasBasePermission = (rolePermissions & permissions) === permissions;
-			if (!hasBasePermission)
-				throw new ForbiddenError('User does not have enough permissions', {
-					user: permissionsFromNumber(rolePermissions),
-					required: permissionsFromNumber(permissions)
-				});
+			hasBasePermission = (rolePermissions & permissions) === permissions;
 		}
 
-		if (otherValidations?.length) {
+		if (!hasBasePermission && otherValidations?.length) {
 			for (const validation of otherValidations) {
 				// validation throws an error if the user is not valid
 				validation(user, req);
 			}
 		}
+
+		// need to add "&& permissions" for typescript to be happy
+		if (!hasBasePermission && permissions)
+			throw new ForbiddenError('User does not have enough permissions', {
+				user: permissionsFromNumber(rolePermissions),
+				required: permissionsFromNumber(permissions)
+			});
 
 		next();
 	};
