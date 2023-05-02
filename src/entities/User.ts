@@ -22,6 +22,10 @@ export class User {
 	@Property({ type: 'string' })
 	public vat!: string;
 
+	// bitmask permissions
+	@Property({ type: 'number' })
+	public permissions!: number;
+
 	@Enum()
 	public type!: UserType;
 
