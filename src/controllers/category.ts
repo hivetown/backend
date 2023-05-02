@@ -3,7 +3,7 @@ import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { AuthMiddleware } from '../middlewares/auth';
+import { AuthenticationMiddleware } from '../middlewares';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { NotFoundError } from '../errors/NotFoundError';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
@@ -42,7 +42,7 @@ export class CategoryController {
 				})
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async createCategory(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const category = await container.categoryGateway.create(req.body);
@@ -78,7 +78,7 @@ export class CategoryController {
 				})
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async updateCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
 		const category = await container.categoryGateway.findById(categoryId);
@@ -99,7 +99,7 @@ export class CategoryController {
 				categoryId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async deleteCategoryById(@Response() res: Express.Response, @Params('categoryId') categoryId: number) {
 		const categoryToRemove = await container.categoryGateway.findById(categoryId);
@@ -190,7 +190,7 @@ export class CategoryController {
 				fieldId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async addFieldToCategory(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Params('fieldId') fieldId: number) {
 		const category = await container.categoryGateway.findById(categoryId);
@@ -216,7 +216,7 @@ export class CategoryController {
 				fieldId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async removeFieldFromCategory(
 		@Response() res: Express.Response,

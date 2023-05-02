@@ -5,7 +5,7 @@ import { UnauthorizedError } from '../errors/UnauthorizedError';
 import { Authentication } from '../external/Authentication';
 
 @Injectable()
-export class AuthMiddleware implements Middleware {
+export class AuthenticationMiddleware implements Middleware {
 	public async use(req: Request, _res: Response, next: NextFunction) {
 		const { authorization } = req.headers;
 		if (!authorization) {

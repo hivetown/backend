@@ -5,7 +5,7 @@ import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import { Producer, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
-import { AuthMiddleware } from '../middlewares/auth';
+import { AuthenticationMiddleware } from '../middlewares';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { NotFoundError } from '../errors/NotFoundError';
@@ -25,7 +25,7 @@ export class ProducersController {
 				vat: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async createProducer(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const data: User = req.body;
@@ -74,7 +74,7 @@ export class ProducersController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -102,7 +102,7 @@ export class ProducersController {
 				orderId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('orderId') orderId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -129,7 +129,7 @@ export class ProducersController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
@@ -173,7 +173,7 @@ export class ProducersController {
 				producerProductId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrderItem(
 		@Response() res: Express.Response,
@@ -212,7 +212,7 @@ export class ProducersController {
 				producerProductId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrderItemShipment(
 		@Response() res: Express.Response,
@@ -258,7 +258,7 @@ export class ProducersController {
 				addressId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async createOrderItemShipmentEvent(
 		@Request() req: Express.Request,
@@ -304,7 +304,7 @@ export class ProducersController {
 		validate({
 			params: Joi.object({ producerId: Joi.number().required() })
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getUnits(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -345,7 +345,7 @@ export class ProducersController {
 				address: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async createProductionUnit(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findByIdWithUnits(producerId);
@@ -371,7 +371,7 @@ export class ProducersController {
 				address: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async updateProductionUnit(
 		@Request() req: Express.Request,
@@ -403,7 +403,7 @@ export class ProducersController {
 				unitId: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async deleteProductionUnit(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('unitId') unitId: number) {
 		const producer = await container.producerGateway.findByIdWithUnits(producerId);
@@ -458,7 +458,7 @@ export class ProducersController {
 				pageSize: Joi.number().optional()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getProductionUnitCarriersInTransitOfProductionUnit(
 		@Response() res: Express.Response,
@@ -493,7 +493,7 @@ export class ProducersController {
 				shipmentId: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async associateShipment(
 		@Request() req: Express.Request,

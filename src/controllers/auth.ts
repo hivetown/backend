@@ -2,14 +2,14 @@ import { Injectable } from '@decorators/di';
 import { Controller, Get, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
-import { AuthMiddleware } from '../middlewares/auth';
+import { AuthenticationMiddleware } from '../middlewares';
 import { NotFoundError } from '../errors/NotFoundError';
 import { UserType } from '../enums';
 
 @Controller('/auth')
 @Injectable()
 export class AuthController {
-	@Get('/', [AuthMiddleware])
+	@Get('/', [AuthenticationMiddleware])
 	public async authUser(@Response() res: Express.Response, @Request() req: Express.Request) {
 		// Fetch the user from the database
 		const user = await container.userGateway.findByAuthId(req.authUser!.uid);

@@ -7,7 +7,7 @@ import { container } from '..';
 import { Address, CartItem, Consumer, Order, User } from '../entities';
 import { ShipmentStatus, UserType } from '../enums';
 import { ConflictError } from '../errors/ConflictError';
-import { AuthMiddleware } from '../middlewares/auth';
+import { AuthenticationMiddleware } from '../middlewares';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { convertExportOrderItem } from '../utils/convertExportOrderItem';
 import type { ExportOrder } from '../interfaces/ExportOrder';
@@ -21,7 +21,7 @@ import { stripe } from '../stripe/key';
 @Controller('/consumers')
 @Injectable()
 export class ConsumerController {
-	@Get('/', [AuthMiddleware])
+	@Get('/', [AuthenticationMiddleware])
 	public async getConsumers(@Response() res: Express.Response) {
 		const consumers = await container.consumerGateway.findAll();
 		return res.json(consumers);
@@ -35,7 +35,7 @@ export class ConsumerController {
 				vat: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async createConsumer(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const data: User = req.body;
@@ -65,7 +65,7 @@ export class ConsumerController {
 				pageSize: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Request() req: Express.Request) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -90,7 +90,7 @@ export class ConsumerController {
 				quantity: Joi.number().integer().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async addCartItem(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -126,7 +126,7 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async deleteCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -148,7 +148,7 @@ export class ConsumerController {
 				quantity: Joi.number().integer().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async updateQuantityCartItem(
 		@Response() res: Express.Response,
@@ -184,7 +184,7 @@ export class ConsumerController {
 				producerProductId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async deleteCartItem(
 		@Response() res: Express.Response,
@@ -218,7 +218,7 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -261,7 +261,7 @@ export class ConsumerController {
 				shippingAddressId: Joi.number().integer().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async createOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
@@ -344,7 +344,7 @@ export class ConsumerController {
 				id: Joi.array().items(Joi.number().integer().min(1)).required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async exportOrders(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Query('id') ids: number[]) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -381,7 +381,7 @@ export class ConsumerController {
 				orderId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -401,7 +401,7 @@ export class ConsumerController {
 				orderId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async deleteOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -440,7 +440,7 @@ export class ConsumerController {
 				pageSize: Joi.number().integer().min(1).max(100)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
@@ -484,7 +484,7 @@ export class ConsumerController {
 				producerProductId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getOrderItem(
 		@Response() res: Express.Response,
@@ -516,7 +516,7 @@ export class ConsumerController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async getAddresses(@Request() req: Express.Request, @Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -550,7 +550,7 @@ export class ConsumerController {
 				longitude: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		AuthenticationMiddleware
 	])
 	public async addAddress(@Request() req: Express.Request, @Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
