@@ -17,4 +17,8 @@ export class ShipmentGateway {
 		await this.repository.populate(shipment, ['carrier', 'events']);
 		return shipment;
 	}
+
+	public async findByIdPopulated(id: number): Promise<Shipment | null> {
+		return this.repository.findOne(id, { populate: ['carrier', 'events', 'events.status', 'events.address'] });
+	}
 }
