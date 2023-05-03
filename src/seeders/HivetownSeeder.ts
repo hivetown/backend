@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { ProductSpecFactory } from './factories/ProductSpec';
 import { ProductSpecCategoryFactory } from './factories/ProductSpecCategory';
 import { CategoryFactory } from './factories/Category';
-import { FieldType, ShipmentStatus } from '../enums';
+import { ShipmentStatus } from '../enums';
 import { ProductionUnitFactory } from './factories/ProductionUnit';
 import { ShipmentFactory } from './factories/Shipment';
 import { ProducerProductFactory } from './factories/ProducerProduct';
