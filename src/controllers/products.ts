@@ -135,7 +135,7 @@ export class ProductsController {
 		productSpec.images.set(images);
 
 		await container.productSpecGatway.createOrUpdate(productSpec);
-		return res.status(200).json(productSpec);
+		return res.status(201).json(productSpec);
 	}
 
 	@Delete('/:productSpecId', [
@@ -309,7 +309,7 @@ export class ProductsController {
 		const newProductSpecCategory = new ProductSpecCategory(productSpec, category);
 		await container.productSpecCategoryGateway.createOrUpdate(newProductSpecCategory);
 
-		res.status(200).json(newProductSpecCategory);
+		res.status(201).json(newProductSpecCategory);
 	}
 
 	@Delete('/:productSpecId/categories/:categoryId', [
@@ -336,7 +336,7 @@ export class ProductsController {
 
 		await container.productSpecCategoryGateway.delete(productSpecCategory);
 
-		res.status(204).json(productSpecCategory);
+		res.status(204).json();
 	}
 
 	@Get('/:productSpecId/categories/:categoryId/fields', [
@@ -476,6 +476,6 @@ export class ProductsController {
 
 		await container.productSpecFieldGateway.delete(productSpecCategoryField);
 
-		res.status(204).json(productSpecCategoryField);
+		res.status(204).json();
 	}
 }

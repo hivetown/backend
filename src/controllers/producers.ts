@@ -69,9 +69,9 @@ export class ProducersController {
 				producerId: producerIdParam
 			}),
 			body: Joi.object({
-				currentPrice: Joi.number().required(),
+				currentPrice: Joi.number().min(0).required(),
 				productionDate: Joi.date().required(),
-				stock: Joi.number().required(),
+				stock: Joi.number().min(0).required(),
 				productionUnitId: Joi.number().min(1).required(),
 				productSpecId: Joi.number().min(1).required()
 			})
@@ -103,9 +103,9 @@ export class ProducersController {
 				producerProductId: Joi.number().min(1).required()
 			}),
 			body: Joi.object({
-				currentPrice: Joi.number().required(),
+				currentPrice: Joi.number().min(0).required(),
 				productionDate: Joi.date().required(),
-				stock: Joi.number().required(),
+				stock: Joi.number().min(0).required(),
 				productionUnitId: Joi.number().min(1).required()
 			})
 		}),
@@ -133,7 +133,7 @@ export class ProducersController {
 
 		await container.producerProductGateway.createOrUpdate(producerProduct);
 
-		return res.status(200).json(producerProduct);
+		return res.status(201).json(producerProduct);
 	}
 
 	@Delete('/:producerId/products/:producerProductId', [
