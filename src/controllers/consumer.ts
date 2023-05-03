@@ -117,7 +117,7 @@ export class ConsumerController {
 
 		await Authentication.updateUserStatus(false, consumer);
 
-		return res.status(200).json(consumer);
+		return res.status(201).json(consumer);
 	}
 
 	// -------------------------------------------------------------------- CART --------------------------------------------------------------------

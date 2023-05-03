@@ -42,14 +42,27 @@ export class ProducersController {
 		return res.status(201).json(producer);
 	}
 
-	@Get('/', [AuthMiddleware])
+	@Get('/', [
+		validate({
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1),
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		AuthMiddleware
+	])
 	public async getProducers(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const options: PaginatedOptions = {
 			page: Number(req.query.page) || -1,
 			size: Number(req.query.pageSize) || -1
 		};
-
-		const producers = await container.producerGateway.findAll(options);
+		let producers;
+		if (req.query.includeAll) {
+			producers = await container.producerGateway.findAllWithDeletedAt(options);
+		} else {
+			producers = await container.producerGateway.findAll(options);
+		}
 		return res.json(producers);
 	}
 
@@ -92,6 +105,65 @@ export class ProducersController {
 		validate({
 			params: Joi.object({
 				producerId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				email: Joi.string().email().required(),
+				phone: Joi.string().required()
+			}),
+			query: Joi.object({
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async updateProducer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
+		let producer;
+		if (req.query.includeAll) {
+			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
+		} else {
+			producer = await container.producerGateway.findById(producerId);
+		}
+
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		producer.name = req.body.name;
+		producer.email = req.body.email;
+		producer.phone = req.body.phone;
+
+		await container.producerGateway.update(producer);
+
+		res.status(201).json(producer);
+	}
+
+	@Get('/:producerId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async getProducer(@Response() res: Express.Response, @Params('producerId') producerId: number, @Request() req: Express.Request) {
+		let producer;
+		if (req.query.includeAll) {
+			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
+		} else {
+			producer = await container.producerGateway.findById(producerId);
+		}
+
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		return res.status(200).json(producer);
+	}
+
+	@Post('/:producerId/reativate', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
 			})
 		}),
 		AuthMiddleware
@@ -115,7 +187,7 @@ export class ProducersController {
 			await container.producerProductGateway.update(producerProduct);
 		}
 
-		res.status(200).json(producer);
+		res.status(201).json(producer);
 	}
 
 	@Get('/:producerId/products', [

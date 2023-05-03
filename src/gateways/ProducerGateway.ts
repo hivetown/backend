@@ -96,4 +96,20 @@ export class ProducerGateway {
 		await this.repository.persistAndFlush(producer);
 		return producer;
 	}
+
+	public async findAllWithDeletedAt(options: PaginatedOptions): Promise<BaseItems<Producer>> {
+		const pagination = paginate(options);
+		const [producers, totalResults] = await Promise.all([
+			this.repository.find({}, { filters: { [SOFT_DELETABLE_FILTER]: false }, limit: pagination.limit, offset: pagination.offset }),
+			this.repository.count({}, { filters: { [SOFT_DELETABLE_FILTER]: false } })
+		]);
+
+		return {
+			items: producers,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: producers.length
+		};
+	}
 }
