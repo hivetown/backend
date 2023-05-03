@@ -644,7 +644,17 @@ export class ConsumerController {
 				producerProductId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getOrderItemShipment(
 		@Response() res: Express.Response,
@@ -657,7 +667,7 @@ export class ConsumerController {
 
 		const order = await container.orderGateway.findById(orderId);
 		if (!order) throw new NotFoundError('Order not found');
-		if (order.consumer.id !== consumer.id) throw new NotFoundError('Order not found for this consumer');
+		if (order.consumer.user.id !== consumer.user.id) throw new NotFoundError('Order not found for this consumer');
 
 		const item = await container.orderItemGateway.findByConsumerIdOrderIdProducerProductId(consumerId, orderId, producerProductId);
 		if (!item) throw new NotFoundError('Order item not found');
