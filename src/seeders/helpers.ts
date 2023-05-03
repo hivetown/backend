@@ -1,16 +1,13 @@
 import { faker } from '@mikro-orm/seeder';
-import type { Field, Image } from '../entities';
+import { Field, Image } from '../entities';
 import { FieldType } from '../enums';
 
 /**
  * loremflickr image types
  */
 type ImageTypes = 'dog' | 'cat' | 'food' | 'avatar' | 'shop' | 'car' | 'department' | 'mcdonalds' | 'factory';
-export const generateImage = (type: ImageTypes): Omit<Image, 'id'> => ({
-	alt: faker.git.commitMessage(),
-	name: faker.name.jobTitle(),
-	url: faker.image.imageUrl(640, 480, type, true)
-});
+export const generateImage = (type: ImageTypes) =>
+	new Image(faker.name.jobTitle(), faker.image.imageUrl(640, 480, type, true), faker.git.commitMessage());
 
 export const generateValueFromField = (field: Field) => {
 	let value: string;
