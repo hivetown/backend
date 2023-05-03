@@ -10,6 +10,14 @@ export class ProductSpecCategoryGateway {
 		this.repository = orm.em.getRepository(ProductSpecCategory);
 	}
 
+	public async createOrUpdate(productSpecCategory: ProductSpecCategory) {
+		return this.repository.persistAndFlush(productSpecCategory);
+	}
+
+	public async delete(productSpecCategory: ProductSpecCategory) {
+		return this.repository.removeAndFlush(productSpecCategory);
+	}
+
 	public async findCategoriesBySpecificationId(id: number, options: PaginatedOptions): Promise<BaseItems<Category>> {
 		const pagination = paginate(options);
 		const [productSpecCategories, totalResults] = await Promise.all([

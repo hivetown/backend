@@ -14,6 +14,14 @@ export class ProductSpecGateway {
 		this.repository = orm.em.getRepository(ProductSpec);
 	}
 
+	public async createOrUpdate(productSpec: ProductSpec) {
+		return this.repository.persistAndFlush(productSpec);
+	}
+
+	public async delete(productSpec: ProductSpec) {
+		return this.repository.removeAndFlush(productSpec);
+	}
+
 	public async findAll(filter?: ProductSpecFilters, options?: ProductSpecOptions): Promise<BaseItems<ProductSpec>> {
 		const pagination = paginate(options);
 		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');
@@ -74,5 +82,9 @@ export class ProductSpecGateway {
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
 			.addSelect('MAX(producerProduct.current_price) as maxPrice')
 			.getSingleResult();
+	}
+
+	public async findSimpleById(id: number): Promise<ProductSpec | null> {
+		return this.repository.findOne(id);
 	}
 }

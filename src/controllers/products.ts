@@ -1,5 +1,5 @@
 import { Injectable } from '@decorators/di';
-import { Controller, Get, Params, Request, Response } from '@decorators/express';
+import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { isEmpty } from 'lodash';
 import { container } from '..';
@@ -10,6 +10,8 @@ import type { ProductSpecOptions } from '../interfaces/ProductSpecOptions';
 import type { FieldTypeType } from '../types/FieldType';
 import { Joi, validate } from 'express-validation';
 import { NotFoundError } from '../errors/NotFoundError';
+import { Image, ProductSpec, ProductSpecCategory, ProductSpecField } from '../entities';
+import { BadRequestError } from '../errors/BadRequestError';
 
 @Controller('/products')
 @Injectable()
@@ -61,6 +63,29 @@ export class ProductsController {
 		return res.status(200).json(productsSpec);
 	}
 
+	@Post('/', [
+		validate({
+			body: Joi.object({
+				name: Joi.string().required(),
+				description: Joi.string().required(),
+				images: Joi.array()
+					.items({
+						name: Joi.string().required(),
+						url: Joi.string().required(),
+						alt: Joi.string().required()
+					})
+					.max(5)
+					.required()
+			})
+		})
+	])
+	public async createProductSpec(@Response() res: Express.Response, @Request() req: Express.Request) {
+		const images = req.body.images.map((image: { name: string; url: string; alt: string }) => new Image(image.name, image.url, image.alt));
+		const productSpec = new ProductSpec(req.body.name, req.body.description, images);
+		await container.productSpecGateway.createOrUpdate(productSpec);
+		return res.status(201).json(productSpec);
+	}
+
 	@Get('/:productSpecId', [
 		validate({
 			params: Joi.object({
@@ -69,10 +94,63 @@ export class ProductsController {
 		})
 	])
 	public async productSpecById(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
+		const exists = await container.productSpecGatway.findSimpleById(productSpecId);
+		if (!exists) throw new NotFoundError('Product specification not found');
+
 		const productSpec = await container.productSpecGatway.findById(productSpecId);
-		if (!productSpec) throw new NotFoundError('Product specification not found');
 
 		return res.status(200).json(productSpec);
+	}
+
+	@Put('/:productSpecId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required()
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				description: Joi.string().required(),
+				images: Joi.array()
+					.items({
+						name: Joi.string().required(),
+						url: Joi.string().required(),
+						alt: Joi.string().required()
+					})
+					.max(5)
+					.required()
+			})
+		})
+	])
+	public async updateProductSpec(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Request() req: Express.Request
+	) {
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		productSpec.name = req.body.name;
+		productSpec.description = req.body.description;
+		const images = req.body.images.map((image: { name: string; url: string; alt: string }) => new Image(image.name, image.url, image.alt));
+		productSpec.images.set(images);
+
+		await container.productSpecGatway.createOrUpdate(productSpec);
+		return res.status(201).json(productSpec);
+	}
+
+	@Delete('/:productSpecId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
+	public async deleteProductSpec(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		await container.productSpecGatway.delete(productSpec);
+		return res.status(204).json();
 	}
 
 	@Get('/:productSpecId/products', [
@@ -91,7 +169,7 @@ export class ProductsController {
 		@Params('productSpecId') productSpecId: number,
 		@Request() req: Express.Request
 	) {
-		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
 		const options: ProductSpecOptions = {
@@ -116,7 +194,7 @@ export class ProductsController {
 		@Params('productSpecId') productSpecId: number,
 		@Params('producerProductId') producerProductId: number
 	) {
-		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
 		const product = await container.producerProductGateway.findOneBySpecificationId(productSpecId, producerProductId);
@@ -141,7 +219,7 @@ export class ProductsController {
 		@Params('productSpecId') productSpecId: number,
 		@Request() req: Express.Request
 	) {
-		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
 		const options: PaginatedOptions = {
@@ -170,7 +248,7 @@ export class ProductsController {
 		@Params('productSpecId') productSpecId: number,
 		@Request() req: Express.Request
 	) {
-		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
 		const options: PaginatedOptions = {
@@ -195,7 +273,7 @@ export class ProductsController {
 		@Params('productSpecId') productSpecId: number,
 		@Params('categoryId') categoryId: number
 	) {
-		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
 		const category = await container.categoryGateway.findById(categoryId);
@@ -205,6 +283,61 @@ export class ProductsController {
 		if (!productSpecCategory) throw new NotFoundError('Category not found on product specification');
 
 		return res.status(200).json(productSpecCategory.category);
+	}
+
+	@Put('/:productSpecId/categories/:categoryId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
+	public async addCategoryToProductSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number
+	) {
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const productSpecCategory = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+		if (productSpecCategory) throw new BadRequestError('Category already added to product specification');
+
+		const newProductSpecCategory = new ProductSpecCategory(productSpec, category);
+		await container.productSpecCategoryGateway.createOrUpdate(newProductSpecCategory);
+
+		res.status(201).json(newProductSpecCategory);
+	}
+
+	@Delete('/:productSpecId/categories/:categoryId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
+	public async removeCategoryFromProductSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number
+	) {
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const productSpecCategory = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+		if (!productSpecCategory) throw new NotFoundError('Category not found on product specification');
+
+		await container.productSpecCategoryGateway.delete(productSpecCategory);
+
+		res.status(204).json();
 	}
 
 	@Get('/:productSpecId/categories/:categoryId/fields', [
@@ -225,7 +358,7 @@ export class ProductsController {
 		@Params('categoryId') categoryId: number,
 		@Request() req: Express.Request
 	) {
-		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
 		const category = await container.categoryGateway.findById(categoryId);
@@ -255,7 +388,7 @@ export class ProductsController {
 		@Params('categoryId') categoryId: number,
 		@Params('fieldId') fieldId: number
 	) {
-		const productSpec = await container.productSpecGatway.findById(productSpecId);
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
 		const category = await container.categoryGateway.findById(categoryId);
@@ -268,5 +401,82 @@ export class ProductsController {
 		if (!productSpecCategoryField) throw new NotFoundError('Field not found on category of product spec');
 
 		return res.status(200).json(productSpecCategoryField);
+	}
+
+	@Put('/:productSpecId/categories/:categoryId/fields/:fieldId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required(),
+				fieldId: Joi.number().integer().min(1).required()
+			}),
+			body: Joi.object({
+				value: Joi.string().required()
+			})
+		})
+	])
+	public async addFieldToCategoryOfProductSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number,
+		@Params('fieldId') fieldId: number,
+		@Request() req: Express.Request
+	) {
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const field = await container.fieldGateway.findById(fieldId);
+		if (!field) throw new NotFoundError('Field not found');
+
+		const productSpecCategory = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+		if (!productSpecCategory) throw new NotFoundError('Category not found on product specification');
+
+		const productSpecCategoryField = await container.productSpecFieldGateway.findFieldBySpecAndCategory(productSpecId, categoryId, fieldId);
+		if (productSpecCategoryField) {
+			productSpecCategoryField.value = req.body.value;
+			await container.productSpecFieldGateway.createOrUpdate(productSpecCategoryField);
+			return res.status(200).json(productSpecCategoryField);
+		}
+		const newProductSpecCategoryField = new ProductSpecField(productSpecCategory, field, req.body.value);
+		await container.productSpecFieldGateway.createOrUpdate(newProductSpecCategoryField);
+		return res.status(201).json(newProductSpecCategoryField);
+	}
+
+	@Delete('/:productSpecId/categories/:categoryId/fields/:fieldId', [
+		validate({
+			params: Joi.object({
+				productSpecId: Joi.number().integer().min(1).required(),
+				categoryId: Joi.number().integer().min(1).required(),
+				fieldId: Joi.number().integer().min(1).required()
+			})
+		})
+	])
+	public async removeFieldFromCategoryOfProductSpecification(
+		@Response() res: Express.Response,
+		@Params('productSpecId') productSpecId: number,
+		@Params('categoryId') categoryId: number,
+		@Params('fieldId') fieldId: number
+	) {
+		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
+		if (!productSpec) throw new NotFoundError('Product specification not found');
+
+		const category = await container.categoryGateway.findById(categoryId);
+		if (!category) throw new NotFoundError('Category not found');
+
+		const field = await container.fieldGateway.findById(fieldId);
+		if (!field) throw new NotFoundError('Field not found');
+
+		const productSpecCategory = await container.productSpecCategoryGateway.findCategoryBySpecificationId(productSpecId, categoryId);
+		if (!productSpecCategory) throw new NotFoundError('Category not found on product specification');
+
+		const productSpecCategoryField = await container.productSpecFieldGateway.findFieldBySpecAndCategory(productSpecId, categoryId, fieldId);
+		if (!productSpecCategoryField) throw new NotFoundError('Field not found on category of product spec');
+
+		await container.productSpecFieldGateway.delete(productSpecCategoryField);
+
+		res.status(204).json();
 	}
 }

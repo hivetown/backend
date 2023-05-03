@@ -11,6 +11,14 @@ export class ProductSpecFieldGateway {
 		this.repository = orm.em.getRepository(ProductSpecField);
 	}
 
+	public async createOrUpdate(productSpecField: ProductSpecField) {
+		return this.repository.upsert(productSpecField);
+	}
+
+	public async delete(productSpecField: ProductSpecField) {
+		return this.repository.nativeDelete(productSpecField);
+	}
+
 	public async findAllFieldsByProductSpecIdAndCategoryId(
 		productSpecId: number,
 		categoryId: number,
