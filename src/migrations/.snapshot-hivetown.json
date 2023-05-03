@@ -141,6 +141,16 @@
 					"primary": false,
 					"nullable": false,
 					"mappedType": "string"
+				},
+				"deleted_at": {
+					"name": "deleted_at",
+					"type": "datetime",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"length": 0,
+					"mappedType": "datetime"
 				}
 			},
 			"name": "product_spec",
@@ -722,6 +732,16 @@
 					"primary": false,
 					"nullable": false,
 					"mappedType": "integer"
+				},
+				"deleted_at": {
+					"name": "deleted_at",
+					"type": "datetime",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"length": 0,
+					"mappedType": "datetime"
 				}
 			},
 			"name": "producer_product",

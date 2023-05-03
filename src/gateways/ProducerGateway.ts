@@ -40,6 +40,7 @@ export class ProducerGateway {
 					producerProducts: { productSpec: id }
 				},
 				{
+					populate: ['productionUnits'],
 					limit: pagination.limit,
 					offset: pagination.offset
 				}

@@ -58,4 +58,15 @@ export class ProductionUnitGateway {
 	public async delete(productionUnit: ProductionUnit): Promise<void> {
 		await this.repository.removeAndFlush(productionUnit);
 	}
+
+	public async findAllFromProductSpec(specId: number, producerId: number): Promise<ProductionUnit[]> {
+		const productionUnits = await this.repository.find(
+			{
+				products: { productSpec: specId },
+				producer: producerId
+			},
+			{ populate: ['address'] }
+		);
+		return productionUnits;
+	}
 }

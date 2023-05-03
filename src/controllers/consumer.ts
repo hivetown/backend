@@ -636,6 +636,41 @@ export class ConsumerController {
 		return res.status(200).json(item);
 	}
 
+	@Get('/:consumerId/orders/:orderId/items/:producerProductId/shipment', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1),
+				orderId: Joi.number().integer().min(1),
+				producerProductId: Joi.number().integer().min(1)
+			})
+		}),
+		AuthMiddleware
+	])
+	public async getOrderItemShipment(
+		@Response() res: Express.Response,
+		@Params('consumerId') consumerId: number,
+		@Params('orderId') orderId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		const order = await container.orderGateway.findById(orderId);
+		if (!order) throw new NotFoundError('Order not found');
+		if (order.consumer.id !== consumer.id) throw new NotFoundError('Order not found for this consumer');
+
+		const item = await container.orderItemGateway.findByConsumerIdOrderIdProducerProductId(consumerId, orderId, producerProductId);
+		if (!item) throw new NotFoundError('Order item not found');
+
+		const shipment = await container.shipmentGateway.findByIdPopulated(item.shipment.id);
+
+		for (const event of shipment!.events) {
+			event.status = ShipmentStatus[event.status] as unknown as ShipmentStatus;
+		}
+
+		return res.status(200).json(shipment);
+	}
+
 	// -------------------------------------------------------------------- ADDRESSES --------------------------------------------------------------------
 	@Get('/:consumerId/addresses', [
 		validate({
