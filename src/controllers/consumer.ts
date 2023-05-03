@@ -22,17 +22,6 @@ import { Authentication } from '../external/Authentication';
 @Controller('/consumers')
 @Injectable()
 export class ConsumerController {
-	@Get('/', [AuthMiddleware])
-	public async getConsumers(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const options: PaginatedOptions = {
-			page: Number(req.query.page) || -1,
-			size: Number(req.query.pageSize) || -1
-		};
-
-		const consumers = await container.consumerGateway.findAll(options);
-		return res.json(consumers);
-	}
-
 	@Post('/', [
 		validate({
 			body: Joi.object({
@@ -58,16 +47,51 @@ export class ConsumerController {
 		return res.status(201).json(consumer);
 	}
 
-	@Get('/:consumerId', [
+	@Get('/', [
 		validate({
-			params: Joi.object({
-				consumerId: Joi.number().integer().min(1)
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1),
+				includeAll: Joi.boolean().optional()
 			})
 		}),
 		AuthMiddleware
 	])
-	public async getConsumer(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
-		const consumer = await container.consumerGateway.findByIdWithAddress(consumerId);
+	public async getConsumers(@Response() res: Express.Response, @Request() req: Express.Request) {
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		let consumers;
+		if (req.query.includeAll) {
+			consumers = await container.consumerGateway.findAllWithDeletedAt(options);
+		} else {
+			consumers = await container.consumerGateway.findAll(options);
+		}
+
+		return res.json(consumers);
+	}
+
+	@Get('/:consumerId', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async getConsumer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		let consumer;
+		if (req.query.includeAll) {
+			consumer = await container.consumerGateway.findByIdWithDeletedAt(consumerId);
+		} else {
+			consumer = await container.consumerGateway.findByIdWithAddress(consumerId);
+		}
+
 		if (!consumer) throw new NotFoundError('Consumer not found');
 
 		return res.status(200).json(consumer);
@@ -104,6 +128,41 @@ export class ConsumerController {
 		validate({
 			params: Joi.object({
 				consumerId: Joi.number().integer().min(1)
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				email: Joi.string().email().required(),
+				phone: Joi.string().required()
+			}),
+			query: Joi.object({
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async updateConsumer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		let consumer;
+		if (req.query.includeAll) {
+			consumer = await container.consumerGateway.findByIdWithDeletedAt(consumerId);
+		} else {
+			consumer = await container.consumerGateway.findById(consumerId);
+		}
+
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		consumer.name = req.body.name;
+		consumer.email = req.body.email;
+		consumer.phone = req.body.phone;
+
+		await container.consumerGateway.update(consumer);
+
+		return res.status(201).json(consumer);
+	}
+
+	@Post('/:consumerId/reativate', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().min(1).required()
 			})
 		}),
 		AuthMiddleware
@@ -117,7 +176,7 @@ export class ConsumerController {
 
 		await Authentication.updateUserStatus(false, consumer);
 
-		return res.status(201).json(consumer);
+		res.status(201).json(consumer);
 	}
 
 	// -------------------------------------------------------------------- CART --------------------------------------------------------------------

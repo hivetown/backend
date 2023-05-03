@@ -71,4 +71,20 @@ export class ConsumerGateway {
 		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false } });
 		return consumer;
 	}
+
+	public async findAllWithDeletedAt(options: PaginatedOptions): Promise<BaseItems<Consumer>> {
+		const pagination = paginate(options);
+		const [consumers, totalResults] = await Promise.all([
+			this.repository.find({}, { filters: { [SOFT_DELETABLE_FILTER]: false }, limit: pagination.limit, offset: pagination.offset }),
+			this.repository.count({}, { filters: { [SOFT_DELETABLE_FILTER]: false } })
+		]);
+
+		return {
+			items: consumers,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: consumers.length
+		};
+	}
 }
