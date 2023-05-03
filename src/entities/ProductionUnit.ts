@@ -27,7 +27,7 @@ export class ProductionUnit {
 	@OneToMany('ProducerProduct', 'productionUnit')
 	public products = new Collection<ProducerProduct>(this);
 
-	@OneToMany('Image', 'productionUnit')
+	@OneToMany('Image', 'productionUnit', { eager: true })
 	public images = new Collection<Image>(this);
 
 	@Property({ nullable: true })

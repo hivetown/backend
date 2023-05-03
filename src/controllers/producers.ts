@@ -4,7 +4,7 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Producer, ProductionUnit, ShipmentEvent, ShipmentStatus } from '../entities';
+import { Producer, ProducerProduct, ProductionUnit, ShipmentEvent, ShipmentStatus } from '../entities';
 import { AuthMiddleware } from '../middlewares/auth';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
@@ -56,11 +56,108 @@ export class ProducersController {
 		const options: ProducerProductOptions = {
 			page: Number(req.query.page) || -1,
 			size: Number(req.query.pageSize) || -1,
-			populate: ['productSpec', 'productionUnit']
+			populate: ['producerProduct.productSpec', 'producerProduct.productionUnit', 'producerProduct_productSpec.images']
 		};
 
 		const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);
 		res.status(200).json(producerProducts);
+	}
+
+	@Post('/:producerId/products', [
+		validate({
+			params: Joi.object({
+				producerId: producerIdParam
+			}),
+			body: Joi.object({
+				currentPrice: Joi.number().min(0).required(),
+				productionDate: Joi.date().required(),
+				stock: Joi.number().min(0).required(),
+				productionUnitId: Joi.number().min(1).required(),
+				productSpecId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async createProducerProduct(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findById(req.body.productionUnitId);
+		if (!productionUnit) throw new NotFoundError('Production unit not found');
+
+		const productSpec = await container.productSpecGateway.findById(req.body.productSpecId);
+		if (!productSpec) throw new NotFoundError('Product spec not found');
+
+		const productionDate = new Date(req.body.productionDate);
+
+		const producerProduct = new ProducerProduct(req.body.currentPrice, productionDate, req.body.stock, producer, productionUnit, productSpec);
+		await container.producerProductGateway.createOrUpdate(producerProduct);
+
+		return res.status(201).json(producerProduct);
+	}
+
+	@Put('/:producerId/products/:producerProductId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				producerProductId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				currentPrice: Joi.number().min(0).required(),
+				productionDate: Joi.date().required(),
+				stock: Joi.number().min(0).required(),
+				productionUnitId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async updateProducerProduct(
+		@Response() res: Express.Response,
+		@Request() req: Express.Request,
+		@Params('producerId') producerId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const producerProduct = await container.producerProductGateway.findById(producerProductId);
+		if (!producerProduct) throw new NotFoundError('Producer product not found');
+
+		const productionUnit = await container.productionUnitGateway.findById(req.body.productionUnitId);
+		if (!productionUnit) throw new NotFoundError('Production unit not found');
+
+		producerProduct.currentPrice = req.body.currentPrice;
+		producerProduct.productionDate = new Date(req.body.productionDate);
+		producerProduct.stock = req.body.stock;
+		producerProduct.productionUnit = productionUnit;
+
+		await container.producerProductGateway.createOrUpdate(producerProduct);
+
+		return res.status(201).json(producerProduct);
+	}
+
+	@Delete('/:producerId/products/:producerProductId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				producerProductId: Joi.number().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async deleteProducerProduct(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('producerProductId') producerProductId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const producerProduct = await container.producerProductGateway.findById(producerProductId);
+		if (!producerProduct) throw new NotFoundError('Producer product not found');
+
+		await container.producerProductGateway.delete(producerProduct);
+		return res.status(204).json();
 	}
 
 	@Get('/:producerId/orders', [
@@ -436,9 +533,10 @@ export class ProducersController {
 		const productionUnit = await container.productionUnitGateway.findById(unitId);
 		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
 
-		const options: PaginatedOptions = {
+		const options: ProducerProductOptions = {
 			page: Number(req.query.page) || -1,
-			size: Number(req.query.pageSize) || -1
+			size: Number(req.query.pageSize) || -1,
+			populate: ['producerProduct.productSpec', 'producerProduct_productSpec.images']
 		};
 
 		const products = await container.producerProductGateway.findFromProductionUnit(productionUnit.id, options);

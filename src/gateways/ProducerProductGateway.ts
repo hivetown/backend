@@ -14,6 +14,14 @@ export class ProducerProductGateway {
 		this.repository = orm.em.getRepository(ProducerProduct);
 	}
 
+	public async createOrUpdate(producerProduct: ProducerProduct) {
+		return this.repository.persistAndFlush(producerProduct);
+	}
+
+	public async delete(producerProduct: ProducerProduct) {
+		return this.repository.removeAndFlush(producerProduct);
+	}
+
 	// Pesquisa o produto pelo id dele mesmo
 	public async findById(id: number): Promise<ProducerProduct | null> {
 		const product = await this.repository.findOne(id, { populate: ['producer', 'productionUnit', 'productSpec'] });
@@ -48,18 +56,25 @@ export class ProducerProductGateway {
 		return product;
 	}
 
-	public async findFromProductionUnit(productionUnitId: number, options: PaginatedOptions): Promise<BaseItems<ProducerProduct> | null> {
+	public async findFromProductionUnit(productionUnitId: number, options: ProducerProductOptions): Promise<BaseItems<ProducerProduct> | null> {
 		const pagination = paginate(options);
 
 		const qb = this.repository
-			.createQueryBuilder('pp')
+			.createQueryBuilder('producerProduct')
 			.select('*')
 			.where({ productionUnit: { id: productionUnitId } });
 
 		const totalItemsQb = qb.clone();
 
 		// Paginate
-		void qb.offset(pagination.offset).limit(pagination.limit).leftJoinAndSelect('pp.productSpec', 'ps').leftJoinAndSelect('ps.images', 'i');
+		void qb.offset(pagination.offset).limit(pagination.limit);
+
+		// Populate
+		if (options?.populate) {
+			options.populate.forEach((field) => {
+				void qb.leftJoinAndSelect(field, field.replaceAll('.', '_'));
+			});
+		}
 
 		// Fetch results and map them
 		const [totalItems, productionUnits] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
@@ -114,7 +129,7 @@ export class ProducerProductGateway {
 		// Populate
 		if (options?.populate) {
 			options.populate.forEach((field) => {
-				void qb.leftJoinAndSelect(`producerProduct.${field}`, field);
+				void qb.leftJoinAndSelect(field, field.replaceAll('.', '_'));
 			});
 		}
 
