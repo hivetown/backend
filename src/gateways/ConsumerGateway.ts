@@ -87,4 +87,9 @@ export class ConsumerGateway {
 			pageSize: consumers.length
 		};
 	}
+
+	public async findByIdWithDeletedAtAndAddress(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false }, populate: ['addresses'] });
+		return consumer;
+	}
 }

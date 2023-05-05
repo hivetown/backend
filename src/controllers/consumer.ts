@@ -87,7 +87,7 @@ export class ConsumerController {
 	public async getConsumer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		let consumer;
 		if (req.query.includeAll) {
-			consumer = await container.consumerGateway.findByIdWithDeletedAt(consumerId);
+			consumer = await container.consumerGateway.findByIdWithDeletedAtAndAddress(consumerId);
 		} else {
 			consumer = await container.consumerGateway.findByIdWithAddress(consumerId);
 		}
