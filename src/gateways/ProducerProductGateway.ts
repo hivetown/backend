@@ -14,6 +14,14 @@ export class ProducerProductGateway {
 		this.repository = orm.em.getRepository(ProducerProduct);
 	}
 
+	public async createOrUpdate(producerProduct: ProducerProduct) {
+		return this.repository.persistAndFlush(producerProduct);
+	}
+
+	public async delete(producerProduct: ProducerProduct) {
+		return this.repository.removeAndFlush(producerProduct);
+	}
+
 	// Pesquisa o produto pelo id dele mesmo
 	public async findById(id: number): Promise<ProducerProduct | null> {
 		const product = await this.repository.findOne(id, { populate: ['producer', 'productionUnit', 'productSpec'] });
@@ -131,10 +139,6 @@ export class ProducerProductGateway {
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
 		return { items: producerProducts, totalItems, totalPages, page, pageSize: pagination.limit };
-	}
-
-	public async delete(ProducerProduct: ProducerProduct): Promise<void> {
-		await this.repository.removeAndFlush(ProducerProduct);
 	}
 
 	public async update(ProducerProduct: ProducerProduct): Promise<ProducerProduct> {

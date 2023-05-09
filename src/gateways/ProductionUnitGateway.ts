@@ -63,4 +63,15 @@ export class ProductionUnitGateway {
 		await this.repository.persistAndFlush(productionUnit);
 		return productionUnit;
 	}
+
+	public async findAllFromProductSpec(specId: number, producerId: number): Promise<ProductionUnit[]> {
+		const productionUnits = await this.repository.find(
+			{
+				products: { productSpec: specId },
+				producer: producerId
+			},
+			{ populate: ['address'] }
+		);
+		return productionUnits;
+	}
 }
