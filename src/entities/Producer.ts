@@ -4,8 +4,10 @@ import { UserType } from '../enums/UserType';
 import type { ProductionUnit } from './ProductionUnit';
 import type { Image } from './Image';
 import type { ProducerProduct } from './ProducerProduct';
+import { SoftDeletable } from 'mikro-orm-soft-delete';
 export { UserType };
 
+@SoftDeletable(() => Producer, 'deletedAt', () => new Date())
 @Entity()
 export class Producer extends User {
 	@PrimaryKey()
@@ -27,4 +29,7 @@ export class Producer extends User {
 
 	@OneToMany('Image', 'producerImages', { eager: true })
 	public images = new Collection<Image>(this);
+
+	@Property({ nullable: true })
+	public deletedAt?: Date;
 }
