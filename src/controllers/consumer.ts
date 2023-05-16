@@ -18,6 +18,7 @@ import { BadRequestError } from '../errors/BadRequestError';
 import { createCheckoutSession } from '../utils/createCheckoutSession';
 import { stripe } from '../stripe/key';
 import { Authentication } from '../external/Authentication';
+import { calcularDistancia } from '../utils/calculateDistance';
 
 @Controller('/consumers')
 @Injectable()
@@ -496,6 +497,41 @@ export class ConsumerController {
 		res.setHeader('Content-Type', 'application/json');
 		res.setHeader('Content-Disposition', 'attachment; filename=orders.json');
 		return res.status(200).send(ordersJson);
+	}
+
+	@Get('/:consumerId/orders/report', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				// data: a ver melhor
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async report(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+		const resultado = [];
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+
+		for (const orderItem of orderItems) {
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+			console.log(enderecoProduto.latitude, enderecoProduto.longitude);
+			console.log(enderecoConsumidor.latitude, enderecoConsumidor.longitude);
+			console.log(distancia);
+
+			if (distancia <= Number(req.query.raio)) {
+				resultado.push(orderItem);
+			}
+		}
+
+		res.status(200).json(resultado);
 	}
 
 	@Get('/:consumerId/orders/:orderId', [
