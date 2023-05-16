@@ -63,7 +63,7 @@ export class ProductionUnitGateway {
 		const productionUnits = await this.repository.find(
 			{
 				products: { productSpec: specId },
-				producer: producerId
+				producer: { user: producerId }
 			},
 			{ populate: ['address'] }
 		);
