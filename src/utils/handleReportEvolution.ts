@@ -2,12 +2,13 @@ export function handleReportEvolution(orderItems: any[], opcao: string) {
 	// console.log('orderItems', orderItems);
 	// console.log('opcao', opcao);
 
-	// let resultado;
+	let resultado;
 
 	// para o numeroEncomendas
 	const encomendas: any[] = [];
 	const totalProdutos: any[] = [];
 	const comprasTotais: any[] = [];
+	const produtosEncomendados: any[] = [];
 
 	if (opcao === 'numeroEncomendas') {
 		for (const oi of orderItems) {
@@ -16,23 +17,35 @@ export function handleReportEvolution(orderItems: any[], opcao: string) {
 
 		const encomendasFiltradas = encomendas.filter((encomenda, index, self) => self.findIndex((t) => t.orderId === encomenda.orderId) === index);
 
-		console.log('encomendas filtradas', agrupaNumeroEncomendas(encomendasFiltradas));
+		resultado = agrupaConta(encomendasFiltradas);
 	} else if (opcao === 'totalProdutos') {
 		for (const oi of orderItems) {
 			totalProdutos.push({ valor: oi.orderItem.quantity, date: oi.date });
 		}
 
-		console.log('totalProdutos', agrupaRestantes(totalProdutos));
+		resultado = agrupaValor(totalProdutos);
 	} else if (opcao === 'comprasTotais') {
 		for (const oi of orderItems) {
 			comprasTotais.push({ valor: oi.orderItem.quantity * oi.orderItem.price, date: oi.date });
 		}
 
-		console.log('comprasTotais', agrupaRestantes(comprasTotais));
+		resultado = agrupaValor(comprasTotais);
+	} else if (opcao === 'numeroProdutosEncomendados') {
+		for (const oi of orderItems) {
+			produtosEncomendados.push({ orderId: oi.orderItem.producerProduct.id, date: oi.date });
+		}
+
+		const produtosFiltrados = produtosEncomendados.filter(
+			(produto, index, self) => self.findIndex((t) => t.orderId === produto.orderId) === index
+		);
+
+		resultado = agrupaConta(produtosFiltrados);
 	}
+
+	return ordena(resultado);
 }
 
-function agrupaNumeroEncomendas(encomendasFiltradas: any) {
+function agrupaConta(encomendasFiltradas: any) {
 	return encomendasFiltradas.reduce((acc: { [x: string]: number }, item: { date: string | number | Date }) => {
 		const date = new Date(item.date);
 		const month = date.getMonth() + 1; // O método getMonth() retorna um valor entre 0 e 11, então adicionamos 1 para representar o mês corretamente
@@ -49,7 +62,7 @@ function agrupaNumeroEncomendas(encomendasFiltradas: any) {
 	}, {});
 }
 
-function agrupaRestantes(obj: any) {
+function agrupaValor(obj: any) {
 	return obj.reduce((acc: { [x: string]: any }, item: { date: string | number | Date; valor: any }) => {
 		const date = new Date(item.date);
 		const month = date.getMonth() + 1;
@@ -64,4 +77,24 @@ function agrupaRestantes(obj: any) {
 
 		return acc;
 	}, {});
+}
+
+function ordena(obj: any) {
+	const sortedData: { [key: string]: any } = {};
+
+	Object.keys(obj)
+		.sort((keyA, keyB) => {
+			const [monthA, yearA] = keyA.split('/').map(Number);
+			const [monthB, yearB] = keyB.split('/').map(Number);
+
+			if (yearA !== yearB) {
+				return yearA - yearB;
+			}
+
+			return monthA - monthB;
+		})
+		.forEach((key) => {
+			sortedData[key] = obj[key];
+		});
+	return sortedData;
 }

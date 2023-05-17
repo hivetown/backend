@@ -692,8 +692,9 @@ export class ConsumerController {
 				raio: Joi.number().integer().min(1).required(),
 				numeroEncomendas: Joi.boolean().optional(),
 				totalProdutos: Joi.boolean().optional(),
-				comprasTotais: Joi.boolean().optional()
-			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais')
+				comprasTotais: Joi.boolean().optional(),
+				numeroProdutosEncomendados: Joi.boolean().optional()
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
 		AuthMiddleware
 	])
@@ -739,9 +740,9 @@ export class ConsumerController {
 
 		// ver se há uma maneira melhor
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
-		handleReportEvolution(resultado, opcao);
+		const retorno = handleReportEvolution(resultado, opcao);
 
-		res.status(200).json();
+		res.status(200).json(retorno);
 	}
 
 	@Get('/:consumerId/orders/:orderId', [
