@@ -545,10 +545,23 @@ export class ConsumerController {
 			}),
 			query: Joi.object({
 				categoryId: Joi.number().integer().min(1).optional(),
-				// data: a ver melhor
+				dataInicio: Joi.date().optional(),
+				dataFim: Joi.date().optional(),
 				raio: Joi.number().integer().min(1).required()
-			})
+			}).when(
+				Joi.object({
+					dataInicio: Joi.exist(),
+					dataFim: Joi.exist()
+				}),
+				{
+					then: Joi.object({
+						dataInicio: Joi.date().required(),
+						dataFim: Joi.date().required()
+					})
+				}
+			)
 		}),
+
 		AuthMiddleware
 	])
 	public async reportFlashcards(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -567,8 +580,23 @@ export class ConsumerController {
 		const produtosEncomendados = [];
 
 		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.order.getOrderDate() };
+		});
+		console.log(orderItemsWithDate);
+		// filtrar pelas datas
+		if (req.query.dataInicio && req.query.dataFim) {
+			const dataInicio = new Date(String(req.query.dataInicio));
+			const dataFim = new Date(String(req.query.dataFim));
+			console.log(dataInicio, dataFim);
+			orderItemsWithDate = orderItemsWithDate.filter((oi) => {
+				const { date } = oi;
+				return date >= dataInicio && date <= dataFim;
+			});
+		}
 
-		for (const orderItem of orderItems) {
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
 			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
 			const enderecoConsumidor = orderItem.order.shippingAddress;
 			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
@@ -583,12 +611,12 @@ export class ConsumerController {
 						comprasTotais += orderItem.quantity * orderItem.price;
 						produtosEncomendados.push(orderItem.producerProduct.id);
 					}
+				} else {
+					encomendas.push(orderItem.order.id);
+					totalProdutos += orderItem.quantity;
+					comprasTotais += orderItem.quantity * orderItem.price;
+					produtosEncomendados.push(orderItem.producerProduct.id);
 				}
-			} else {
-				encomendas.push(orderItem.order.id);
-				totalProdutos += orderItem.quantity;
-				comprasTotais += orderItem.quantity * orderItem.price;
-				produtosEncomendados.push(orderItem.producerProduct.id);
 			}
 		}
 

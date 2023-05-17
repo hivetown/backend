@@ -142,7 +142,9 @@ export class OrderItemGateway {
 					'order.shippingAddress',
 					'producerProduct.productSpec',
 					'producerProduct.productSpec.categories',
-					'producerProduct.productSpec.categories.category'
+					'producerProduct.productSpec.categories.category',
+					'shipment.events.status',
+					'order.items'
 				]
 			}
 		);
