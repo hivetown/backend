@@ -546,23 +546,11 @@ export class ConsumerController {
 			}),
 			query: Joi.object({
 				categoryId: Joi.number().integer().min(1).optional(),
-				dataInicio: Joi.date().optional(),
-				dataFim: Joi.date().optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
 				raio: Joi.number().integer().min(1).required()
-			}).when(
-				Joi.object({
-					dataInicio: Joi.exist(),
-					dataFim: Joi.exist()
-				}),
-				{
-					then: Joi.object({
-						dataInicio: Joi.date().required(),
-						dataFim: Joi.date().required()
-					})
-				}
-			)
+			})
 		}),
-
 		AuthMiddleware
 	])
 	public async reportFlashcards(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -587,13 +575,6 @@ export class ConsumerController {
 		// console.log(orderItemsWithDate);
 		// filtrar pelas datas
 		if (req.query.dataInicio && req.query.dataFim) {
-			// const dataInicio = new Date(String(req.query.dataInicio));
-			// const dataFim = new Date(String(req.query.dataFim));
-			// console.log(dataInicio, dataFim);
-			// orderItemsWithDate = orderItemsWithDate.filter((oi) => {
-			// 	const { date } = oi;
-			// 	return date >= dataInicio && date <= dataFim;
-			// });
 			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
 		}
 
@@ -640,21 +621,10 @@ export class ConsumerController {
 			}),
 			query: Joi.object({
 				categoryId: Joi.number().integer().min(1).optional(),
-				dataInicio: Joi.date().optional(),
-				dataFim: Joi.date().optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
 				raio: Joi.number().integer().min(1).required()
-			}).when(
-				Joi.object({
-					dataInicio: Joi.exist(),
-					dataFim: Joi.exist()
-				}),
-				{
-					then: Joi.object({
-						dataInicio: Joi.date().required(),
-						dataFim: Joi.date().required()
-					})
-				}
-			)
+			})
 		}),
 		AuthMiddleware
 	])
@@ -707,6 +677,43 @@ export class ConsumerController {
 		}
 		// console.log(resultado.length);
 		res.status(200).json(resultado);
+	}
+
+	@Get('/:consumerId/orders/report/evolution', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async reportEvolution(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Request() req: Express.Request) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.order.getOrderDate() };
+		});
+
+		// filtrar pelas datas
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+
+		res.status(200).json();
 	}
 
 	@Get('/:consumerId/orders/:orderId', [
