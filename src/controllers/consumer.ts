@@ -19,6 +19,7 @@ import { createCheckoutSession } from '../utils/createCheckoutSession';
 import { stripe } from '../stripe/key';
 import { Authentication } from '../external/Authentication';
 import { calcularDistancia } from '../utils/calculateDistance';
+import { filterOrderItemsByDate } from '../utils/filterReportDate';
 
 @Controller('/consumers')
 @Injectable()
@@ -583,16 +584,17 @@ export class ConsumerController {
 		let orderItemsWithDate = orderItems.map((orderItem) => {
 			return { orderItem, date: orderItem.order.getOrderDate() };
 		});
-		console.log(orderItemsWithDate);
+		// console.log(orderItemsWithDate);
 		// filtrar pelas datas
 		if (req.query.dataInicio && req.query.dataFim) {
-			const dataInicio = new Date(String(req.query.dataInicio));
-			const dataFim = new Date(String(req.query.dataFim));
-			console.log(dataInicio, dataFim);
-			orderItemsWithDate = orderItemsWithDate.filter((oi) => {
-				const { date } = oi;
-				return date >= dataInicio && date <= dataFim;
-			});
+			// const dataInicio = new Date(String(req.query.dataInicio));
+			// const dataFim = new Date(String(req.query.dataFim));
+			// console.log(dataInicio, dataFim);
+			// orderItemsWithDate = orderItemsWithDate.filter((oi) => {
+			// 	const { date } = oi;
+			// 	return date >= dataInicio && date <= dataFim;
+			// });
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
 		}
 
 		for (const oi of orderItemsWithDate) {
@@ -629,6 +631,82 @@ export class ConsumerController {
 			comprasTotais,
 			numeroProdutosEncomendados
 		});
+	}
+
+	@Get('/:consumerId/orders/report/map', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().optional(),
+				dataFim: Joi.date().optional(),
+				raio: Joi.number().integer().min(1).required()
+			}).when(
+				Joi.object({
+					dataInicio: Joi.exist(),
+					dataFim: Joi.exist()
+				}),
+				{
+					then: Joi.object({
+						dataInicio: Joi.date().required(),
+						dataFim: Joi.date().required()
+					})
+				}
+			)
+		}),
+		AuthMiddleware
+	])
+	public async reportMap(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const resultado = [];
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.order.getOrderDate() };
+		});
+		// console.log(orderItemsWithDate);
+		// filtrar pelas datas
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia <= Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						resultado.push({
+							enderecoUnidadeProducao: enderecoProduto,
+							enderecoConsumidor,
+							distancia
+						});
+					}
+				} else {
+					resultado.push({
+						enderecoUnidadeProducao: enderecoProduto,
+						enderecoConsumidor,
+						distancia
+					});
+				}
+			}
+		}
+		// console.log(resultado.length);
+		res.status(200).json(resultado);
 	}
 
 	@Get('/:consumerId/orders/:orderId', [
