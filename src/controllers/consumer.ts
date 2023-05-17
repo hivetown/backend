@@ -522,9 +522,9 @@ export class ConsumerController {
 			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
 			const enderecoConsumidor = orderItem.order.shippingAddress;
 			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
-			console.log(enderecoProduto.latitude, enderecoProduto.longitude);
-			console.log(enderecoConsumidor.latitude, enderecoConsumidor.longitude);
-			console.log(distancia);
+			// console.log(enderecoProduto.latitude, enderecoProduto.longitude);
+			// console.log(enderecoConsumidor.latitude, enderecoConsumidor.longitude);
+			// console.log(distancia);
 
 			if (distancia <= Number(req.query.raio)) {
 				resultado.push({
@@ -555,6 +555,12 @@ export class ConsumerController {
 		const consumer = await container.consumerGateway.findById(consumerId);
 		if (!consumer) throw new NotFoundError('Consumer not found');
 
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
 		const encomendas: number[] = [];
 		let totalProdutos = 0;
 		let comprasTotais = 0;
@@ -568,12 +574,24 @@ export class ConsumerController {
 			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
 
 			if (distancia <= Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						encomendas.push(orderItem.order.id);
+						totalProdutos += orderItem.quantity;
+						comprasTotais += orderItem.quantity * orderItem.price;
+						produtosEncomendados.push(orderItem.producerProduct.id);
+					}
+				}
+			} else {
 				encomendas.push(orderItem.order.id);
 				totalProdutos += orderItem.quantity;
 				comprasTotais += orderItem.quantity * orderItem.price;
 				produtosEncomendados.push(orderItem.producerProduct.id);
 			}
 		}
+
 		const numeroEncomendas = [...new Set(encomendas)].length;
 		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
 

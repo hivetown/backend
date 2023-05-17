@@ -136,7 +136,15 @@ export class OrderItemGateway {
 	public async findAllByConsumerId(consumerId: number): Promise<OrderItem[]> {
 		const orderItems = await this.repository.find(
 			{ order: { consumer: consumerId } },
-			{ populate: ['producerProduct.productionUnit.address', 'order.shippingAddress'] }
+			{
+				populate: [
+					'producerProduct.productionUnit.address',
+					'order.shippingAddress',
+					'producerProduct.productSpec',
+					'producerProduct.productSpec.categories',
+					'producerProduct.productSpec.categories.category'
+				]
+			}
 		);
 		return orderItems;
 	}
