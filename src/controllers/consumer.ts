@@ -20,6 +20,7 @@ import { stripe } from '../stripe/key';
 import { Authentication } from '../external/Authentication';
 import { calcularDistancia } from '../utils/calculateDistance';
 import { filterOrderItemsByDate } from '../utils/filterReportDate';
+import { handleReportEvolution } from '../utils/handleReportEvolution';
 
 @Controller('/consumers')
 @Injectable()
@@ -688,8 +689,11 @@ export class ConsumerController {
 				categoryId: Joi.number().integer().min(1).optional(),
 				dataInicio: Joi.date().required(),
 				dataFim: Joi.date().required(),
-				raio: Joi.number().integer().min(1).required()
-			})
+				raio: Joi.number().integer().min(1).required(),
+				numeroEncomendas: Joi.boolean().optional(),
+				totalProdutos: Joi.boolean().optional(),
+				comprasTotais: Joi.boolean().optional()
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais')
 		}),
 		AuthMiddleware
 	])
@@ -712,6 +716,30 @@ export class ConsumerController {
 		if (req.query.dataInicio && req.query.dataFim) {
 			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
 		}
+		// console.log(orderItemsWithDate);
+		const resultado = [];
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia <= Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						resultado.push(oi);
+					}
+				} else {
+					resultado.push(oi);
+				}
+			}
+		}
+
+		// ver se há uma maneira melhor
+		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
+		handleReportEvolution(resultado, opcao);
 
 		res.status(200).json();
 	}
