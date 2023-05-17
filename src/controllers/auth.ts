@@ -16,7 +16,9 @@ export class AuthController {
 		if (!user) throw new NotFoundError('User not found');
 
 		const consumerProducer =
-			user.type === UserType.Consumer ? await container.consumerGateway.findById(user.id) : await container.producerGateway.findById(user.id);
+			user.type === UserType.Consumer
+				? await container.consumerGateway.findById(user.id)
+				: await container.producerGateway.findById(user.id, { populate: ['user.role'] });
 
 		if (!consumerProducer) throw new NotFoundError(`${user.type} not found`);
 

@@ -15,7 +15,7 @@ export class ConsumerGateway {
 	}
 
 	public async findById(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne({ user: id });
+		const consumer = await this.repository.findOne({ user: id }, { populate: ['user.role'] });
 		return consumer;
 	}
 
