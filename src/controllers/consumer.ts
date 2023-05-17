@@ -527,11 +527,62 @@ export class ConsumerController {
 			console.log(distancia);
 
 			if (distancia <= Number(req.query.raio)) {
-				resultado.push(orderItem);
+				resultado.push({
+					producerProduct: orderItem.producerProduct,
+					enderecoConsumidor,
+					distancia
+				});
 			}
 		}
-
+		console.log(resultado.length);
 		res.status(200).json(resultado);
+	}
+
+	@Get('/:consumerId/orders/report/flashcards', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				// data: a ver melhor
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		AuthMiddleware
+	])
+	public async reportFlashcards(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		const encomendas: number[] = [];
+		let totalProdutos = 0;
+		let comprasTotais = 0;
+		const produtosEncomendados = [];
+
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+
+		for (const orderItem of orderItems) {
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia <= Number(req.query.raio)) {
+				encomendas.push(orderItem.order.id);
+				totalProdutos += orderItem.quantity;
+				comprasTotais += orderItem.quantity * orderItem.price;
+				produtosEncomendados.push(orderItem.producerProduct.id);
+			}
+		}
+		const numeroEncomendas = [...new Set(encomendas)].length;
+		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
+
+		res.status(200).json({
+			numeroEncomendas,
+			totalProdutos,
+			comprasTotais,
+			numeroProdutosEncomendados
+		});
 	}
 
 	@Get('/:consumerId/orders/:orderId', [
