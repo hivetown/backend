@@ -70,7 +70,7 @@ export class ConsumerController {
 		};
 
 		let consumers;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			consumers = await container.consumerGateway.findAllWithDeletedAt(options);
 		} else {
 			consumers = await container.consumerGateway.findAll(options);
@@ -102,7 +102,7 @@ export class ConsumerController {
 	])
 	public async getConsumer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		let consumer;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			consumer = await container.consumerGateway.findByIdWithDeletedAtAndAddress(consumerId);
 		} else {
 			consumer = await container.consumerGateway.findByIdWithAddress(consumerId);

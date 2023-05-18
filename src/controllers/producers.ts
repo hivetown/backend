@@ -16,6 +16,7 @@ import { Permission } from '../enums/Permission';
 import { throwError } from '../utils/throw';
 import { ForbiddenError } from '../errors/ForbiddenError';
 import { Authentication } from '../external/Authentication';
+import { hasPermissions } from '../utils/hasPermission';
 
 @Controller('/producers')
 @Injectable()
@@ -62,7 +63,7 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 		let producers;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_PRODUCER)) {
 			producers = await container.producerGateway.findAllWithDeletedAt(options);
 		} else {
 			producers = await container.producerGateway.findAll(options);
@@ -143,7 +144,7 @@ export class ProducersController {
 	])
 	public async updateProducer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		let producer;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
 		} else {
 			producer = await container.producerGateway.findById(producerId);
@@ -173,7 +174,7 @@ export class ProducersController {
 	])
 	public async getProducer(@Response() res: Express.Response, @Params('producerId') producerId: number, @Request() req: Express.Request) {
 		let producer;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
 		} else {
 			producer = await container.producerGateway.findById(producerId);
