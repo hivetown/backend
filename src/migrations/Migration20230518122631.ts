@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class Migration20230503164913 extends Migration {
+export class Migration20230518122631 extends Migration {
 	async up(): Promise<void> {
 		this.addSql(
 			"create table `field` (`id` int unsigned not null auto_increment primary key, `name` varchar(255) not null, `unit` varchar(255) not null, `type` enum('TEXT', 'NUMBER', 'DATE', 'BOOLEAN', 'ENUM') not null) default character set utf8mb4 engine = InnoDB;"
@@ -27,9 +27,13 @@ export class Migration20230503164913 extends Migration {
 		this.addSql('alter table `user` add index `user_role_id_index`(`role_id`);');
 		this.addSql('alter table `user` add unique `user_image_id_unique`(`image_id`);');
 
-		this.addSql('create table `producer` (`id` int unsigned not null, primary key (`id`)) default character set utf8mb4 engine = InnoDB;');
+		this.addSql(
+			'create table `producer` (`id` int unsigned not null, `deleted_at` datetime null, primary key (`id`)) default character set utf8mb4 engine = InnoDB;'
+		);
 
-		this.addSql('create table `consumer` (`id` int unsigned not null, primary key (`id`)) default character set utf8mb4 engine = InnoDB;');
+		this.addSql(
+			'create table `consumer` (`id` int unsigned not null, `deleted_at` datetime null, primary key (`id`)) default character set utf8mb4 engine = InnoDB;'
+		);
 
 		this.addSql(
 			'create table `address` (`id` int unsigned not null auto_increment primary key, `number` int not null, `door` varchar(255) not null, `floor` int not null, `zip_code` varchar(255) not null, `street` varchar(255) not null, `parish` varchar(255) not null, `county` varchar(255) not null, `city` varchar(255) not null, `district` varchar(255) not null, `latitude` double not null, `longitude` double not null, `consumer_id` int unsigned null) default character set utf8mb4 engine = InnoDB;'
