@@ -1,7 +1,16 @@
-import { Entity, Property } from '@mikro-orm/core';
+import { Entity, Enum, ManyToOne, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import type { Image } from './Image';
+import type { UserType } from '../enums';
+import type { Role } from './Role';
 
-@Entity({ abstract: true })
-export abstract class User {
+@Entity()
+export class User {
+	@PrimaryKey()
+	public id!: number;
+
+	@Property({ unique: true, hidden: true })
+	public authId!: string;
+
 	@Property()
 	public name!: string;
 
@@ -11,9 +20,16 @@ export abstract class User {
 	@Property({ type: 'string' })
 	public phone!: string;
 
-	@Property({ type: 'string', unique: true })
+	@Property({ type: 'string' })
 	public vat!: string;
 
-	@Property({ unique: true, hidden: true })
-	public authId!: string;
+	// Role based access control
+	@ManyToOne({ nullable: true })
+	public role?: Role;
+
+	@Enum()
+	public type!: UserType;
+
+	@OneToOne({ eager: true })
+	public image?: Image;
 }

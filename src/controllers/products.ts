@@ -12,6 +12,8 @@ import { Joi, validate } from 'express-validation';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Image, ProductSpec, ProductSpecCategory, ProductSpecField } from '../entities';
 import { BadRequestError } from '../errors/BadRequestError';
+import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
+import { Permission } from '../enums/Permission';
 
 @Controller('/products')
 @Injectable()
@@ -77,6 +79,10 @@ export class ProductsController {
 					.max(5)
 					.required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_PRODUCT
 		})
 	])
 	public async createProductSpec(@Response() res: Express.Response, @Request() req: Express.Request) {
@@ -119,6 +125,10 @@ export class ProductsController {
 					.max(5)
 					.required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_PRODUCT
 		})
 	])
 	public async updateProductSpec(
@@ -143,6 +153,10 @@ export class ProductsController {
 			params: Joi.object({
 				productSpecId: Joi.number().integer().min(1).required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.DELETE_PRODUCT
 		})
 	])
 	public async deleteProductSpec(@Response() res: Express.Response, @Params('productSpecId') productSpecId: number) {
@@ -291,6 +305,10 @@ export class ProductsController {
 				productSpecId: Joi.number().integer().min(1).required(),
 				categoryId: Joi.number().integer().min(1).required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_PRODUCT
 		})
 	])
 	public async addCategoryToProductSpecification(
@@ -319,6 +337,10 @@ export class ProductsController {
 				productSpecId: Joi.number().integer().min(1).required(),
 				categoryId: Joi.number().integer().min(1).required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_PRODUCT
 		})
 	])
 	public async removeCategoryFromProductSpecification(
@@ -413,6 +435,10 @@ export class ProductsController {
 			body: Joi.object({
 				value: Joi.string().required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_PRODUCT
 		})
 	])
 	public async addFieldToCategoryOfProductSpecification(
@@ -452,6 +478,10 @@ export class ProductsController {
 				categoryId: Joi.number().integer().min(1).required(),
 				fieldId: Joi.number().integer().min(1).required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_PRODUCT
 		})
 	])
 	public async removeFieldFromCategoryOfProductSpecification(

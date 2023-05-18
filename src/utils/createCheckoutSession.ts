@@ -22,10 +22,10 @@ export async function createCheckoutSession(order: Order) {
 	}));
 
 	const consumer: ConsumerMetadata = {
-		name: order.consumer.name,
-		email: order.consumer.email,
+		name: order.consumer.user.name,
+		email: order.consumer.user.email,
 		shipping_address: metadataAddress(order.shippingAddress),
-		phone: order.consumer.phone
+		phone: order.consumer.user.phone
 	};
 
 	const session = await stripe.checkout.sessions.create({

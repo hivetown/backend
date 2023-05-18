@@ -1,23 +1,17 @@
-import { Collection, Entity, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Collection, Entity, OneToMany, OneToOne, Property } from '@mikro-orm/core';
 import { UserType } from '../enums/UserType';
-import { User } from './User';
 import type { Address } from './Address';
 import type { Order } from './Order';
-import type { Image } from './Image';
 import type { CartItem } from './CartItem';
+import type { User } from './User';
 import { SoftDeletable } from 'mikro-orm-soft-delete';
 export { UserType };
 
 @SoftDeletable(() => Consumer, 'deletedAt', () => new Date())
 @Entity()
-export class Consumer extends User {
-	@PrimaryKey()
-	public id!: number;
-
-	@Property({ persist: false })
-	public get type() {
-		return UserType.Consumer;
-	}
+export class Consumer {
+	@OneToOne({ primary: true, name: 'id', eager: true })
+	public user!: User;
 
 	@OneToMany('CartItem', 'consumer')
 	public cartItems = new Collection<CartItem>(this);
@@ -27,9 +21,6 @@ export class Consumer extends User {
 
 	@OneToMany('Address', 'consumer')
 	public addresses = new Collection<Address>(this);
-
-	@OneToOne({ eager: true })
-	public image?: Image;
 
 	@Property({ nullable: true })
 	public deletedAt?: Date;

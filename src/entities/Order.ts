@@ -51,7 +51,7 @@ export class Order {
 	}
 
 	public getGeneralStatusForProducer(producerId: number) {
-		const its = this.items.getItems().filter((item) => item.producerProduct.producer.id === Number(producerId));
+		const its = this.items.getItems().filter((item) => item.producerProduct.producer.user.id === Number(producerId));
 		const statuses: number[] = new Array(its.length);
 		for (let i = 0; i < its.length; i++) {
 			statuses[i] = its[i].getActualStatus();

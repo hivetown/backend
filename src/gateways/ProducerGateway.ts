@@ -3,6 +3,7 @@ import { Producer } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
+import type { ProducerOptions } from '../interfaces/ProducerOptions';
 import { SOFT_DELETABLE_FILTER } from 'mikro-orm-soft-delete';
 
 export class ProducerGateway {
@@ -35,38 +36,30 @@ export class ProducerGateway {
 	}
 
 	public async findByIdWithUnits(id: number): Promise<Producer | null> {
-		const producer = await this.repository.findOne(id, { populate: ['productionUnits'] });
+		const producer = await this.repository.findOne({ user: id }, { populate: ['productionUnits'] });
 		return producer;
 	}
 
-	public async findById(id: number): Promise<Producer | null> {
-		return this.repository.findOne(id);
-	}
-
-	public async findByAuthId(authId: string): Promise<Producer | null> {
-		return this.repository.findOne({ authId });
+	public async findById(id: number, options?: ProducerOptions): Promise<Producer | null> {
+		return this.repository.findOne({ user: id }, { populate: options?.populate as any });
 	}
 
 	public async findFromProductSpecId(id: number, options: PaginatedOptions): Promise<BaseItems<Producer>> {
 		const pagination = paginate(options);
 		const [producers, totalResults] = await Promise.all([
-			this.repository
-				.createQueryBuilder('p')
-				.select(['p.*'], true)
-				.leftJoinAndSelect('p.productionUnits', 'pu')
-				.leftJoin('p.producerProducts', 'pp')
-				.leftJoinAndSelect('producer.image', 'image')
-				.where({ 'pp.product_spec_id': id })
-				.limit(pagination.limit)
-				.offset(pagination.offset)
-				.getResultList(),
-			this.repository
-				.createQueryBuilder('p')
-				.select(['p.*'], true)
-				.leftJoinAndSelect('p.productionUnits', 'pu')
-				.leftJoin('p.producerProducts', 'pp')
-				.where({ 'pp.product_spec_id': id })
-				.count()
+			this.repository.find(
+				{
+					producerProducts: { productSpec: id }
+				},
+				{
+					populate: ['productionUnits'],
+					limit: pagination.limit,
+					offset: pagination.offset
+				}
+			),
+			this.repository.count({
+				producerProducts: { productSpec: id }
+			})
 		]);
 
 		return {
@@ -83,14 +76,17 @@ export class ProducerGateway {
 	}
 
 	public async findByIdPopulated(id: number): Promise<Producer | null> {
-		return this.repository.findOne(id, { populate: ['productionUnits', 'producerProducts'] });
+		return this.repository.findOne({ user: id }, { populate: ['productionUnits', 'producerProducts'] });
 	}
 
 	public async findByIdWithDeletedAt(id: number): Promise<Producer | null> {
-		const producer = await this.repository.findOne(id, {
-			populate: ['productionUnits', 'producerProducts'],
-			filters: { [SOFT_DELETABLE_FILTER]: false }
-		});
+		const producer = await this.repository.findOne(
+			{ user: id },
+			{
+				populate: ['productionUnits', 'producerProducts'],
+				filters: { [SOFT_DELETABLE_FILTER]: false }
+			}
+		);
 		return producer;
 	}
 

@@ -4,10 +4,10 @@ import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { Address, CartItem, Consumer, Order } from '../entities';
-import { ShipmentStatus } from '../enums';
+import { Address, CartItem, Consumer, Order, User } from '../entities';
+import { ShipmentStatus, UserType } from '../enums';
 import { ConflictError } from '../errors/ConflictError';
-import { AuthMiddleware } from '../middlewares/auth';
+import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { convertExportOrderItem } from '../utils/convertExportOrderItem';
 import type { ExportOrder } from '../interfaces/ExportOrder';
@@ -17,7 +17,11 @@ import { NotFoundError } from '../errors/NotFoundError';
 import { BadRequestError } from '../errors/BadRequestError';
 import { createCheckoutSession } from '../utils/createCheckoutSession';
 import { stripe } from '../stripe/key';
+import { Permission } from '../enums/Permission';
+import { throwError } from '../utils/throw';
+import { ForbiddenError } from '../errors/ForbiddenError';
 import { Authentication } from '../external/Authentication';
+import { hasPermissions } from '../utils/hasPermission';
 
 @Controller('/consumers')
 @Injectable()
@@ -30,21 +34,22 @@ export class ConsumerController {
 				vat: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware
 	])
 	public async createConsumer(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const data: Consumer = req.body;
+		const data: User = req.body;
 		data.authId = req.authUser!.uid;
 		data.email = req.authUser!.email!;
 
-		let consumer: Consumer | null = null;
+		data.type = UserType.Consumer;
+
 		try {
-			consumer = await container.consumerGateway.create(data);
+			const user = await container.consumerGateway.create({ user: data } as Consumer);
+			return res.status(201).json(user);
 		} catch (error) {
 			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Consumer already exists');
+			throw error;
 		}
-
-		return res.status(201).json(consumer);
 	}
 
 	@Get('/', [
@@ -55,7 +60,8 @@ export class ConsumerController {
 				includeAll: Joi.boolean().optional()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({ permissions: Permission.READ_OTHER_CONSUMER })
 	])
 	public async getConsumers(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const options: PaginatedOptions = {
@@ -64,7 +70,7 @@ export class ConsumerController {
 		};
 
 		let consumers;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			consumers = await container.consumerGateway.findAllWithDeletedAt(options);
 		} else {
 			consumers = await container.consumerGateway.findAll(options);
@@ -82,11 +88,21 @@ export class ConsumerController {
 				includeAll: Joi.boolean().optional()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other consumers', { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getConsumer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		let consumer;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			consumer = await container.consumerGateway.findByIdWithDeletedAtAndAddress(consumerId);
 		} else {
 			consumer = await container.consumerGateway.findByIdWithAddress(consumerId);
@@ -103,7 +119,17 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.DELETE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other consumers', { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async deleteConsumer(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -119,7 +145,7 @@ export class ConsumerController {
 
 		await container.consumerGateway.delete(consumer);
 
-		await Authentication.updateUserStatus(true, consumer);
+		await Authentication.updateUserStatus(true, consumer.user);
 
 		return res.status(204).send();
 	}
@@ -138,11 +164,21 @@ export class ConsumerController {
 				includeAll: Joi.boolean().optional()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other consumers', { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async updateConsumer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		let consumer;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			consumer = await container.consumerGateway.findByIdWithDeletedAt(consumerId);
 		} else {
 			consumer = await container.consumerGateway.findById(consumerId);
@@ -150,9 +186,9 @@ export class ConsumerController {
 
 		if (!consumer) throw new NotFoundError('Consumer not found');
 
-		consumer.name = req.body.name;
-		consumer.email = req.body.email;
-		consumer.phone = req.body.phone;
+		consumer.user.name = req.body.name;
+		consumer.user.email = req.body.email;
+		consumer.user.phone = req.body.phone;
 
 		await container.consumerGateway.update(consumer);
 
@@ -165,7 +201,17 @@ export class ConsumerController {
 				consumerId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other consumers', { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async reativateConsumer(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithDeletedAt(consumerId);
@@ -174,7 +220,7 @@ export class ConsumerController {
 		consumer.deletedAt = undefined;
 		await container.consumerGateway.update(consumer);
 
-		await Authentication.updateUserStatus(false, consumer);
+		await Authentication.updateUserStatus(false, consumer.user);
 
 		res.status(201).json(consumer);
 	}
@@ -190,7 +236,17 @@ export class ConsumerController {
 				pageSize: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Request() req: Express.Request) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -215,7 +271,17 @@ export class ConsumerController {
 				quantity: Joi.number().integer().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async addCartItem(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -251,7 +317,17 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.DELETE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async deleteCart(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
@@ -273,7 +349,17 @@ export class ConsumerController {
 				quantity: Joi.number().integer().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async updateQuantityCartItem(
 		@Response() res: Express.Response,
@@ -309,7 +395,17 @@ export class ConsumerController {
 				producerProductId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' carts", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async deleteCartItem(
 		@Response() res: Express.Response,
@@ -343,7 +439,17 @@ export class ConsumerController {
 				consumerId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -386,7 +492,17 @@ export class ConsumerController {
 				shippingAddressId: Joi.number().integer().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async createOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findByIdWithCartAndProducts(consumerId);
@@ -417,6 +533,17 @@ export class ConsumerController {
 			query: Joi.object({
 				session_id: Joi.string().required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
 		})
 	])
 	public async successOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -427,20 +554,6 @@ export class ConsumerController {
 		res.status(200).json(session);
 	}
 
-	@Get('/:consumerId/orders/cancel', [
-		validate({
-			params: Joi.object({
-				consumerId: Joi.number().integer().min(1)
-			}),
-			query: Joi.object({
-				session_id: Joi.string().required()
-			})
-		})
-	])
-	public PageCancelOrder(@Response() res: Express.Response, @Request() req: Express.Request) {
-		res.json(`Sessão ${req.query.session_id} cancelada com sucesso.`);
-	}
-
 	@Post('/:consumerId/orders/cancel', [
 		validate({
 			params: Joi.object({
@@ -449,6 +562,17 @@ export class ConsumerController {
 			query: Joi.object({
 				session_id: Joi.string().required()
 			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
 		})
 	])
 	public async cancelOrder(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
@@ -469,11 +593,22 @@ export class ConsumerController {
 				id: Joi.array().items(Joi.number().integer().min(1)).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async exportOrders(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Query('id') ids: number[]) {
 		const consumer = await container.consumerGateway.findById(consumerId);
 		if (!consumer) throw new NotFoundError('Consumer not found');
+		console.log(consumer);
 
 		const orders = await container.orderGateway.findByIdsToExport(ids, consumerId);
 		if (!orders) throw new NotFoundError('Orders not found');
@@ -505,7 +640,17 @@ export class ConsumerController {
 				orderId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -525,7 +670,17 @@ export class ConsumerController {
 				orderId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async deleteOrder(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Params('orderId') orderId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -564,7 +719,17 @@ export class ConsumerController {
 				pageSize: Joi.number().integer().min(1).max(100)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
@@ -608,7 +773,17 @@ export class ConsumerController {
 				producerProductId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getOrderItem(
 		@Response() res: Express.Response,
@@ -621,7 +796,7 @@ export class ConsumerController {
 
 		const order = await container.orderGateway.findById(orderId);
 		if (!order) throw new NotFoundError('Order not found');
-		if (order.consumer.id !== consumer.id) throw new NotFoundError('Order not found for this consumer');
+		if (order.consumer.user.id !== consumer.user.id) throw new NotFoundError('Order not found for this consumer');
 
 		const item = await container.orderItemGateway.findByConsumerIdOrderIdProducerProductId(consumerId, orderId, producerProductId);
 		if (!item) throw new NotFoundError('Order item not found');
@@ -637,7 +812,17 @@ export class ConsumerController {
 				producerProductId: Joi.number().integer().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getOrderItemShipment(
 		@Response() res: Express.Response,
@@ -650,7 +835,7 @@ export class ConsumerController {
 
 		const order = await container.orderGateway.findById(orderId);
 		if (!order) throw new NotFoundError('Order not found');
-		if (order.consumer.id !== consumer.id) throw new NotFoundError('Order not found for this consumer');
+		if (order.consumer.user.id !== consumer.user.id) throw new NotFoundError('Order not found for this consumer');
 
 		const item = await container.orderItemGateway.findByConsumerIdOrderIdProducerProductId(consumerId, orderId, producerProductId);
 		if (!item) throw new NotFoundError('Order item not found');
@@ -675,7 +860,17 @@ export class ConsumerController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' addresses", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async getAddresses(@Request() req: Express.Request, @Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);
@@ -686,7 +881,7 @@ export class ConsumerController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const addresses = await container.addressGateway.findFromConsumer(consumer.id, options);
+		const addresses = await container.addressGateway.findFromConsumer(consumer.user.id, options);
 		return res.status(200).json(addresses);
 	}
 
@@ -709,7 +904,17 @@ export class ConsumerController {
 				longitude: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' addresses", { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
 	])
 	public async addAddress(@Request() req: Express.Request, @Response() res: Express.Response, @Params('consumerId') consumerId: number) {
 		const consumer = await container.consumerGateway.findById(consumerId);

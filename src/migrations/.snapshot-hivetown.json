@@ -186,138 +186,24 @@
 					"nullable": false,
 					"mappedType": "string"
 				},
-				"url": {
-					"name": "url",
-					"type": "varchar(255)",
+				"permissions": {
+					"name": "permissions",
+					"type": "int",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
-				},
-				"alt": {
-					"name": "alt",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"carrier_id": {
-					"name": "carrier_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
-					"mappedType": "integer"
-				},
-				"category_id": {
-					"name": "category_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
-					"mappedType": "integer"
-				},
-				"consumer_id": {
-					"name": "consumer_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
-					"mappedType": "integer"
-				},
-				"producer_image_id": {
-					"name": "producer_image_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
-					"mappedType": "integer"
-				},
-				"producer_images_id": {
-					"name": "producer_images_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
-					"mappedType": "integer"
-				},
-				"production_unit_id": {
-					"name": "production_unit_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
-					"mappedType": "integer"
-				},
-				"product_spec_id": {
-					"name": "product_spec_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
 					"mappedType": "integer"
 				}
 			},
-			"name": "image",
+			"name": "role",
 			"indexes": [
 				{
-					"columnNames": ["carrier_id"],
+					"columnNames": ["name"],
 					"composite": false,
-					"keyName": "image_carrier_id_unique",
+					"keyName": "role_name_unique",
 					"primary": false,
 					"unique": true
-				},
-				{
-					"columnNames": ["category_id"],
-					"composite": false,
-					"keyName": "image_category_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
-					"columnNames": ["consumer_id"],
-					"composite": false,
-					"keyName": "image_consumer_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
-					"columnNames": ["producer_image_id"],
-					"composite": false,
-					"keyName": "image_producer_image_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
-					"columnNames": ["producer_images_id"],
-					"composite": false,
-					"keyName": "image_producer_images_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["production_unit_id"],
-					"composite": false,
-					"keyName": "image_production_unit_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["product_spec_id"],
-					"composite": false,
-					"keyName": "image_product_spec_id_index",
-					"primary": false,
-					"unique": false
 				},
 				{
 					"keyName": "PRIMARY",
@@ -328,71 +214,7 @@
 				}
 			],
 			"checks": [],
-			"foreignKeys": {
-				"image_carrier_id_foreign": {
-					"constraintName": "image_carrier_id_foreign",
-					"columnNames": ["carrier_id"],
-					"localTableName": "image",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "carrier",
-					"deleteRule": "set null",
-					"updateRule": "cascade"
-				},
-				"image_category_id_foreign": {
-					"constraintName": "image_category_id_foreign",
-					"columnNames": ["category_id"],
-					"localTableName": "image",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "category",
-					"deleteRule": "set null",
-					"updateRule": "cascade"
-				},
-				"image_consumer_id_foreign": {
-					"constraintName": "image_consumer_id_foreign",
-					"columnNames": ["consumer_id"],
-					"localTableName": "image",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "consumer",
-					"deleteRule": "set null",
-					"updateRule": "cascade"
-				},
-				"image_producer_image_id_foreign": {
-					"constraintName": "image_producer_image_id_foreign",
-					"columnNames": ["producer_image_id"],
-					"localTableName": "image",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "producer",
-					"deleteRule": "set null",
-					"updateRule": "cascade"
-				},
-				"image_producer_images_id_foreign": {
-					"constraintName": "image_producer_images_id_foreign",
-					"columnNames": ["producer_images_id"],
-					"localTableName": "image",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "producer",
-					"deleteRule": "set null",
-					"updateRule": "cascade"
-				},
-				"image_production_unit_id_foreign": {
-					"constraintName": "image_production_unit_id_foreign",
-					"columnNames": ["production_unit_id"],
-					"localTableName": "image",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "production_unit",
-					"deleteRule": "set null",
-					"updateRule": "cascade"
-				},
-				"image_product_spec_id_foreign": {
-					"constraintName": "image_product_spec_id_foreign",
-					"columnNames": ["product_spec_id"],
-					"localTableName": "image",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "product_spec",
-					"deleteRule": "set null",
-					"updateRule": "cascade"
-				}
-			}
+			"foreignKeys": {}
 		},
 		{
 			"columns": {
@@ -404,6 +226,15 @@
 					"primary": true,
 					"nullable": false,
 					"mappedType": "integer"
+				},
+				"auth_id": {
+					"name": "auth_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
 				},
 				"name": {
 					"name": "name",
@@ -441,14 +272,24 @@
 					"nullable": false,
 					"mappedType": "string"
 				},
-				"auth_id": {
-					"name": "auth_id",
-					"type": "varchar(255)",
+				"role_id": {
+					"name": "role_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				},
+				"type": {
+					"name": "type",
+					"type": "enum('CONSUMER', 'PRODUCER')",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
+					"enumItems": ["CONSUMER", "PRODUCER"],
+					"mappedType": "enum"
 				},
 				"image_id": {
 					"name": "image_id",
@@ -457,6 +298,71 @@
 					"autoincrement": false,
 					"primary": false,
 					"nullable": true,
+					"mappedType": "integer"
+				}
+			},
+			"name": "user",
+			"indexes": [
+				{
+					"columnNames": ["auth_id"],
+					"composite": false,
+					"keyName": "user_auth_id_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["role_id"],
+					"composite": false,
+					"keyName": "user_role_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"columnNames": ["image_id"],
+					"composite": false,
+					"keyName": "user_image_id_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"user_role_id_foreign": {
+					"constraintName": "user_role_id_foreign",
+					"columnNames": ["role_id"],
+					"localTableName": "user",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "role",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				},
+				"user_image_id_foreign": {
+					"constraintName": "user_image_id_foreign",
+					"columnNames": ["image_id"],
+					"localTableName": "user",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "image",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				}
+			}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
 					"mappedType": "integer"
 				},
 				"deleted_at": {
@@ -473,27 +379,6 @@
 			"name": "producer",
 			"indexes": [
 				{
-					"columnNames": ["vat"],
-					"composite": false,
-					"keyName": "producer_vat_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
-					"columnNames": ["auth_id"],
-					"composite": false,
-					"keyName": "producer_auth_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
-					"columnNames": ["image_id"],
-					"composite": false,
-					"keyName": "producer_image_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
 					"keyName": "PRIMARY",
 					"columnNames": ["id"],
 					"composite": false,
@@ -503,13 +388,13 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"producer_image_id_foreign": {
-					"constraintName": "producer_image_id_foreign",
-					"columnNames": ["image_id"],
+				"producer_id_foreign": {
+					"constraintName": "producer_id_foreign",
+					"columnNames": ["id"],
 					"localTableName": "producer",
 					"referencedColumnNames": ["id"],
-					"referencedTableName": "image",
-					"deleteRule": "set null",
+					"referencedTableName": "user",
+					"deleteRule": "cascade",
 					"updateRule": "cascade"
 				}
 			}
@@ -520,63 +405,9 @@
 					"name": "id",
 					"type": "int",
 					"unsigned": true,
-					"autoincrement": true,
-					"primary": true,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"name": {
-					"name": "name",
-					"type": "varchar(255)",
-					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
-					"mappedType": "string"
-				},
-				"email": {
-					"name": "email",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"phone": {
-					"name": "phone",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"vat": {
-					"name": "vat",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"auth_id": {
-					"name": "auth_id",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"image_id": {
-					"name": "image_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
 					"mappedType": "integer"
 				},
 				"deleted_at": {
@@ -593,27 +424,6 @@
 			"name": "consumer",
 			"indexes": [
 				{
-					"columnNames": ["vat"],
-					"composite": false,
-					"keyName": "consumer_vat_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
-					"columnNames": ["auth_id"],
-					"composite": false,
-					"keyName": "consumer_auth_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
-					"columnNames": ["image_id"],
-					"composite": false,
-					"keyName": "consumer_image_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
 					"keyName": "PRIMARY",
 					"columnNames": ["id"],
 					"composite": false,
@@ -623,13 +433,13 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"consumer_image_id_foreign": {
-					"constraintName": "consumer_image_id_foreign",
-					"columnNames": ["image_id"],
+				"consumer_id_foreign": {
+					"constraintName": "consumer_id_foreign",
+					"columnNames": ["id"],
 					"localTableName": "consumer",
 					"referencedColumnNames": ["id"],
-					"referencedTableName": "image",
-					"deleteRule": "set null",
+					"referencedTableName": "user",
+					"deleteRule": "cascade",
 					"updateRule": "cascade"
 				}
 			}
@@ -1098,54 +908,57 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"consumer_id": {
-					"name": "consumer_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"shipping_address_id": {
-					"name": "shipping_address_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"payment": {
-					"name": "payment",
+				"license_plate": {
+					"name": "license_plate",
 					"type": "varchar(255)",
 					"unsigned": false,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": true,
+					"nullable": false,
 					"mappedType": "string"
+				},
+				"production_unit_id": {
+					"name": "production_unit_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"status": {
+					"name": "status",
+					"type": "enum('AVAILABLE', 'UNAVAILABLE')",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"enumItems": ["AVAILABLE", "UNAVAILABLE"],
+					"mappedType": "enum"
+				},
+				"image_id": {
+					"name": "image_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
 				}
 			},
-			"name": "order",
+			"name": "carrier",
 			"indexes": [
 				{
-					"columnNames": ["consumer_id"],
+					"columnNames": ["production_unit_id"],
 					"composite": false,
-					"keyName": "order_consumer_id_index",
+					"keyName": "carrier_production_unit_id_index",
 					"primary": false,
 					"unique": false
 				},
 				{
-					"columnNames": ["shipping_address_id"],
+					"columnNames": ["image_id"],
 					"composite": false,
-					"keyName": "order_shipping_address_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["payment"],
-					"composite": false,
-					"keyName": "order_payment_unique",
+					"keyName": "carrier_image_id_unique",
 					"primary": false,
 					"unique": true
 				},
@@ -1159,20 +972,394 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"order_consumer_id_foreign": {
-					"constraintName": "order_consumer_id_foreign",
-					"columnNames": ["consumer_id"],
-					"localTableName": "order",
+				"carrier_production_unit_id_foreign": {
+					"constraintName": "carrier_production_unit_id_foreign",
+					"columnNames": ["production_unit_id"],
+					"localTableName": "carrier",
 					"referencedColumnNames": ["id"],
-					"referencedTableName": "consumer",
+					"referencedTableName": "production_unit",
 					"updateRule": "cascade"
 				},
-				"order_shipping_address_id_foreign": {
-					"constraintName": "order_shipping_address_id_foreign",
-					"columnNames": ["shipping_address_id"],
-					"localTableName": "order",
+				"carrier_image_id_foreign": {
+					"constraintName": "carrier_image_id_foreign",
+					"columnNames": ["image_id"],
+					"localTableName": "carrier",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "image",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				}
+			}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": true,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"carrier_id": {
+					"name": "carrier_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				}
+			},
+			"name": "shipment",
+			"indexes": [
+				{
+					"columnNames": ["carrier_id"],
+					"composite": false,
+					"keyName": "shipment_carrier_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"shipment_carrier_id_foreign": {
+					"constraintName": "shipment_carrier_id_foreign",
+					"columnNames": ["carrier_id"],
+					"localTableName": "shipment",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "carrier",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				}
+			}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": true,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"date": {
+					"name": "date",
+					"type": "datetime",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"length": 0,
+					"mappedType": "datetime"
+				},
+				"shipment_id": {
+					"name": "shipment_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"address_id": {
+					"name": "address_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"status": {
+					"name": "status",
+					"type": "tinyint",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "enum"
+				}
+			},
+			"name": "shipment_event",
+			"indexes": [
+				{
+					"columnNames": ["shipment_id"],
+					"composite": false,
+					"keyName": "shipment_event_shipment_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"columnNames": ["address_id"],
+					"composite": false,
+					"keyName": "shipment_event_address_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"shipment_event_shipment_id_foreign": {
+					"constraintName": "shipment_event_shipment_id_foreign",
+					"columnNames": ["shipment_id"],
+					"localTableName": "shipment_event",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "shipment",
+					"deleteRule": "cascade",
+					"updateRule": "cascade"
+				},
+				"shipment_event_address_id_foreign": {
+					"constraintName": "shipment_event_address_id_foreign",
+					"columnNames": ["address_id"],
+					"localTableName": "shipment_event",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "address",
+					"updateRule": "cascade"
+				}
+			}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": true,
+					"primary": true,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"url": {
+					"name": "url",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"alt": {
+					"name": "alt",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"carrier_id": {
+					"name": "carrier_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				},
+				"category_id": {
+					"name": "category_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				},
+				"consumer_id": {
+					"name": "consumer_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				},
+				"producer_image_id": {
+					"name": "producer_image_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				},
+				"producer_images_id": {
+					"name": "producer_images_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				},
+				"production_unit_id": {
+					"name": "production_unit_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				},
+				"product_spec_id": {
+					"name": "product_spec_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "integer"
+				}
+			},
+			"name": "image",
+			"indexes": [
+				{
+					"columnNames": ["carrier_id"],
+					"composite": false,
+					"keyName": "image_carrier_id_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["category_id"],
+					"composite": false,
+					"keyName": "image_category_id_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["consumer_id"],
+					"composite": false,
+					"keyName": "image_consumer_id_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["producer_image_id"],
+					"composite": false,
+					"keyName": "image_producer_image_id_unique",
+					"primary": false,
+					"unique": true
+				},
+				{
+					"columnNames": ["producer_images_id"],
+					"composite": false,
+					"keyName": "image_producer_images_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"columnNames": ["production_unit_id"],
+					"composite": false,
+					"keyName": "image_production_unit_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"columnNames": ["product_spec_id"],
+					"composite": false,
+					"keyName": "image_product_spec_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["id"],
+					"composite": false,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"image_carrier_id_foreign": {
+					"constraintName": "image_carrier_id_foreign",
+					"columnNames": ["carrier_id"],
+					"localTableName": "image",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "carrier",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				},
+				"image_category_id_foreign": {
+					"constraintName": "image_category_id_foreign",
+					"columnNames": ["category_id"],
+					"localTableName": "image",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "category",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				},
+				"image_consumer_id_foreign": {
+					"constraintName": "image_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
+					"localTableName": "image",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "consumer",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				},
+				"image_producer_image_id_foreign": {
+					"constraintName": "image_producer_image_id_foreign",
+					"columnNames": ["producer_image_id"],
+					"localTableName": "image",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "producer",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				},
+				"image_producer_images_id_foreign": {
+					"constraintName": "image_producer_images_id_foreign",
+					"columnNames": ["producer_images_id"],
+					"localTableName": "image",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "producer",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				},
+				"image_production_unit_id_foreign": {
+					"constraintName": "image_production_unit_id_foreign",
+					"columnNames": ["production_unit_id"],
+					"localTableName": "image",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "production_unit",
+					"deleteRule": "set null",
+					"updateRule": "cascade"
+				},
+				"image_product_spec_id_foreign": {
+					"constraintName": "image_product_spec_id_foreign",
+					"columnNames": ["product_spec_id"],
+					"localTableName": "image",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "product_spec",
+					"deleteRule": "set null",
 					"updateRule": "cascade"
 				}
 			}
@@ -1255,167 +1442,6 @@
 					"constraintName": "category_image_id_foreign",
 					"columnNames": ["image_id"],
 					"localTableName": "category",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "image",
-					"deleteRule": "set null",
-					"updateRule": "cascade"
-				}
-			}
-		},
-		{
-			"columns": {
-				"category_id": {
-					"name": "category_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"field_id": {
-					"name": "field_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				}
-			},
-			"name": "category_fields",
-			"indexes": [
-				{
-					"columnNames": ["category_id"],
-					"composite": false,
-					"keyName": "category_fields_category_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["field_id"],
-					"composite": false,
-					"keyName": "category_fields_field_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"keyName": "PRIMARY",
-					"columnNames": ["category_id", "field_id"],
-					"composite": true,
-					"primary": true,
-					"unique": true
-				}
-			],
-			"checks": [],
-			"foreignKeys": {
-				"category_fields_category_id_foreign": {
-					"constraintName": "category_fields_category_id_foreign",
-					"columnNames": ["category_id"],
-					"localTableName": "category_fields",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "category",
-					"deleteRule": "cascade",
-					"updateRule": "cascade"
-				},
-				"category_fields_field_id_foreign": {
-					"constraintName": "category_fields_field_id_foreign",
-					"columnNames": ["field_id"],
-					"localTableName": "category_fields",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "field",
-					"deleteRule": "cascade",
-					"updateRule": "cascade"
-				}
-			}
-		},
-		{
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": true,
-					"primary": true,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"license_plate": {
-					"name": "license_plate",
-					"type": "varchar(255)",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "string"
-				},
-				"production_unit_id": {
-					"name": "production_unit_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"status": {
-					"name": "status",
-					"type": "enum('AVAILABLE', 'UNAVAILABLE')",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"enumItems": ["AVAILABLE", "UNAVAILABLE"],
-					"mappedType": "enum"
-				},
-				"image_id": {
-					"name": "image_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": true,
-					"mappedType": "integer"
-				}
-			},
-			"name": "carrier",
-			"indexes": [
-				{
-					"columnNames": ["production_unit_id"],
-					"composite": false,
-					"keyName": "carrier_production_unit_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["image_id"],
-					"composite": false,
-					"keyName": "carrier_image_id_unique",
-					"primary": false,
-					"unique": true
-				},
-				{
-					"keyName": "PRIMARY",
-					"columnNames": ["id"],
-					"composite": false,
-					"primary": true,
-					"unique": true
-				}
-			],
-			"checks": [],
-			"foreignKeys": {
-				"carrier_production_unit_id_foreign": {
-					"constraintName": "carrier_production_unit_id_foreign",
-					"columnNames": ["production_unit_id"],
-					"localTableName": "carrier",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "production_unit",
-					"updateRule": "cascade"
-				},
-				"carrier_image_id_foreign": {
-					"constraintName": "carrier_image_id_foreign",
-					"columnNames": ["image_id"],
-					"localTableName": "carrier",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "image",
 					"deleteRule": "set null",
@@ -1573,6 +1599,73 @@
 		},
 		{
 			"columns": {
+				"category_id": {
+					"name": "category_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"field_id": {
+					"name": "field_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				}
+			},
+			"name": "category_fields",
+			"indexes": [
+				{
+					"columnNames": ["category_id"],
+					"composite": false,
+					"keyName": "category_fields_category_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"columnNames": ["field_id"],
+					"composite": false,
+					"keyName": "category_fields_field_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"keyName": "PRIMARY",
+					"columnNames": ["category_id", "field_id"],
+					"composite": true,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"category_fields_category_id_foreign": {
+					"constraintName": "category_fields_category_id_foreign",
+					"columnNames": ["category_id"],
+					"localTableName": "category_fields",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "category",
+					"deleteRule": "cascade",
+					"updateRule": "cascade"
+				},
+				"category_fields_field_id_foreign": {
+					"constraintName": "category_fields_field_id_foreign",
+					"columnNames": ["field_id"],
+					"localTableName": "category_fields",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "field",
+					"deleteRule": "cascade",
+					"updateRule": "cascade"
+				}
+			}
+		},
+		{
+			"columns": {
 				"id": {
 					"name": "id",
 					"type": "int",
@@ -1582,24 +1675,56 @@
 					"nullable": false,
 					"mappedType": "integer"
 				},
-				"carrier_id": {
-					"name": "carrier_id",
+				"consumer_id": {
+					"name": "consumer_id",
 					"type": "int",
 					"unsigned": true,
 					"autoincrement": false,
 					"primary": false,
-					"nullable": true,
+					"nullable": false,
 					"mappedType": "integer"
+				},
+				"shipping_address_id": {
+					"name": "shipping_address_id",
+					"type": "int",
+					"unsigned": true,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "integer"
+				},
+				"payment": {
+					"name": "payment",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "string"
 				}
 			},
-			"name": "shipment",
+			"name": "order",
 			"indexes": [
 				{
-					"columnNames": ["carrier_id"],
+					"columnNames": ["consumer_id"],
 					"composite": false,
-					"keyName": "shipment_carrier_id_index",
+					"keyName": "order_consumer_id_index",
 					"primary": false,
 					"unique": false
+				},
+				{
+					"columnNames": ["shipping_address_id"],
+					"composite": false,
+					"keyName": "order_shipping_address_id_index",
+					"primary": false,
+					"unique": false
+				},
+				{
+					"columnNames": ["payment"],
+					"composite": false,
+					"keyName": "order_payment_unique",
+					"primary": false,
+					"unique": true
 				},
 				{
 					"keyName": "PRIMARY",
@@ -1611,13 +1736,20 @@
 			],
 			"checks": [],
 			"foreignKeys": {
-				"shipment_carrier_id_foreign": {
-					"constraintName": "shipment_carrier_id_foreign",
-					"columnNames": ["carrier_id"],
-					"localTableName": "shipment",
+				"order_consumer_id_foreign": {
+					"constraintName": "order_consumer_id_foreign",
+					"columnNames": ["consumer_id"],
+					"localTableName": "order",
 					"referencedColumnNames": ["id"],
-					"referencedTableName": "carrier",
-					"deleteRule": "set null",
+					"referencedTableName": "consumer",
+					"updateRule": "cascade"
+				},
+				"order_shipping_address_id_foreign": {
+					"constraintName": "order_shipping_address_id_foreign",
+					"columnNames": ["shipping_address_id"],
+					"localTableName": "order",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "address",
 					"updateRule": "cascade"
 				}
 			}
@@ -1726,100 +1858,6 @@
 					"localTableName": "order_item",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "shipment",
-					"updateRule": "cascade"
-				}
-			}
-		},
-		{
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": true,
-					"primary": true,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"date": {
-					"name": "date",
-					"type": "datetime",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"length": 0,
-					"mappedType": "datetime"
-				},
-				"shipment_id": {
-					"name": "shipment_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"address_id": {
-					"name": "address_id",
-					"type": "int",
-					"unsigned": true,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "integer"
-				},
-				"status": {
-					"name": "status",
-					"type": "tinyint",
-					"unsigned": false,
-					"autoincrement": false,
-					"primary": false,
-					"nullable": false,
-					"mappedType": "enum"
-				}
-			},
-			"name": "shipment_event",
-			"indexes": [
-				{
-					"columnNames": ["shipment_id"],
-					"composite": false,
-					"keyName": "shipment_event_shipment_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"columnNames": ["address_id"],
-					"composite": false,
-					"keyName": "shipment_event_address_id_index",
-					"primary": false,
-					"unique": false
-				},
-				{
-					"keyName": "PRIMARY",
-					"columnNames": ["id"],
-					"composite": false,
-					"primary": true,
-					"unique": true
-				}
-			],
-			"checks": [],
-			"foreignKeys": {
-				"shipment_event_shipment_id_foreign": {
-					"constraintName": "shipment_event_shipment_id_foreign",
-					"columnNames": ["shipment_id"],
-					"localTableName": "shipment_event",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "shipment",
-					"deleteRule": "cascade",
-					"updateRule": "cascade"
-				},
-				"shipment_event_address_id_foreign": {
-					"constraintName": "shipment_event_address_id_foreign",
-					"columnNames": ["address_id"],
-					"localTableName": "shipment_event",
-					"referencedColumnNames": ["id"],
-					"referencedTableName": "address",
 					"updateRule": "cascade"
 				}
 			}

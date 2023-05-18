@@ -43,7 +43,7 @@ export class WebhookController {
 				const order = await container.orderGateway.findByIdPopulated(Number(session.metadata?.order_id));
 
 				if (order) {
-					const consumerId = order.consumer.id;
+					const consumerId = order.consumer.user.id;
 					const consumer = await container.consumerGateway.findByIdWithCart(consumerId);
 					if (consumer) {
 						await container.cartItemGateway.delete(consumer.cartItems.getItems());
@@ -65,7 +65,7 @@ export class WebhookController {
 				const order = await container.orderGateway.findById(Number(session.metadata?.order_id));
 				let consumerId;
 				if (order) {
-					consumerId = order.consumer.id;
+					consumerId = order.consumer.user.id;
 					await container.orderGateway.deleteOrder(order);
 				}
 				if (consumerId) {

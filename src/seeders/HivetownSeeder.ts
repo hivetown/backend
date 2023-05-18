@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { ProductSpecFactory } from './factories/ProductSpec';
 import { ProductSpecCategoryFactory } from './factories/ProductSpecCategory';
 import { CategoryFactory } from './factories/Category';
-import { ShipmentStatus } from '../enums';
+import { ShipmentStatus, UserType } from '../enums';
 import { ProductionUnitFactory } from './factories/ProductionUnit';
 import { ShipmentFactory } from './factories/Shipment';
 import { ProducerProductFactory } from './factories/ProducerProduct';
@@ -16,9 +16,11 @@ import { OrderItemFactory } from './factories/OrderItem';
 import { ShipmentEventFactory } from './factories/ShipmentEvent';
 import { ProducerFactory } from './factories/Producer';
 import { CarrierFactory } from './factories/Carrier';
+import { UserFactory } from './factories/User';
 import { ProducerProduct, ProductSpecField } from '../entities';
 import { createFields } from './factories/Field';
-import { generateValueFromField } from './helpers';
+import { generateImageUrl, generateValueFromField } from './helpers';
+import { createRoles } from './factories/Role';
 
 export class HivetownSeeder extends Seeder {
 	public async run(em: EntityManager): Promise<void> {
@@ -37,8 +39,14 @@ export class HivetownSeeder extends Seeder {
 		const shipmentFactory = new ShipmentFactory(em);
 		const shipmentEventFactory = new ShipmentEventFactory(em);
 		const carrierFactory = new CarrierFactory(em);
+		const userFactory = new UserFactory(em);
 
 		console.log('Seeding Hivetown...');
+		console.log('Generating roles...');
+		// We create some roles
+		const roles = createRoles(em);
+		await em.persistAndFlush(roles);
+
 		console.log('Generating fields...');
 		// We create some fields to use on the Categories
 		const fields = createFields(em);
@@ -90,39 +98,45 @@ export class HivetownSeeder extends Seeder {
 			});
 		});
 
+		console.log('Generating users...');
+		// We create some users
+		const users = await userFactory.create(1000);
+
 		console.log('Generating producers...');
 		// We create some producers
-		const producers = await producerFactory.create(300);
+		// Pick 400 users to be producers
+		const producerUsers = users.splice(0, 400);
+		const producers = await producerUsers.map((user) => producerFactory.makeOne({ user }));
+		await em.persistAndFlush(producers);
 
-		console.log('Generating production units...');
-		// We wait for the producers to be created so we can create some production units
 		producers.forEach((producer) => {
+			// Set the producer's image and type to be a producer
+			producer.user.image!.url = generateImageUrl('shop');
+			producer.user.type = UserType.Producer;
+
 			producer.productionUnits.set(
 				productionUnitFactory
 					.each((pUnit) => {
 						pUnit.address = addressFactory.makeOne();
 						pUnit.carriers.set(carrierFactory.make(faker.datatype.number({ min: 0, max: 10 })));
 
-						pUnit.name = `${producer.name} - ${pUnit.address.street} ${pUnit.address.city}`;
+						pUnit.name = `${producer.user.name} - ${pUnit.address.street} ${pUnit.address.city}`;
+
+						pUnit.products.set(
+							producerProductFactory
+								.each((pProduct) => {
+									pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
+									pProduct.producer = producer;
+								})
+								.make(faker.datatype.number({ min: 0, max: 70 }))
+						);
 					})
 					.make(faker.datatype.number({ min: 0, max: 8 }))
 			);
+
+			return producer;
 		});
 
-		console.log("Generating producers' products...");
-		// We wait for the production units to be created so we can create some producer products
-		producers.forEach((producer) => {
-			producer.productionUnits.getItems().forEach((pUnit) => {
-				pUnit.products.set(
-					producerProductFactory
-						.each((pProduct) => {
-							pProduct.productSpec = faker.helpers.arrayElement(productSpecs);
-							pProduct.producer = producer;
-						})
-						.make(faker.datatype.number({ min: 0, max: 70 }))
-				);
-			});
-		});
 		await em.persistAndFlush(producers);
 
 		// Filter for producers that have products
@@ -137,7 +151,7 @@ export class HivetownSeeder extends Seeder {
 					.getItems()
 					.filter((pUnit) => pUnit.products.getItems().length > 0 && pUnit.carriers.getItems().length > 0)
 			}));
-		console.log(`Found ${producersWithProducts.length} producers with products.`);
+		console.log(`Found ${producersWithProducts.length}/${producers.length} producers with products.`);
 
 		// If there are no producers with products, we create one
 		if (!producersWithProducts.length) {
@@ -148,23 +162,27 @@ export class HivetownSeeder extends Seeder {
 
 		console.log('Generating consumers...');
 		// We create some consumers
-		const consumers = await consumerFactory
-			.each((consumer) => {
-				consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 1, max: 5 })));
+		// Pick 600 users to be consumers
+		const consumerUsers = users.splice(0, 600);
+		const consumers = await consumerUsers.map((user) => consumerFactory.makeOne({ user }));
+		await em.persistAndFlush(consumers);
 
-				consumer.orders.set(
-					orderFactory
-						.each((order) => {
-							// Otherwise we use one of the consumer addresses
-							order.shippingAddress = faker.helpers.arrayElement(consumer.addresses.getItems());
-						})
-						.make(faker.datatype.number({ min: 1, max: 13 }))
-				);
-			})
-			.create(600);
+		consumers.map((consumer) => {
+			// Set the consumer's image and type to be a consumer
+			consumer.user.image!.url = generateImageUrl('shopper');
+			consumer.user.type = UserType.Consumer;
 
-		console.log('Generating cart items for consumers...');
-		consumers.forEach((consumer) => {
+			consumer.addresses.set(addressFactory.make(faker.datatype.number({ min: 1, max: 5 })));
+
+			consumer.orders.set(
+				orderFactory
+					.each((order) => {
+						// Use one of the consumer's addresses
+						order.shippingAddress = faker.helpers.arrayElement(consumer.addresses.getItems());
+					})
+					.make(faker.datatype.number({ min: 1, max: 13 }))
+			);
+
 			const cartItems = new Set();
 			consumer.cartItems.set(
 				cartItemFactory
@@ -184,7 +202,10 @@ export class HivetownSeeder extends Seeder {
 					})
 					.make(faker.datatype.number({ min: 0, max: 17 }))
 			);
+
+			return consumer;
 		});
+
 		await em.persistAndFlush(consumers);
 
 		console.log("Generating consumers' order items...");

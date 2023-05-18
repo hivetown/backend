@@ -18,12 +18,8 @@ export class ConsumerGateway {
 		return consumer;
 	}
 
-	public async findByAuthId(authId: string): Promise<Consumer | null> {
-		return this.repository.findOne({ authId });
-	}
-
 	public async findById(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id);
+		const consumer = await this.repository.findOne({ user: id }, { populate: ['user.role'] });
 		return consumer;
 	}
 
@@ -44,12 +40,12 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithCart(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { populate: ['cartItems'] });
+		const consumer = await this.repository.findOne({ user: id }, { populate: ['cartItems'] });
 		return consumer;
 	}
 
 	public async findByIdWithCartAndProducts(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { populate: ['cartItems', 'cartItems.producerProduct', 'addresses'] });
+		const consumer = await this.repository.findOne({ user: id }, { populate: ['cartItems', 'cartItems.producerProduct', 'addresses'] });
 		return consumer;
 	}
 
@@ -59,7 +55,7 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithAddress(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { populate: ['addresses'] });
+		const consumer = await this.repository.findOne({ user: id }, { populate: ['addresses'] });
 		return consumer;
 	}
 
@@ -68,7 +64,7 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithDeletedAt(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false } });
+		const consumer = await this.repository.findOne({ user: id }, { filters: { [SOFT_DELETABLE_FILTER]: false } });
 		return consumer;
 	}
 
@@ -89,7 +85,7 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithDeletedAtAndAddress(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false }, populate: ['addresses'] });
+		const consumer = await this.repository.findOne({ user: id }, { filters: { [SOFT_DELETABLE_FILTER]: false }, populate: ['addresses'] });
 		return consumer;
 	}
 }

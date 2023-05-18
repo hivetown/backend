@@ -4,15 +4,19 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Producer, ProducerProduct, ProductionUnit, ShipmentEvent, ShipmentStatus } from '../entities';
-import { AuthMiddleware } from '../middlewares/auth';
+import { Producer, ProducerProduct, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
+import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
-import { CarrierStatus } from '../enums';
+import { CarrierStatus, UserType } from '../enums';
 import { BadRequestError } from '../errors/BadRequestError';
+import { Permission } from '../enums/Permission';
+import { throwError } from '../utils/throw';
+import { ForbiddenError } from '../errors/ForbiddenError';
 import { Authentication } from '../external/Authentication';
+import { hasPermissions } from '../utils/hasPermission';
 
 @Controller('/producers')
 @Injectable()
@@ -25,21 +29,22 @@ export class ProducersController {
 				vat: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware
 	])
 	public async createProducer(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const data: Producer = req.body;
+		const data: User = req.body;
 		data.authId = req.authUser!.uid;
 		data.email = req.authUser!.email!;
 
-		let producer: Producer | null = null;
+		data.type = UserType.Producer;
+
 		try {
-			producer = await container.producerGateway.create(data);
+			const user = await container.producerGateway.create({ user: data } as Producer);
+			return res.status(201).json(user);
 		} catch (error) {
 			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Producer already exists');
+			throw error;
 		}
-
-		return res.status(201).json(producer);
 	}
 
 	@Get('/', [
@@ -50,7 +55,7 @@ export class ProducersController {
 				includeAll: Joi.boolean().optional()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware
 	])
 	public async getProducers(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const options: PaginatedOptions = {
@@ -58,7 +63,7 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 		let producers;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_PRODUCER)) {
 			producers = await container.producerGateway.findAllWithDeletedAt(options);
 		} else {
 			producers = await container.producerGateway.findAll(options);
@@ -72,7 +77,17 @@ export class ProducersController {
 				producerId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.DELETE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other producers', { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async deleteProducer(@Response() res: Express.Response, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findByIdPopulated(producerId);
@@ -96,7 +111,7 @@ export class ProducersController {
 
 		await container.producerGateway.delete(producer);
 
-		await Authentication.updateUserStatus(true, producer);
+		await Authentication.updateUserStatus(true, producer.user);
 
 		res.status(204).json();
 	}
@@ -115,11 +130,21 @@ export class ProducersController {
 				includeAll: Joi.boolean().optional()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other producers', { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async updateProducer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		let producer;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
 		} else {
 			producer = await container.producerGateway.findById(producerId);
@@ -127,9 +152,9 @@ export class ProducersController {
 
 		if (!producer) throw new NotFoundError('Producer not found');
 
-		producer.name = req.body.name;
-		producer.email = req.body.email;
-		producer.phone = req.body.phone;
+		producer.user.name = req.body.name;
+		producer.user.email = req.body.email;
+		producer.user.phone = req.body.phone;
 
 		await container.producerGateway.update(producer);
 
@@ -145,11 +170,11 @@ export class ProducersController {
 				includeAll: Joi.boolean().optional()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware
 	])
 	public async getProducer(@Response() res: Express.Response, @Params('producerId') producerId: number, @Request() req: Express.Request) {
 		let producer;
-		if (req.query.includeAll) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
 		} else {
 			producer = await container.producerGateway.findById(producerId);
@@ -166,7 +191,17 @@ export class ProducersController {
 				producerId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other producers', { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async reativateProducer(@Response() res: Express.Response, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
@@ -175,7 +210,7 @@ export class ProducersController {
 		producer.deletedAt = undefined;
 		await container.producerGateway.update(producer);
 
-		await Authentication.updateUserStatus(false, producer);
+		await Authentication.updateUserStatus(false, producer.user);
 
 		for (const productionUnit of producer.productionUnits) {
 			productionUnit.deletedAt = undefined;
@@ -224,7 +259,17 @@ export class ProducersController {
 				productSpecId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' products", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async createProducerProduct(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -257,7 +302,17 @@ export class ProducersController {
 				productionUnitId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' products", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async updateProducerProduct(
 		@Response() res: Express.Response,
@@ -291,7 +346,17 @@ export class ProducersController {
 				producerProductId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' products", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async deleteProducerProduct(
 		@Response() res: Express.Response,
@@ -318,7 +383,17 @@ export class ProducersController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async getOrders(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -346,7 +421,17 @@ export class ProducersController {
 				orderId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async getOrder(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('orderId') orderId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -373,7 +458,17 @@ export class ProducersController {
 				pageSize: Joi.number().min(1)
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async getOrderItems(
 		@Response() res: Express.Response,
@@ -417,7 +512,17 @@ export class ProducersController {
 				producerProductId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async getOrderItem(
 		@Response() res: Express.Response,
@@ -456,7 +561,17 @@ export class ProducersController {
 				producerProductId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async getOrderItemShipment(
 		@Response() res: Express.Response,
@@ -502,7 +617,17 @@ export class ProducersController {
 				addressId: Joi.number().min(1).required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' orders", { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
 	])
 	public async createOrderItemShipmentEvent(
 		@Request() req: Express.Request,
@@ -547,8 +672,7 @@ export class ProducersController {
 	@Get('/:producerId/units', [
 		validate({
 			params: Joi.object({ producerId: Joi.number().required() })
-		}),
-		AuthMiddleware
+		})
 	])
 	public async getUnits(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findById(producerId);
@@ -559,7 +683,7 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const units = await container.productionUnitGateway.findFromProducer(producer.id, options);
+		const units = await container.productionUnitGateway.findFromProducer(producer.user.id, options);
 		return res.status(200).json(units);
 	}
 
@@ -576,7 +700,7 @@ export class ProducersController {
 		if (!producer) throw new NotFoundError('Producer not found');
 
 		const productionUnit = await container.productionUnitGateway.findById(unitId);
-		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+		if (!productionUnit || productionUnit.producer.user.id !== producer.user.id) throw new NotFoundError('Production unit not found');
 
 		return res.status(200).json(productionUnit);
 	}
@@ -589,7 +713,20 @@ export class ProducersController {
 				address: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
 	])
 	public async createProductionUnit(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
 		const producer = await container.producerGateway.findByIdWithUnits(producerId);
@@ -615,7 +752,20 @@ export class ProducersController {
 				address: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
 	])
 	public async updateProductionUnit(
 		@Request() req: Express.Request,
@@ -647,7 +797,20 @@ export class ProducersController {
 				unitId: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
 	])
 	public async deleteProductionUnit(@Response() res: Express.Response, @Params('producerId') producerId: number, @Params('unitId') unitId: number) {
 		const producer = await container.producerGateway.findByIdWithUnits(producerId);
@@ -679,7 +842,7 @@ export class ProducersController {
 		if (!producer) throw new NotFoundError('Producer not found');
 
 		const productionUnit = await container.productionUnitGateway.findById(unitId);
-		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+		if (!productionUnit || productionUnit.producer.user.id !== producer.user.id) throw new NotFoundError('Production unit not found');
 
 		const options: ProducerProductOptions = {
 			page: Number(req.query.page) || -1,
@@ -702,7 +865,20 @@ export class ProducersController {
 				pageSize: Joi.number().optional()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
 	])
 	public async getProductionUnitCarriersInTransitOfProductionUnit(
 		@Response() res: Express.Response,
@@ -714,7 +890,7 @@ export class ProducersController {
 		if (!producer) throw new NotFoundError('Producer not found');
 
 		const productionUnit = await container.productionUnitGateway.findById(unitId);
-		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+		if (!productionUnit || productionUnit.producer.user.id !== producer.user.id) throw new NotFoundError('Production unit not found');
 
 		const options: PaginatedOptions = {
 			page: Number(req.query.page) || -1,
@@ -737,7 +913,20 @@ export class ProducersController {
 				shipmentId: Joi.number().required()
 			})
 		}),
-		AuthMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
 	])
 	public async associateShipment(
 		@Request() req: Express.Request,
@@ -750,7 +939,7 @@ export class ProducersController {
 		if (!producer) throw new NotFoundError('Producer not found');
 
 		const productionUnit = await container.productionUnitGateway.findByIdPopulated(unitId);
-		if (!productionUnit || productionUnit.producer.id !== producer.id) throw new NotFoundError('Production unit not found');
+		if (!productionUnit || productionUnit.producer.user.id !== producer.user.id) throw new NotFoundError('Production unit not found');
 
 		const carrier = productionUnit.carriers.getItems().find((c) => c.id === Number(carrierId));
 		if (!carrier) throw new NotFoundError('Carrier not found');
