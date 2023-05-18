@@ -129,4 +129,22 @@ export class OrderItemGateway {
 		);
 		return products;
 	}
+
+	public async findAllByConsumerId(consumerId: number): Promise<OrderItem[]> {
+		const orderItems = await this.repository.find(
+			{ order: { consumer: { user: consumerId } } },
+			{
+				populate: [
+					'producerProduct.productionUnit.address',
+					'order.shippingAddress',
+					'producerProduct.productSpec',
+					'producerProduct.productSpec.categories',
+					'producerProduct.productSpec.categories.category',
+					'shipment.events.status',
+					'order.items'
+				]
+			}
+		);
+		return orderItems;
+	}
 }

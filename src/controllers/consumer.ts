@@ -22,6 +22,9 @@ import { throwError } from '../utils/throw';
 import { ForbiddenError } from '../errors/ForbiddenError';
 import { Authentication } from '../external/Authentication';
 import { hasPermissions } from '../utils/hasPermission';
+import { calcularDistancia } from '../utils/calculateDistance';
+import { filterOrderItemsByDate } from '../utils/filterReportDate';
+import { handleReportEvolution } from '../utils/handleReportEvolution';
 
 @Controller('/consumers')
 @Injectable()
@@ -631,6 +634,250 @@ export class ConsumerController {
 		res.setHeader('Content-Type', 'application/json');
 		res.setHeader('Content-Disposition', 'attachment; filename=orders.json');
 		return res.status(200).send(ordersJson);
+	}
+
+	@Get('/:consumerId/orders/report', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				// data: a ver melhor
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async report(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+		const resultado = [];
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+
+		for (const orderItem of orderItems) {
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+			// console.log(enderecoProduto.latitude, enderecoProduto.longitude);
+			// console.log(enderecoConsumidor.latitude, enderecoConsumidor.longitude);
+			// console.log(distancia);
+
+			if (distancia <= Number(req.query.raio)) {
+				resultado.push({
+					producerProduct: orderItem.producerProduct,
+					enderecoConsumidor,
+					distancia
+				});
+			}
+		}
+		console.log(resultado.length);
+		res.status(200).json(resultado);
+	}
+
+	@Get('/:consumerId/orders/report/flashcards', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async reportFlashcards(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const encomendas: number[] = [];
+		let totalProdutos = 0;
+		let comprasTotais = 0;
+		const produtosEncomendados = [];
+
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.order.getOrderDate() };
+		});
+		// console.log(orderItemsWithDate);
+		// filtrar pelas datas
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia <= Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						encomendas.push(orderItem.order.id);
+						totalProdutos += orderItem.quantity;
+						comprasTotais += orderItem.quantity * orderItem.price;
+						produtosEncomendados.push(orderItem.producerProduct.id);
+					}
+				} else {
+					encomendas.push(orderItem.order.id);
+					totalProdutos += orderItem.quantity;
+					comprasTotais += orderItem.quantity * orderItem.price;
+					produtosEncomendados.push(orderItem.producerProduct.id);
+				}
+			}
+		}
+
+		const numeroEncomendas = [...new Set(encomendas)].length;
+		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
+
+		res.status(200).json({
+			numeroEncomendas,
+			totalProdutos,
+			comprasTotais,
+			numeroProdutosEncomendados
+		});
+	}
+
+	@Get('/:consumerId/orders/report/map', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async reportMap(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const resultado = [];
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.order.getOrderDate() };
+		});
+		// console.log(orderItemsWithDate);
+		// filtrar pelas datas
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia <= Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						resultado.push({
+							enderecoUnidadeProducao: enderecoProduto,
+							enderecoConsumidor,
+							distancia
+						});
+					}
+				} else {
+					resultado.push({
+						enderecoUnidadeProducao: enderecoProduto,
+						enderecoConsumidor,
+						distancia
+					});
+				}
+			}
+		}
+		// console.log(resultado.length);
+		res.status(200).json(resultado);
+	}
+
+	@Get('/:consumerId/orders/report/evolution', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required(),
+				numeroEncomendas: Joi.boolean().optional(),
+				totalProdutos: Joi.boolean().optional(),
+				comprasTotais: Joi.boolean().optional(),
+				numeroProdutosEncomendados: Joi.boolean().optional()
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
+		}),
+		authenticationMiddleware
+	])
+	public async reportEvolution(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Request() req: Express.Request) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.order.getOrderDate() };
+		});
+
+		// filtrar pelas datas
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+		// console.log(orderItemsWithDate);
+		const resultado = [];
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia <= Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						resultado.push(oi);
+					}
+				} else {
+					resultado.push(oi);
+				}
+			}
+		}
+
+		// ver se há uma maneira melhor
+		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
+		const retorno = handleReportEvolution(resultado, opcao);
+
+		res.status(200).json(retorno);
 	}
 
 	@Get('/:consumerId/orders/:orderId', [
