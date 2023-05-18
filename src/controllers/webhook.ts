@@ -74,7 +74,7 @@ export class WebhookController {
 						for (const item of consumer.cartItems.getItems()) {
 							item.producerProduct.stock += item.quantity;
 						}
-						await container.consumerGateway.updateCart(consumer);
+						await container.consumerGateway.update(consumer);
 					} else {
 						throw new NotFoundError('Consumer not found');
 					}

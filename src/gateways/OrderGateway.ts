@@ -120,4 +120,14 @@ export class OrderGateway {
 		});
 		return order;
 	}
+
+	public async findByConsumerIdPopulated(consumerId: number): Promise<Order[]> {
+		const orders = await this.repository.find(
+			{ consumer: consumerId },
+			{
+				populate: ['items', 'items.shipment', 'items.shipment.events', 'items.shipment.events.status']
+			}
+		);
+		return orders;
+	}
 }

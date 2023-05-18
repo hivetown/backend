@@ -20,16 +20,12 @@ import { stripe } from '../stripe/key';
 import { Permission } from '../enums/Permission';
 import { throwError } from '../utils/throw';
 import { ForbiddenError } from '../errors/ForbiddenError';
+import { Authentication } from '../external/Authentication';
+import { hasPermissions } from '../utils/hasPermission';
 
 @Controller('/consumers')
 @Injectable()
 export class ConsumerController {
-	@Get('/', [authenticationMiddleware, authorizationMiddleware({ permissions: Permission.READ_OTHER_CONSUMER })])
-	public async getConsumers(@Response() res: Express.Response) {
-		const consumers = await container.consumerGateway.findAll();
-		return res.json(consumers);
-	}
-
 	@Post('/', [
 		validate({
 			body: Joi.object({
@@ -56,8 +52,180 @@ export class ConsumerController {
 		}
 	}
 
-	// -------------------------------------------------------------------- CART --------------------------------------------------------------------
+	@Get('/', [
+		validate({
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1),
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({ permissions: Permission.READ_OTHER_CONSUMER })
+	])
+	public async getConsumers(@Response() res: Express.Response, @Request() req: Express.Request) {
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
 
+		let consumers;
+		if (req.query.includeAll) {
+			consumers = await container.consumerGateway.findAllWithDeletedAt(options);
+		} else {
+			consumers = await container.consumerGateway.findAll(options);
+		}
+
+		return res.json(consumers);
+	}
+
+	@Get('/:consumerId', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other consumers', { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
+	])
+	public async getConsumer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		let consumer;
+		if (req.query.includeAll) {
+			consumer = await container.consumerGateway.findByIdWithDeletedAtAndAddress(consumerId);
+		} else {
+			consumer = await container.consumerGateway.findByIdWithAddress(consumerId);
+		}
+
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		return res.status(200).json(consumer);
+	}
+
+	@Delete('/:consumerId', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.DELETE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other consumers', { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
+	])
+	public async deleteConsumer(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		const orders = await container.orderGateway.findByConsumerIdPopulated(consumerId);
+		const canDelete = orders.every((order) => {
+			const orderStatus = ShipmentStatus[order.getGeneralStatus() as keyof typeof ShipmentStatus];
+			return orderStatus === ShipmentStatus.Delivered || orderStatus === ShipmentStatus.Canceled;
+		});
+
+		if (!canDelete) throw new BadRequestError('Cannot delete consumer with active orders');
+
+		await container.consumerGateway.delete(consumer);
+
+		await Authentication.updateUserStatus(true, consumer.user);
+
+		return res.status(204).send();
+	}
+
+	@Put('/:consumerId', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				email: Joi.string().email().required(),
+				phone: Joi.string().required()
+			}),
+			query: Joi.object({
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other consumers', { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
+	])
+	public async updateConsumer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('consumerId') consumerId: number) {
+		let consumer;
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
+			consumer = await container.consumerGateway.findByIdWithDeletedAt(consumerId);
+		} else {
+			consumer = await container.consumerGateway.findById(consumerId);
+		}
+
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		consumer.user.name = req.body.name;
+		consumer.user.email = req.body.email;
+		consumer.user.phone = req.body.phone;
+
+		await container.consumerGateway.update(consumer);
+
+		return res.status(201).json(consumer);
+	}
+
+	@Post('/:consumerId/reativate', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_CONSUMER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.consumerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other consumers', { user: user.id, consumer: Number(req.params.consumerId) })
+					)
+			]
+		})
+	])
+	public async reativateConsumer(@Response() res: Express.Response, @Params('consumerId') consumerId: number) {
+		const consumer = await container.consumerGateway.findByIdWithDeletedAt(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		consumer.deletedAt = undefined;
+		await container.consumerGateway.update(consumer);
+
+		await Authentication.updateUserStatus(false, consumer.user);
+
+		res.status(201).json(consumer);
+	}
+
+	// -------------------------------------------------------------------- CART --------------------------------------------------------------------
 	@Get('/:consumerId/cart', [
 		validate({
 			params: Joi.object({
@@ -136,7 +304,7 @@ export class ConsumerController {
 		else consumer.cartItems.add(new CartItem(consumer, product, quantity));
 
 		// Update the cart
-		await container.consumerGateway.updateCart(consumer);
+		await container.consumerGateway.update(consumer);
 
 		// Return the updated item
 		const updatedItem = await container.cartItemGateway.findProductById(consumerId, product.id);
@@ -214,7 +382,7 @@ export class ConsumerController {
 		if (quantity > product.stock) throw new BadRequestError('Product out of stock');
 
 		item.quantity = quantity;
-		await container.consumerGateway.updateCart(consumer);
+		await container.consumerGateway.update(consumer);
 
 		const updatedItem = await container.cartItemGateway.findProductById(consumerId, producerProductId);
 		return res.status(200).json(updatedItem);

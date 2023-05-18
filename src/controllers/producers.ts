@@ -15,8 +15,8 @@ import { BadRequestError } from '../errors/BadRequestError';
 import { Permission } from '../enums/Permission';
 import { throwError } from '../utils/throw';
 import { ForbiddenError } from '../errors/ForbiddenError';
+import { Authentication } from '../external/Authentication';
 
-const producerIdParam = Joi.number().min(1).required();
 @Controller('/producers')
 @Injectable()
 export class ProducersController {
@@ -46,10 +46,188 @@ export class ProducersController {
 		}
 	}
 
+	@Get('/', [
+		validate({
+			query: Joi.object({
+				page: Joi.number().integer().min(1),
+				pageSize: Joi.number().integer().min(1),
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async getProducers(@Response() res: Express.Response, @Request() req: Express.Request) {
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+		let producers;
+		if (req.query.includeAll) {
+			producers = await container.producerGateway.findAllWithDeletedAt(options);
+		} else {
+			producers = await container.producerGateway.findAll(options);
+		}
+		return res.json(producers);
+	}
+
+	@Delete('/:producerId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.DELETE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other producers', { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
+	])
+	public async deleteProducer(@Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findByIdPopulated(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const orderItems = await container.orderItemGateway.findByProducerIdPopulated(producerId);
+		const canDelete = orderItems.every((orderItem) => {
+			const orderStatus = orderItem.getActualStatus();
+			return orderStatus === ShipmentStatus.Delivered || orderStatus === ShipmentStatus.Canceled;
+		});
+
+		if (!canDelete) throw new BadRequestError('Producer has active orders');
+
+		for (const productionUnit of producer.productionUnits) {
+			await container.productionUnitGateway.delete(productionUnit);
+		}
+
+		for (const producerProduct of producer.producerProducts) {
+			await container.producerProductGateway.delete(producerProduct);
+		}
+
+		await container.producerGateway.delete(producer);
+
+		await Authentication.updateUserStatus(true, producer.user);
+
+		res.status(204).json();
+	}
+
+	@Put('/:producerId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				name: Joi.string().required(),
+				email: Joi.string().email().required(),
+				phone: Joi.string().required()
+			}),
+			query: Joi.object({
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other producers', { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
+	])
+	public async updateProducer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
+		let producer;
+		if (req.query.includeAll) {
+			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
+		} else {
+			producer = await container.producerGateway.findById(producerId);
+		}
+
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		producer.user.name = req.body.name;
+		producer.user.email = req.body.email;
+		producer.user.phone = req.body.phone;
+
+		await container.producerGateway.update(producer);
+
+		res.status(201).json(producer);
+	}
+
+	@Get('/:producerId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				includeAll: Joi.boolean().optional()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async getProducer(@Response() res: Express.Response, @Params('producerId') producerId: number, @Request() req: Express.Request) {
+		let producer;
+		if (req.query.includeAll) {
+			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
+		} else {
+			producer = await container.producerGateway.findById(producerId);
+		}
+
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		return res.status(200).json(producer);
+	}
+
+	@Post('/:producerId/reativate', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError('User may not interact with other producers', { user: user.id, producer: Number(req.params.producerId) })
+					)
+			]
+		})
+	])
+	public async reativateProducer(@Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		producer.deletedAt = undefined;
+		await container.producerGateway.update(producer);
+
+		await Authentication.updateUserStatus(false, producer.user);
+
+		for (const productionUnit of producer.productionUnits) {
+			productionUnit.deletedAt = undefined;
+			await container.productionUnitGateway.update(productionUnit);
+		}
+
+		for (const producerProduct of producer.producerProducts) {
+			producerProduct.deletedAt = undefined;
+			await container.producerProductGateway.update(producerProduct);
+		}
+
+		res.status(201).json(producer);
+	}
+
 	@Get('/:producerId/products', [
 		validate({
 			params: Joi.object({
-				producerId: producerIdParam
+				producerId: Joi.number().min(1).required()
 			})
 		})
 	])
@@ -70,7 +248,7 @@ export class ProducersController {
 	@Post('/:producerId/products', [
 		validate({
 			params: Joi.object({
-				producerId: producerIdParam
+				producerId: Joi.number().min(1).required()
 			}),
 			body: Joi.object({
 				currentPrice: Joi.number().min(0).required(),

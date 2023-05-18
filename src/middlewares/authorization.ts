@@ -5,6 +5,7 @@ import type { User } from '../entities';
 import { ForbiddenError } from '../errors/ForbiddenError';
 import { Permission, permissionsFromNumber } from '../enums/Permission';
 import { NotFoundError } from '../errors/NotFoundError';
+import { hasPermissions } from '../utils/hasPermission';
 
 /**
  * A generic validation function for the authorization middleware
@@ -26,13 +27,13 @@ export const authorizationMiddleware = ({
 
 		const user = await container.userGateway.findByAuthId(req.authUser.uid, { populate: ['role'] });
 		if (!user) throw new NotFoundError('Authenticated user not found');
+		req.user = user;
 
 		// Bitwise AND operator to check if the user has the required permission(s)
 		let hasBasePermission = true;
 		// Default to none if the user has no role
-		const rolePermissions = user.role?.permissions || Permission.NONE;
 		if (permissions) {
-			hasBasePermission = (rolePermissions & permissions) === permissions;
+			hasBasePermission = hasPermissions(user, permissions);
 		}
 
 		// If the user does not have the base permission, check the other validations (if any)
@@ -50,7 +51,7 @@ export const authorizationMiddleware = ({
 		// need to add "&& permissions" for typescript to be happy
 		if (!hasBasePermission && permissions)
 			throw new ForbiddenError('User does not have enough permissions', {
-				user: permissionsFromNumber(rolePermissions),
+				user: permissionsFromNumber(user.role?.permissions || Permission.NONE),
 				required: permissionsFromNumber(permissions)
 			});
 

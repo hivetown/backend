@@ -1,5 +1,9 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { Consumer } from '../entities';
+import type { PaginatedOptions } from '../interfaces/PaginationOptions';
+import { paginate } from '../utils/paginate';
+import type { BaseItems } from '../interfaces/BaseItems';
+import { SOFT_DELETABLE_FILTER } from 'mikro-orm-soft-delete';
 
 export class ConsumerGateway {
 	private repository: EntityRepository<Consumer>;
@@ -19,9 +23,20 @@ export class ConsumerGateway {
 		return consumer;
 	}
 
-	public async findAll(): Promise<Consumer[]> {
-		const consumers = await this.repository.findAll();
-		return consumers;
+	public async findAll(options: PaginatedOptions): Promise<BaseItems<Consumer>> {
+		const pagination = paginate(options);
+		const [consumers, totalResults] = await Promise.all([
+			this.repository.find({}, { limit: pagination.limit, offset: pagination.offset }),
+			this.repository.count()
+		]);
+
+		return {
+			items: consumers,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: consumers.length
+		};
 	}
 
 	public async findByIdWithCart(id: number): Promise<Consumer | null> {
@@ -34,8 +49,43 @@ export class ConsumerGateway {
 		return consumer;
 	}
 
-	public async updateCart(consumer: Consumer): Promise<Consumer> {
+	public async update(consumer: Consumer): Promise<Consumer> {
 		await this.repository.persistAndFlush(consumer);
+		return consumer;
+	}
+
+	public async findByIdWithAddress(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id, { populate: ['addresses'] });
+		return consumer;
+	}
+
+	public async delete(consumer: Consumer): Promise<void> {
+		await this.repository.removeAndFlush(consumer);
+	}
+
+	public async findByIdWithDeletedAt(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false } });
+		return consumer;
+	}
+
+	public async findAllWithDeletedAt(options: PaginatedOptions): Promise<BaseItems<Consumer>> {
+		const pagination = paginate(options);
+		const [consumers, totalResults] = await Promise.all([
+			this.repository.find({}, { filters: { [SOFT_DELETABLE_FILTER]: false }, limit: pagination.limit, offset: pagination.offset }),
+			this.repository.count({}, { filters: { [SOFT_DELETABLE_FILTER]: false } })
+		]);
+
+		return {
+			items: consumers,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / pagination.limit),
+			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: consumers.length
+		};
+	}
+
+	public async findByIdWithDeletedAtAndAddress(id: number): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false }, populate: ['addresses'] });
 		return consumer;
 	}
 }

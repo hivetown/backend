@@ -59,6 +59,11 @@ export class ProductionUnitGateway {
 		await this.repository.removeAndFlush(productionUnit);
 	}
 
+	public async update(productionUnit: ProductionUnit): Promise<ProductionUnit> {
+		await this.repository.persistAndFlush(productionUnit);
+		return productionUnit;
+	}
+
 	public async findAllFromProductSpec(specId: number, producerId: number): Promise<ProductionUnit[]> {
 		const productionUnits = await this.repository.find(
 			{

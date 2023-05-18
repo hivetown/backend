@@ -299,6 +299,16 @@
 					"primary": false,
 					"nullable": true,
 					"mappedType": "integer"
+				},
+				"deleted_at": {
+					"name": "deleted_at",
+					"type": "datetime",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"length": 0,
+					"mappedType": "datetime"
 				}
 			},
 			"name": "user",
@@ -399,6 +409,16 @@
 					"primary": false,
 					"nullable": false,
 					"mappedType": "integer"
+				},
+				"deleted_at": {
+					"name": "deleted_at",
+					"type": "datetime",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"length": 0,
+					"mappedType": "datetime"
 				}
 			},
 			"name": "consumer",

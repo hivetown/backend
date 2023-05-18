@@ -140,4 +140,9 @@ export class ProducerProductGateway {
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
 		return { items: producerProducts, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
+
+	public async update(ProducerProduct: ProducerProduct): Promise<ProducerProduct> {
+		await this.repository.persistAndFlush(ProducerProduct);
+		return ProducerProduct;
+	}
 }
