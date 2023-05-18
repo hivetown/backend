@@ -123,7 +123,7 @@ export class OrderGateway {
 
 	public async findByConsumerIdPopulated(consumerId: number): Promise<Order[]> {
 		const orders = await this.repository.find(
-			{ consumer: consumerId },
+			{ consumer: { user: consumerId } },
 			{
 				populate: ['items', 'items.shipment', 'items.shipment.events', 'items.shipment.events.status']
 			}

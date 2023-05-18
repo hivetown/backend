@@ -122,7 +122,7 @@ export class OrderItemGateway {
 
 	public async findByProducerIdPopulated(producerId: number): Promise<OrderItem[]> {
 		const products = await this.repository.find(
-			{ producerProduct: { producer: producerId } },
+			{ producerProduct: { producer: { user: producerId } } },
 			{
 				populate: ['shipment', 'shipment.events', 'shipment.events.status']
 			}

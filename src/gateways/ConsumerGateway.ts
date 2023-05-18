@@ -55,7 +55,7 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithAddress(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { populate: ['addresses'] });
+		const consumer = await this.repository.findOne({ user: id }, { populate: ['addresses'] });
 		return consumer;
 	}
 
@@ -64,7 +64,7 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithDeletedAt(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false } });
+		const consumer = await this.repository.findOne({ user: id }, { filters: { [SOFT_DELETABLE_FILTER]: false } });
 		return consumer;
 	}
 
@@ -85,7 +85,7 @@ export class ConsumerGateway {
 	}
 
 	public async findByIdWithDeletedAtAndAddress(id: number): Promise<Consumer | null> {
-		const consumer = await this.repository.findOne(id, { filters: { [SOFT_DELETABLE_FILTER]: false }, populate: ['addresses'] });
+		const consumer = await this.repository.findOne({ user: id }, { filters: { [SOFT_DELETABLE_FILTER]: false }, populate: ['addresses'] });
 		return consumer;
 	}
 }
