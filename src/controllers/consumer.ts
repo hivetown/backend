@@ -25,6 +25,7 @@ import { hasPermissions } from '../utils/hasPermission';
 import { calcularDistancia } from '../utils/calculateDistance';
 import { filterOrderItemsByDate } from '../utils/filterReportDate';
 import { handleReportEvolution } from '../utils/handleReportEvolution';
+import { handleReportProducts } from '../utils/handleReportProducts';
 
 @Controller('/consumers')
 @Injectable()
@@ -878,6 +879,70 @@ export class ConsumerController {
 		const retorno = handleReportEvolution(resultado, opcao);
 
 		res.status(200).json(retorno);
+	}
+
+	@Get('/:consumerId/orders/report/products', [
+		validate({
+			params: Joi.object({
+				consumerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required(),
+				numeroEncomendas: Joi.boolean().optional(),
+				totalProdutos: Joi.boolean().optional(),
+				comprasTotais: Joi.boolean().optional(),
+				numeroProdutosEncomendados: Joi.boolean().optional()
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
+		}),
+		authenticationMiddleware
+	])
+	public async reportProducts(@Response() res: Express.Response, @Params('consumerId') consumerId: number, @Request() req: Express.Request) {
+		const consumer = await container.consumerGateway.findById(consumerId);
+		if (!consumer) throw new NotFoundError('Consumer not found');
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		let resultado: any[] = [];
+		const orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.order.getOrderDate() };
+		});
+
+		// console.log(orderItemsWithDate);
+
+		// filtrar pelas datas
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
+
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia < Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						resultado = handleReportProducts(resultado, orderItem, opcao);
+					}
+				} else {
+					resultado = handleReportProducts(resultado, orderItem, opcao);
+				}
+			}
+		}
+
+		res.status(200).json(resultado);
 	}
 
 	@Get('/:consumerId/orders/:orderId', [
