@@ -23,6 +23,25 @@ export class OrderItemGateway {
 		return orderIds;
 	}
 
+	public async findOrdersByProducerPopulated(producerId: number): Promise<OrderItem[]> {
+		const orderIds = await this.repository.find(
+			{ producerProduct: { producer: { user: producerId } } },
+			{
+				populate: [
+					'producerProduct.productionUnit.address',
+					'order.shippingAddress',
+					'producerProduct.productSpec',
+					'producerProduct.productSpec.categories',
+					'producerProduct.productSpec.categories.category',
+					'shipment.events.status',
+					'order.items'
+				]
+			}
+		);
+
+		return orderIds;
+	}
+
 	public async findOrderByProducerAndOrderId(producerId: number, orderId: number): Promise<OrderItem | null> {
 		const orderItem = await this.repository.findOne({ order: orderId, producerProduct: { producer: { user: producerId } } });
 		return orderItem;

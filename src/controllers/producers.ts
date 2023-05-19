@@ -17,6 +17,8 @@ import { throwError } from '../utils/throw';
 import { ForbiddenError } from '../errors/ForbiddenError';
 import { Authentication } from '../external/Authentication';
 import { hasPermissions } from '../utils/hasPermission';
+import { filterOrderItemsByDate } from '../utils/filterReportDate';
+import { calcularDistancia } from '../utils/calculateDistance';
 
 @Controller('/producers')
 @Injectable()
@@ -412,6 +414,82 @@ export class ProducersController {
 
 		const orders = await container.orderGateway.findByIds(ordersId, options);
 		return res.status(200).json(orders);
+	}
+
+	@Get('/:producerId/orders/report/flashcards', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async reportFlashcards(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const encomendas: number[] = [];
+		let totalProdutos = 0;
+		let comprasTotais = 0;
+		const produtosEncomendados = [];
+
+		const orderItems = await container.orderItemGateway.findOrdersByProducerPopulated(producerId);
+		console.log(orderItems.length);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			// console.log(orderItem.order.id, orderItem.producerProduct.id);
+			return { orderItem, date: orderItem.getFirstDate() };
+		});
+		// console.log(orderItemsWithDate);
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia <= Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						encomendas.push(orderItem.order.id);
+						totalProdutos += orderItem.quantity;
+						comprasTotais += orderItem.quantity * orderItem.price;
+						produtosEncomendados.push(orderItem);
+					}
+				} else {
+					encomendas.push(orderItem.order.id);
+					totalProdutos += orderItem.quantity;
+					comprasTotais += orderItem.quantity * orderItem.price;
+					produtosEncomendados.push(orderItem);
+				}
+			}
+		}
+
+		const numeroEncomendas = [...new Set(encomendas)].length;
+		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
+
+		res.status(200).json({
+			numeroEncomendas,
+			totalProdutos,
+			comprasTotais,
+			numeroProdutosEncomendados
+		});
 	}
 
 	@Get('/:producerId/orders/:orderId', [
