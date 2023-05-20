@@ -25,4 +25,12 @@ export class Notification {
 	public get message(): string {
 		return `${this.templateMessage.replaceAll('{actor}', this.actor.name)}`;
 	}
+
+	public static create(actor: User, notifier: User, templateMessage: string): Notification {
+		const notification = new Notification();
+		notification.actor = actor;
+		notification.notifier = notifier;
+		notification.templateMessage = templateMessage;
+		return notification;
+	}
 }

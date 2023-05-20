@@ -3,7 +3,6 @@ import { Address } from './Address';
 import { Shipment } from './Shipment';
 import { ShipmentStatus } from '../enums/ShipmentStatus';
 import type { NotificableEntity } from '../interfaces/NotificationableEntity';
-import type { User } from './User';
 
 @Entity()
 export class ShipmentEvent implements NotificableEntity {
@@ -30,19 +29,18 @@ export class ShipmentEvent implements NotificableEntity {
 		return this;
 	}
 
-	// TODO populate address!!
-	public makeMessage(actor: User): string {
+	public makeMessage(): string {
 		switch (this.status) {
 			case ShipmentStatus.Paid:
-				return `Your shipment from ${actor.name} was paid`;
+				return `Your shipment from {actor} was paid`;
 			case ShipmentStatus.Processing:
-				return `Your shipment from ${actor.name}is being processed in ${this.address.getShortAddress()}`;
+				return `Your shipment from {actor} is being processed in ${this.address.getShortAddress()}`;
 			case ShipmentStatus.Shipped:
-				return `Your shipment from ${actor.name} is in ${this.address.getShortAddress()}`;
+				return `Your shipment from {actor} is in ${this.address.getShortAddress()}`;
 			case ShipmentStatus.Delivered:
-				return `Your shipment from ${actor.name} was delivered to ${this.address.getFullAddress()}`;
+				return `Your shipment from {actor} was delivered to ${this.address.getFullAddress()}`;
 			case ShipmentStatus.Canceled:
-				return `Your shipment from ${actor.name} was canceled`;
+				return `Your shipment from {actor} was canceled`;
 		}
 	}
 }

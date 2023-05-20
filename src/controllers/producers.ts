@@ -4,7 +4,7 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Producer, ProducerProduct, ProductionUnit, ShipmentEvent, User } from '../entities';
+import { Notification, Producer, ProducerProduct, ProductionUnit, ShipmentEvent, User } from '../entities';
 import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
@@ -644,8 +644,10 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 
+		const order = await container.orderGateway.findById(orderId);
+		if (!order) throw new NotFoundError('Order not found');
+
 		const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
-		// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
 		if (!orderItems.totalItems) throw new NotFoundError('Order not found');
 
 		const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProductWithShipment(
@@ -663,6 +665,10 @@ export class ProducersController {
 
 		const newEvent = new ShipmentEvent().create(orderItem.shipment, status, address);
 		orderItem.shipment.events.add(newEvent);
+
+		// Create notification
+		const notification = Notification.create(order.consumer.user, producer.user, newEvent.makeMessage());
+		await container.notificationGateway.create(notification);
 
 		await container.shipmentGateway.update(orderItem.shipment);
 
