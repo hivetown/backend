@@ -5,7 +5,10 @@ export function handleReportProducts(atual: any[], orderItem: OrderItem, opcao: 
 
 	if (obj) {
 		if (opcao === 'numeroEncomendas') {
-			obj.numeroEncomendas++;
+			if (!obj.encomendas.includes(orderItem.order.id)) {
+				obj.numeroEncomendas++;
+				obj.encomendas.push(orderItem.order.id);
+			}
 		} else if (opcao === 'totalProdutos') {
 			obj.totalProdutos += orderItem.quantity;
 		} else if (opcao === 'comprasTotais') {
@@ -14,7 +17,12 @@ export function handleReportProducts(atual: any[], orderItem: OrderItem, opcao: 
 			obj.vendasTotais += orderItem.quantity * orderItem.price;
 		}
 	} else if (opcao === 'numeroEncomendas') {
-		atual.push({ id: orderItem.producerProduct.id, nome: orderItem.producerProduct.productSpec.name, numeroEncomendas: 1 });
+		atual.push({
+			id: orderItem.producerProduct.id,
+			nome: orderItem.producerProduct.productSpec.name,
+			numeroEncomendas: 1,
+			encomendas: [orderItem.order.id]
+		});
 	} else if (opcao === 'totalProdutos') {
 		atual.push({ id: orderItem.producerProduct.id, nome: orderItem.producerProduct.productSpec.name, totalProdutos: orderItem.quantity });
 	} else if (opcao === 'comprasTotais') {
