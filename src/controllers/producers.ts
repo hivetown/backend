@@ -471,13 +471,13 @@ export class ProducersController {
 						encomendas.push(orderItem.order.id);
 						totalProdutos += orderItem.quantity;
 						comprasTotais += orderItem.quantity * orderItem.price;
-						produtosEncomendados.push(orderItem);
+						produtosEncomendados.push(orderItem.producerProduct.id);
 					}
 				} else {
 					encomendas.push(orderItem.order.id);
 					totalProdutos += orderItem.quantity;
 					comprasTotais += orderItem.quantity * orderItem.price;
-					produtosEncomendados.push(orderItem);
+					produtosEncomendados.push(orderItem.producerProduct.id);
 				}
 			}
 		}
