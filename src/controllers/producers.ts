@@ -21,6 +21,7 @@ import { filterOrderItemsByDate } from '../utils/filterReportDate';
 import { calcularDistancia } from '../utils/calculateDistance';
 import { handleReportEvolution } from '../utils/handleReportEvolution';
 import { handleReportProducts } from '../utils/handleReportProducts';
+import { handleReportClients } from '../utils/handleReportClients';
 
 @Controller('/producers')
 @Injectable()
@@ -676,6 +677,70 @@ export class ProducersController {
 					}
 				} else {
 					resultado = handleReportProducts(resultado, orderItem, opcao);
+				}
+			}
+		}
+
+		res.status(200).json(resultado);
+	}
+
+	@Get('/:producerId/orders/report/clients', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required(),
+				numeroEncomendas: Joi.boolean().optional(),
+				totalProdutos: Joi.boolean().optional(),
+				comprasTotais: Joi.boolean().optional(),
+				numeroProdutosEncomendados: Joi.boolean().optional()
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
+		}),
+		authenticationMiddleware
+	])
+	public async reportClients(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const orderItems = await container.orderItemGateway.findOrdersByProducerPopulated(producerId);
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.getFirstDate() };
+		});
+
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+
+		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
+
+		let resultado: any[] = [];
+
+		for (const oi of orderItemsWithDate) {
+			// console.log(oi.orderItem.order.consumer);
+			const { orderItem } = oi;
+			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
+			const enderecoConsumidor = orderItem.order.shippingAddress;
+			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+
+			if (distancia <= Number(req.query.raio)) {
+				if (category) {
+					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
+					const isCategoryPresent = categoryIds.includes(category.id);
+					if (isCategoryPresent) {
+						resultado = handleReportClients(resultado, orderItem, opcao);
+					}
+				} else {
+					resultado = handleReportClients(resultado, orderItem, opcao);
 				}
 			}
 		}

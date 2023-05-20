@@ -34,7 +34,9 @@ export class OrderItemGateway {
 					'producerProduct.productSpec.categories',
 					'producerProduct.productSpec.categories.category',
 					'shipment.events.status',
-					'order.items'
+					'order.items',
+					'order.consumer',
+					'order.consumer.user'
 				]
 			}
 		);
