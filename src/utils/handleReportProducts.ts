@@ -5,17 +5,13 @@ export function handleReportProducts(atual: any[], orderItem: OrderItem, opcao: 
 
 	if (obj) {
 		if (opcao === 'numeroEncomendas') {
-			console.log('obj antes', obj);
 			obj.numeroEncomendas++;
-			console.log('obj depois', obj);
 		} else if (opcao === 'totalProdutos') {
-			console.log('obj antes', obj);
 			obj.totalProdutos += orderItem.quantity;
-			console.log('obj depois', obj);
 		} else if (opcao === 'comprasTotais') {
-			console.log('obj antes', obj);
 			obj.comprasTotais += orderItem.quantity * orderItem.price;
-			console.log('obj depois', obj);
+		} else if (opcao === 'vendasTotais') {
+			obj.vendasTotais += orderItem.quantity * orderItem.price;
 		}
 	} else if (opcao === 'numeroEncomendas') {
 		atual.push({ id: orderItem.producerProduct.id, nome: orderItem.producerProduct.productSpec.name, numeroEncomendas: 1 });
@@ -26,6 +22,12 @@ export function handleReportProducts(atual: any[], orderItem: OrderItem, opcao: 
 			id: orderItem.producerProduct.id,
 			nome: orderItem.producerProduct.productSpec.name,
 			comprasTotais: orderItem.quantity * orderItem.price
+		});
+	} else if (opcao === 'vendasTotais') {
+		atual.push({
+			id: orderItem.producerProduct.id,
+			nome: orderItem.producerProduct.productSpec.name,
+			vendasTotais: orderItem.quantity * orderItem.price
 		});
 	}
 
