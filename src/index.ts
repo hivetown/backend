@@ -36,6 +36,7 @@ import { NotificationController } from './controllers/notifications';
 
 // ENV
 import { config } from 'dotenv-cra';
+import { Email } from './external/Email';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 config();
 
@@ -43,6 +44,7 @@ export const container = {} as {
 	server: http.Server;
 	orm: MikroORM;
 	em: EntityManager;
+	email: Email;
 	addressGateway: AddressGateway;
 	producerGateway: ProducerGateway;
 	producerProductGateway: ProducerProductGateway;
@@ -68,6 +70,7 @@ const port = Number(process.env.PORT) || 3000;
 export const main = async () => {
 	container.orm = await MikroORM.init<MySqlDriver>();
 	container.em = container.orm.em;
+	container.email = new Email(process.env.EMAIL_FROM!, { user: process.env.EMAIL_USER!, pass: process.env.EMAIL_PASSWORD! });
 	container.addressGateway = new AddressGateway(container.orm);
 	container.producerGateway = new ProducerGateway(container.orm);
 	container.producerProductGateway = new ProducerProductGateway(container.orm);
