@@ -41,4 +41,16 @@ export class Address {
 
 	@ManyToOne({ hidden: true })
 	public consumer?: Consumer;
+
+	@Property({ persist: false })
+	public getFullAddress(): string {
+		return `${this.street}, ${this.number} ${this.floor}${` - ${this.door}`}, ${this.zipCode} ${this.parish}, ${this.county}, ${this.city}, ${
+			this.district
+		}`;
+	}
+
+	@Property({ persist: false })
+	public getShortAddress(): string {
+		return `${this.parish}, ${this.county}, ${this.city}`;
+	}
 }

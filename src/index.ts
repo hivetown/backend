@@ -22,7 +22,8 @@ import {
 	ProductionUnitGateway,
 	ShipmentGateway,
 	CarrierGateway,
-	UserGateway
+	UserGateway,
+	NotificationGateway
 } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
@@ -31,6 +32,7 @@ import { ConsumerController } from './controllers/consumer';
 import { ProducersController } from './controllers/producers';
 import { AuthController } from './controllers/auth';
 import { WebhookController } from './controllers/webhook';
+import { NotificationController } from './controllers/notifications';
 
 // ENV
 import { config } from 'dotenv-cra';
@@ -49,6 +51,7 @@ export const container = {} as {
 	productSpecGatway: ProductSpecGateway;
 	fieldGateway: FieldGateway;
 	consumerGateway: ConsumerGateway;
+	notificationGateway: NotificationGateway;
 	orderGateway: OrderGateway;
 	orderItemGateway: OrderItemGateway;
 	productSpecFieldGateway: ProductSpecFieldGateway;
@@ -73,6 +76,7 @@ export const main = async () => {
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
 	container.fieldGateway = new FieldGateway(container.orm);
 	container.consumerGateway = new ConsumerGateway(container.orm);
+	container.notificationGateway = new NotificationGateway(container.orm);
 	container.orderGateway = new OrderGateway(container.orm);
 	container.orderItemGateway = new OrderItemGateway(container.orm);
 	container.productSpecFieldGateway = new ProductSpecFieldGateway(container.orm);
@@ -96,8 +100,15 @@ export const main = async () => {
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
-	await attachControllers(app, [ProductsController, CategoryController, ConsumerController, WebhookController]);
-	await attachControllers(app, [AuthController, ProductsController, CategoryController, ConsumerController, ProducersController]);
+	await attachControllers(app, [
+		AuthController,
+		ProductsController,
+		CategoryController,
+		ConsumerController,
+		NotificationController,
+		ProducersController,
+		WebhookController
+	]);
 
 	app.use('/', (_req, res) => {
 		res.status(200).send('Hello Hivetown!');
