@@ -445,7 +445,7 @@ export class ProducersController {
 
 		const encomendas: number[] = [];
 		let totalProdutos = 0;
-		let comprasTotais = 0;
+		let vendasTotais = 0;
 		const produtosEncomendados = [];
 
 		const orderItems = await container.orderItemGateway.findOrdersByProducerPopulated(producerId);
@@ -472,13 +472,13 @@ export class ProducersController {
 					if (isCategoryPresent) {
 						encomendas.push(orderItem.order.id);
 						totalProdutos += orderItem.quantity;
-						comprasTotais += orderItem.quantity * orderItem.price;
+						vendasTotais += orderItem.quantity * orderItem.price;
 						produtosEncomendados.push(orderItem.producerProduct.id);
 					}
 				} else {
 					encomendas.push(orderItem.order.id);
 					totalProdutos += orderItem.quantity;
-					comprasTotais += orderItem.quantity * orderItem.price;
+					vendasTotais += orderItem.quantity * orderItem.price;
 					produtosEncomendados.push(orderItem.producerProduct.id);
 				}
 			}
@@ -490,7 +490,7 @@ export class ProducersController {
 		res.status(200).json({
 			numeroEncomendas,
 			totalProdutos,
-			comprasTotais,
+			vendasTotais,
 			numeroProdutosEncomendados
 		});
 	}
