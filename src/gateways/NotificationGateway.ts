@@ -45,7 +45,7 @@ export class NotificationGateway {
 	}
 
 	public async findById(id: number): Promise<Notification | null> {
-		return this.repository.findOne(id);
+		return this.repository.findOne(id, { populate: ['actor', 'actor.image'] });
 	}
 
 	public async delete(notification: Notification): Promise<void> {

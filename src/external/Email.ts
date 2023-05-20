@@ -33,7 +33,7 @@ export class Email {
 				margin-bottom: 2rem;
 				border-top: 1px solid #ccc;
 				padding-top: 1rem;">
-				<img style="width: 50px" src="/logo.svg" />
+				<img style="width: 50px" src="https://cdn.discordapp.com/attachments/1075406296293056612/1109617659663880324/logo.svg" />
 				<span style="margin-left: 10px">Sent with ❤️ from HiveTown</span>
 			</div>
 			</body>
