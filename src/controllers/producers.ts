@@ -39,8 +39,18 @@ export class ProducersController {
 		data.type = UserType.Producer;
 
 		try {
-			const user = await container.producerGateway.create({ user: data } as Producer);
-			return res.status(201).json(user);
+			await container.producerGateway.create({ user: data } as Producer);
+			const producer = (await container.producerGateway.findByAuthId(req.authUser!.uid))!;
+
+			const notification = await Notification.create(
+				producer.user,
+				producer.user,
+				`Welcome to Hivetown!`,
+				`We're so thrilled to have you here!`
+			);
+			await container.notificationGateway.create(notification);
+
+			return res.status(201).json(producer);
 		} catch (error) {
 			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Producer already exists');
 			throw error;
@@ -113,6 +123,14 @@ export class ProducersController {
 
 		await Authentication.updateUserStatus(true, producer.user);
 
+		const notification = await Notification.create(
+			producer.user,
+			producer.user,
+			'Bye-bye HiveTown',
+			`We're sad to see you go :(\nYour account has been disabled. If you think this is a mistake, please contact us.`
+		);
+		await container.notificationGateway.create(notification);
+
 		res.status(204).json();
 	}
 
@@ -124,7 +142,8 @@ export class ProducersController {
 			body: Joi.object({
 				name: Joi.string().required(),
 				email: Joi.string().email().required(),
-				phone: Joi.string().required()
+				phone: Joi.string().required(),
+				disableEmails: Joi.boolean().optional()
 			}),
 			query: Joi.object({
 				includeAll: Joi.boolean().optional()
@@ -155,6 +174,7 @@ export class ProducersController {
 		producer.user.name = req.body.name;
 		producer.user.email = req.body.email;
 		producer.user.phone = req.body.phone;
+		producer.user.disableEmails = Boolean(req.body.disableEmails);
 
 		await container.producerGateway.update(producer);
 
@@ -221,6 +241,14 @@ export class ProducersController {
 			producerProduct.deletedAt = undefined;
 			await container.producerProductGateway.update(producerProduct);
 		}
+
+		const notification = await Notification.create(
+			producer.user,
+			producer.user,
+			'Welcome back to HiveTown!',
+			`We're really glad to see you back! :)`
+		);
+		await container.notificationGateway.create(notification);
 
 		res.status(201).json(producer);
 	}
@@ -667,7 +695,7 @@ export class ProducersController {
 		orderItem.shipment.events.add(newEvent);
 
 		// Create notification
-		const notification = Notification.create(order.consumer.user, producer.user, newEvent.makeMessage());
+		const notification = await Notification.create(order.consumer.user, producer.user, `Hivetown Shipment Update!`, newEvent.makeMessage());
 		await container.notificationGateway.create(notification);
 
 		await container.shipmentGateway.update(orderItem.shipment);

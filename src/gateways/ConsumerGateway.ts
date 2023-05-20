@@ -14,12 +14,18 @@ export class ConsumerGateway {
 
 	public async create(consumer: Consumer): Promise<Consumer> {
 		const data = this.repository.create(consumer);
+		console.log(data);
 		await this.repository.persistAndFlush(data);
 		return consumer;
 	}
 
 	public async findById(id: number): Promise<Consumer | null> {
 		const consumer = await this.repository.findOne({ user: id }, { populate: ['user.role'] });
+		return consumer;
+	}
+
+	public async findByAuthId(authId: string): Promise<Consumer | null> {
+		const consumer = await this.repository.findOne({ user: { authId } }, { populate: ['user.role'] });
 		return consumer;
 	}
 

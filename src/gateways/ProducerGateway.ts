@@ -44,6 +44,11 @@ export class ProducerGateway {
 		return this.repository.findOne({ user: id }, { populate: options?.populate as any });
 	}
 
+	public async findByAuthId(authId: string): Promise<Producer | null> {
+		const consumer = await this.repository.findOne({ user: { authId } }, { populate: ['user.role'] });
+		return consumer;
+	}
+
 	public async findFromProductSpecId(id: number, options: PaginatedOptions): Promise<BaseItems<Producer>> {
 		const pagination = paginate(options);
 		const [producers, totalResults] = await Promise.all([
