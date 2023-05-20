@@ -7,8 +7,8 @@ export function handleReportEvolution(orderItems: any[], opcao: string) {
 	// para o numeroEncomendas
 	const encomendas: any[] = [];
 	const totalProdutos: any[] = [];
-	const comprasTotais: any[] = [];
 	const produtosEncomendados: any[] = [];
+	const totais: any[] = [];
 
 	if (opcao === 'numeroEncomendas') {
 		for (const oi of orderItems) {
@@ -24,21 +24,21 @@ export function handleReportEvolution(orderItems: any[], opcao: string) {
 		}
 
 		resultado = agrupaValor(totalProdutos);
-	} else if (opcao === 'comprasTotais') {
+	} else if (opcao === 'comprasTotais' || opcao === 'vendasTotais') {
 		for (const oi of orderItems) {
-			comprasTotais.push({ valor: oi.orderItem.quantity * oi.orderItem.price, date: oi.date });
+			totais.push({ valor: oi.orderItem.quantity * oi.orderItem.price, date: oi.date });
 		}
 
-		resultado = agrupaValor(comprasTotais);
+		resultado = agrupaValor(totais);
 	} else if (opcao === 'numeroProdutosEncomendados') {
 		for (const oi of orderItems) {
-			produtosEncomendados.push({ orderId: oi.orderItem.producerProduct.id, date: oi.date });
+			produtosEncomendados.push({ producerProductId: oi.orderItem.producerProduct.id, date: oi.date });
 		}
-
+		// console.log('produtos não filtrados', produtosEncomendados);
 		const produtosFiltrados = produtosEncomendados.filter(
-			(produto, index, self) => self.findIndex((t) => t.orderId === produto.orderId) === index
+			(produto, index, self) => self.findIndex((t) => t.producerProductId === produto.producerProductId) === index
 		);
-
+		// console.log('produtosFiltrados', produtosFiltrados);
 		resultado = agrupaConta(produtosFiltrados);
 	}
 
