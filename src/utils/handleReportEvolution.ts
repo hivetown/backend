@@ -1,48 +1,85 @@
+import { ShipmentStatus } from '../enums';
+
 export function handleReportEvolution(orderItems: any[], opcao: string) {
 	// console.log('orderItems', orderItems);
 	// console.log('opcao', opcao);
 
 	let resultado;
+	let cancelados;
 
 	// para o numeroEncomendas
 	const encomendas: any[] = [];
+	const encomendasCanceladas: any[] = [];
 	const totalProdutos: any[] = [];
+	const totalProdutosCancelados: any[] = [];
 	const produtosEncomendados: any[] = [];
+	const produtosEncomendadosCancelados: any[] = [];
 	const totais: any[] = [];
+	const totaisCancelados: any[] = [];
 
 	if (opcao === 'numeroEncomendas') {
 		for (const oi of orderItems) {
 			encomendas.push({ orderId: oi.orderItem.order.id, date: oi.date });
+
+			if (oi.orderItem.getActualStatus() === ShipmentStatus.Canceled) {
+				encomendasCanceladas.push({ orderId: oi.orderItem.order.id, date: oi.date });
+			}
 		}
 
 		const encomendasFiltradas = encomendas.filter((encomenda, index, self) => self.findIndex((t) => t.orderId === encomenda.orderId) === index);
+		const encomendasCanceladasFiltradas = encomendasCanceladas.filter(
+			(encomenda, index, self) => self.findIndex((t) => t.orderId === encomenda.orderId) === index
+		);
 
 		resultado = agrupaConta(encomendasFiltradas);
+		cancelados = agrupaConta(encomendasCanceladasFiltradas);
 	} else if (opcao === 'totalProdutos') {
 		for (const oi of orderItems) {
 			totalProdutos.push({ valor: oi.orderItem.quantity, date: oi.date });
+
+			if (oi.orderItem.getActualStatus() === ShipmentStatus.Canceled) {
+				totalProdutosCancelados.push({ valor: oi.orderItem.quantity, date: oi.date });
+			}
 		}
 
 		resultado = agrupaValor(totalProdutos);
+		cancelados = agrupaValor(totalProdutosCancelados);
 	} else if (opcao === 'comprasTotais' || opcao === 'vendasTotais') {
 		for (const oi of orderItems) {
 			totais.push({ valor: oi.orderItem.quantity * oi.orderItem.price, date: oi.date });
+
+			if (oi.orderItem.getActualStatus() === ShipmentStatus.Canceled) {
+				totaisCancelados.push({ valor: oi.orderItem.quantity * oi.orderItem.price, date: oi.date });
+			}
 		}
 
 		resultado = agrupaValor(totais);
+		cancelados = agrupaValor(totaisCancelados);
 	} else if (opcao === 'numeroProdutosEncomendados') {
 		for (const oi of orderItems) {
 			produtosEncomendados.push({ producerProductId: oi.orderItem.producerProduct.id, date: oi.date });
+
+			if (oi.orderItem.getActualStatus() === ShipmentStatus.Canceled) {
+				produtosEncomendadosCancelados.push({ producerProductId: oi.orderItem.producerProduct.id, date: oi.date });
+			}
 		}
 		// console.log('produtos não filtrados', produtosEncomendados);
 		const produtosFiltrados = produtosEncomendados.filter(
 			(produto, index, self) => self.findIndex((t) => t.producerProductId === produto.producerProductId) === index
 		);
-		// console.log('produtosFiltrados', produtosFiltrados);
+
+		const produtosCanceladosFiltrados = produtosEncomendadosCancelados.filter(
+			(produto, index, self) => self.findIndex((t) => t.producerProductId === produto.producerProductId) === index
+		);
+
 		resultado = agrupaConta(produtosFiltrados);
+		cancelados = agrupaConta(produtosCanceladosFiltrados);
 	}
 
-	return ordena(resultado);
+	const resultadoOrdenado = ordena(resultado);
+	const canceladosOrdenado = ordena(cancelados);
+
+	return { resultadoOrdenado, canceladosOrdenado };
 }
 
 function agrupaConta(encomendasFiltradas: any) {
