@@ -108,6 +108,7 @@ export class ReportsController {
 		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
 		const numeroEncomendasCanceladas = [...new Set(encomendasCanceladas)].length;
 		const numeroProdutosEncomendadosCancelados = [...new Set(produtosEncomendadosCancelados)].length;
+		console.log(encomendasCanceladas);
 
 		if (tipo === 'Consumer') {
 			res.status(200).json({

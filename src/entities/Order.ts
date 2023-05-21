@@ -47,6 +47,10 @@ export class Order {
 		for (let i = 0; i < its.length; i++) {
 			statuses[i] = its[i].getActualStatus();
 		}
+
+		if (statuses.includes(ShipmentStatus.Canceled)) {
+			return ShipmentStatus[ShipmentStatus.Canceled];
+		}
 		return ShipmentStatus[Math.min(...statuses)];
 	}
 
@@ -55,6 +59,10 @@ export class Order {
 		const statuses: number[] = new Array(its.length);
 		for (let i = 0; i < its.length; i++) {
 			statuses[i] = its[i].getActualStatus();
+		}
+
+		if (statuses.includes(ShipmentStatus.Canceled)) {
+			return ShipmentStatus[ShipmentStatus.Canceled];
 		}
 		return ShipmentStatus[Math.min(...statuses)];
 	}
