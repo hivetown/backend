@@ -4,7 +4,7 @@ import * as Express from 'express';
 import { container } from '..';
 import { authenticationMiddleware } from '../middlewares';
 import { NotFoundError } from '../errors/NotFoundError';
-import { UserType } from '../enums';
+import { ShipmentStatus, UserType } from '../enums';
 import { Joi, validate } from 'express-validation';
 import { filterOrderItemsByDate } from '../utils/filterReportDate';
 import { calcularDistancia } from '../utils/calculateDistance';
@@ -46,6 +46,10 @@ export class ReportsController {
 		let totalProdutos = 0;
 		let valorTotal = 0; // vai ser ou compras totais ou vendas totais
 		const produtosEncomendados = [];
+		const encomendasCanceladas: number[] = [];
+		let totalProdutosCancelados = 0;
+		let valorTotalCancelado = 0;
+		const produtosEncomendadosCancelados = [];
 
 		let orderItems;
 		if (tipo === 'Consumer') {
@@ -77,32 +81,55 @@ export class ReportsController {
 						totalProdutos += orderItem.quantity;
 						valorTotal += orderItem.quantity * orderItem.price;
 						produtosEncomendados.push(orderItem.producerProduct.id);
+						if (orderItem.getActualStatus() === ShipmentStatus.Canceled) {
+							encomendasCanceladas.push(orderItem.order.id);
+							totalProdutosCancelados += orderItem.quantity;
+							valorTotalCancelado += orderItem.quantity * orderItem.price;
+							produtosEncomendadosCancelados.push(orderItem.producerProduct.id);
+						}
 					}
 				} else {
 					encomendas.push(orderItem.order.id);
 					totalProdutos += orderItem.quantity;
 					valorTotal += orderItem.quantity * orderItem.price;
 					produtosEncomendados.push(orderItem.producerProduct.id);
+
+					if (orderItem.getActualStatus() === ShipmentStatus.Canceled) {
+						encomendasCanceladas.push(orderItem.order.id);
+						totalProdutosCancelados += orderItem.quantity;
+						valorTotalCancelado += orderItem.quantity * orderItem.price;
+						produtosEncomendadosCancelados.push(orderItem.producerProduct.id);
+					}
 				}
 			}
 		}
 
 		const numeroEncomendas = [...new Set(encomendas)].length;
 		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
+		const numeroEncomendasCanceladas = [...new Set(encomendasCanceladas)].length;
+		const numeroProdutosEncomendadosCancelados = [...new Set(produtosEncomendadosCancelados)].length;
 
 		if (tipo === 'Consumer') {
 			res.status(200).json({
 				numeroEncomendas,
+				numeroEncomendasCanceladas,
 				totalProdutos,
+				totalProdutosCancelados,
 				comprasTotais: valorTotal,
-				numeroProdutosEncomendados
+				comprasTotaisCanceladas: valorTotalCancelado,
+				numeroProdutosEncomendados,
+				numeroProdutosEncomendadosCancelados
 			});
 		} else {
 			res.status(200).json({
 				numeroEncomendas,
+				numeroEncomendasCanceladas,
 				totalProdutos,
+				totalProdutosCancelados,
 				vendasTotais: valorTotal,
-				numeroProdutosEncomendados
+				vendasTotaisCanceladas: valorTotalCancelado,
+				numeroProdutosEncomendados,
+				numeroProdutosEncomendadosCancelados
 			});
 		}
 	}
