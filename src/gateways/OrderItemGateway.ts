@@ -36,7 +36,8 @@ export class OrderItemGateway {
 					'shipment.events.status',
 					'order.items',
 					'order.consumer',
-					'order.consumer.user'
+					'order.consumer.user',
+					'order.items.shipment.events.status'
 				]
 			}
 		);
