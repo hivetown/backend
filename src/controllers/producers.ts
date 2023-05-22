@@ -17,6 +17,8 @@ import { throwError } from '../utils/throw';
 import { ForbiddenError } from '../errors/ForbiddenError';
 import { Authentication } from '../external/Authentication';
 import { hasPermissions } from '../utils/hasPermission';
+import type { ProductionUnitFilters } from '../interfaces/ProductionUnitFilters';
+import { StringSearchType } from '../enums/StringSearchType';
 
 @Controller('/producers')
 @Injectable()
@@ -671,7 +673,12 @@ export class ProducersController {
 
 	@Get('/:producerId/units', [
 		validate({
-			params: Joi.object({ producerId: Joi.number().required() })
+			params: Joi.object({ producerId: Joi.number().required() }),
+			query: Joi.object({
+				search: Joi.string().optional(),
+				page: Joi.number().min(1).optional(),
+				pageSize: Joi.number().min(1).optional()
+			})
 		})
 	])
 	public async getUnits(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
@@ -683,7 +690,10 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const units = await container.productionUnitGateway.findFromProducer(producer.user.id, options);
+		const filter: ProductionUnitFilters = { producerId: producer.user.id };
+		if (req.query.search) filter.search = { type: StringSearchType.CONTAINS, value: req.query.search as string };
+
+		const units = await container.productionUnitGateway.findFromProducer(filter, options);
 		return res.status(200).json(units);
 	}
 
