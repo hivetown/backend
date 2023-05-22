@@ -1,8 +1,9 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
-import { Order } from '../entities';
+import { Order, ShipmentEvent } from '../entities';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import type { BaseItems } from '../interfaces/BaseItems';
 import { paginate } from '../utils/paginate';
+import { container } from '..';
 
 export class OrderGateway {
 	private repository: EntityRepository<Order>;
@@ -136,49 +137,32 @@ export class OrderGateway {
 	}
 
 	//  ------------------------------ 	  CONTAS PARA O ADMIN 	--------------------------------------------
-	public async getFlashCardsInformation(dataInicio: string, dataFim: string, distancia: number, categoryId: number): Promise<any> {
-		let qb;
-		if (categoryId === 0) {
-			qb = this.repository
-				.createQueryBuilder('o')
-				.select([
-					'COUNT(DISTINCT oi.order_id) as numeroEncomendas',
-					'SUM(oi.quantity) as totalProdutos',
-					'SUM(oi.quantity * oi.price) as comprasTotais',
-					'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados'
-				])
-				.join('o.shippingAddress', 'sa')
-				.join('o.items', 'oi')
-				.join('oi.producerProduct', 'pp')
-				.join('pp.productionUnit', 'pu')
-				.join('pu.address', 'pa')
-				.join('oi.shipment', 's')
-				.join('s.events', 'se')
-				.where(
-					`se.date BETWEEN '${dataInicio}' AND '${dataFim}' and ( 2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(sa.latitude)) / 2), 2) + COS(RADIANS(sa.latitude)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(sa.longitude)) / 2), 2)) ) )<= ${distancia}`
-				);
-		} else {
-			qb = this.repository
-				.createQueryBuilder('o')
-				.select([
-					'COUNT(DISTINCT oi.order_id) as numeroEncomendas',
-					'SUM(oi.quantity) as totalProdutos',
-					'SUM(oi.quantity * oi.price) as comprasTotais',
-					'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados'
-				])
-				.join('o.shippingAddress', 'sa')
-				.join('o.items', 'oi')
-				.join('oi.producerProduct', 'pp')
-				.join('pp.productSpec', 'ps')
-				.join('ps.categories', 'psc')
-				.join('pp.productionUnit', 'pu')
-				.join('pu.address', 'pa')
-				.join('oi.shipment', 's')
-				.join('s.events', 'se')
-				.where(
-					`se.date BETWEEN '${dataInicio}' AND '${dataFim}' and psc.category_id = ${categoryId} and ( 2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(sa.latitude)) / 2), 2) + COS(RADIANS(sa.latitude)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(sa.longitude)) / 2), 2)) ) )<= ${distancia}`
-				);
-		}
+	public async getFlashCardsInformation(dataInicio: string, dataFim: string, distancia: number, categoryId?: number): Promise<any> {
+		console.log(categoryId);
+		const innerQb = container.em
+			.createQueryBuilder(ShipmentEvent, 'se_sub')
+			.where('oi.shipment_id = se_sub.shipment_id')
+			.andWhere('se_sub.date BETWEEN ? AND ?', [dataInicio, dataFim])
+			.limit(1);
+
+		const qb = this.repository
+			.createQueryBuilder('o')
+			.select([
+				'COUNT(DISTINCT oi.order_id) as numeroEncomendas',
+				'SUM(oi.quantity) as totalProdutos',
+				'SUM(oi.quantity * oi.price) as comprasTotais',
+				'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados'
+			])
+			.leftJoin('o.shippingAddress', 'sa')
+			.leftJoin('o.items', 'oi')
+			.leftJoin('oi.producerProduct', 'pp')
+			.leftJoin('pp.productionUnit', 'pu')
+			.leftJoin('pu.address', 'pa')
+			.where(innerQb.getKnex())
+			.andWhere(
+				`(2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(sa.latitude)) / 2), 2) + COS(RADIANS(sa.latitude)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(sa.longitude)) / 2), 2)) ) ) <= ?`,
+				[distancia]
+			);
 
 		const result = await qb.execute();
 		return result[0];

@@ -29,7 +29,7 @@ export class ReportsController {
 	])
 	public async reportFlashcardsAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
 		let category = null;
-		let categoryId = 0;
+		let categoryId: number | undefined;
 		if (req.query.categoryId) {
 			category = await container.categoryGateway.findById(Number(req.query.categoryId));
 			if (!category) throw new NotFoundError('Category not found');
