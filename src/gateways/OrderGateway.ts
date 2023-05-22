@@ -134,4 +134,53 @@ export class OrderGateway {
 	public async numberOfOrders(): Promise<number> {
 		return this.repository.count();
 	}
+
+	//  ------------------------------ 	  CONTAS PARA O ADMIN 	--------------------------------------------
+	public async getFlashCardsInformation(dataInicio: string, dataFim: string, distancia: number, categoryId: number): Promise<any> {
+		let qb;
+		if (categoryId === 0) {
+			qb = this.repository
+				.createQueryBuilder('o')
+				.select([
+					'COUNT(DISTINCT oi.order_id) as numeroEncomendas',
+					'SUM(oi.quantity) as totalProdutos',
+					'SUM(oi.quantity * oi.price) as comprasTotais',
+					'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados'
+				])
+				.join('o.shippingAddress', 'sa')
+				.join('o.items', 'oi')
+				.join('oi.producerProduct', 'pp')
+				.join('pp.productionUnit', 'pu')
+				.join('pu.address', 'pa')
+				.join('oi.shipment', 's')
+				.join('s.events', 'se')
+				.where(
+					`se.date BETWEEN '${dataInicio}' AND '${dataFim}' and ( 2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(sa.latitude)) / 2), 2) + COS(RADIANS(sa.latitude)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(sa.longitude)) / 2), 2)) ) )<= ${distancia}`
+				);
+		} else {
+			qb = this.repository
+				.createQueryBuilder('o')
+				.select([
+					'COUNT(DISTINCT oi.order_id) as numeroEncomendas',
+					'SUM(oi.quantity) as totalProdutos',
+					'SUM(oi.quantity * oi.price) as comprasTotais',
+					'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados'
+				])
+				.join('o.shippingAddress', 'sa')
+				.join('o.items', 'oi')
+				.join('oi.producerProduct', 'pp')
+				.join('pp.productSpec', 'ps')
+				.join('ps.categories', 'psc')
+				.join('pp.productionUnit', 'pu')
+				.join('pu.address', 'pa')
+				.join('oi.shipment', 's')
+				.join('s.events', 'se')
+				.where(
+					`se.date BETWEEN '${dataInicio}' AND '${dataFim}' and psc.category_id = ${categoryId} and ( 2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(sa.latitude)) / 2), 2) + COS(RADIANS(sa.latitude)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(sa.longitude)) / 2), 2)) ) )<= ${distancia}`
+				);
+		}
+
+		const result = await qb.execute();
+		return result[0];
+	}
 }

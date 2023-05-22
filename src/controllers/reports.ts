@@ -30,12 +30,21 @@ export class ReportsController {
 	])
 	public async reportFlashcardsAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
 		let category = null;
+		let categoryId = 0;
 		if (req.query.categoryId) {
 			category = await container.categoryGateway.findById(Number(req.query.categoryId));
 			if (!category) throw new NotFoundError('Category not found');
+			categoryId = category.id;
 		}
 
-		res.status(200).json({});
+		const result = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			categoryId
+		);
+
+		res.status(200).json(result);
 	}
 
 	@Get('/:userId/flashcards', [

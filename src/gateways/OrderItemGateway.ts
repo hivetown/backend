@@ -171,9 +171,40 @@ export class OrderItemGateway {
 		return orderItems;
 	}
 
-	public async findAllAdmin() {
-		return this.repository.find({});
+	public async findAllAdmin(distancia: number, dataInicio: Date, dataFim: Date): Promise<OrderItem[]> {
+		const orderItems = await this.repository
+			.createQueryBuilder('orderItem')
+			.select(['orderItem.orderId', 'orderItem.producerProduct'])
+			.leftJoinAndSelect('orderItem.producerProduct', 'producerProduct')
+			.leftJoinAndSelect('producerProduct.productionUnit', 'productionUnit')
+			.leftJoinAndSelect('productionUnit.address', 'address')
+			.leftJoinAndSelect('orderItem.order', 'order')
+			.leftJoinAndSelect('order.shippingAddress', 'shippingAddress')
+			.leftJoinAndSelect('producerProduct.productSpec', 'productSpec')
+			.leftJoinAndSelect('productSpec.categories', 'categories')
+			.leftJoinAndSelect('categories.category', 'category')
+			.leftJoinAndSelect('orderItem.shipment', 'shipment')
+			.leftJoinAndSelect('shipment.events', 'events')
+			.leftJoinAndSelect('order.items', 'items')
+			.leftJoinAndSelect('items.shipment', 'itemShipment')
+			.where(
+				` events.date BETWEEN '${dataInicio}' and '${dataFim}' and
+					(2 * 6371 * ASIN(
+							SQRT(
+								POWER(SIN((RADIANS(address.latitude) - RADIANS(shippingAddress.latitude)) / 2), 2) +
+								COS(RADIANS(shippingAddress.latitude)) * COS(RADIANS(address.latitude)) *
+								POWER(SIN((RADIANS(address.longitude) - RADIANS(shippingAddress.longitude)) / 2), 2)
+			)
+		)) <= ${distancia}`
+			)
+			.getResultList();
+
+		// await this.repository.populate(orderItems, ['shipment', 'shipment.events', 'shipment.events.status']);
+
+		return orderItems;
 	}
+
+	// ------------------------------ 	  CONTAS PARA O CONSUMIDOR 	--------------------------------------------
 
 	public async findAllByConsumerIdNovo(consumerId: number, distancia: number): Promise<OrderItem[]> {
 		const orderItems = await this.repository
@@ -235,6 +266,8 @@ export class OrderItemGateway {
 		await this.repository.populate(orderItems, ['shipment', 'shipment.events', 'shipment.events.status']);
 		return orderItems;
 	}
+
+	// ------------------------------ 	  CONTAS PARA O PRODUTOR 	--------------------------------------------
 
 	public async findAllByProducerIdCategory(producerId: number, distancia: number, categoryId: number): Promise<OrderItem[]> {
 		const orderItems = await this.repository
