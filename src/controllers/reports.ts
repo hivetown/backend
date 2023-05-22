@@ -12,10 +12,32 @@ import { handleReportEvolution } from '../utils/handleReportEvolution';
 import { handleReportProducts } from '../utils/handleReportProducts';
 import { handleReportClients } from '../utils/handleReportClients';
 import { BadRequestError } from '../errors/BadRequestError';
+import type { OrderItem } from '../entities';
 
 @Controller('/reports')
 @Injectable()
 export class ReportsController {
+	@Get('/admin/flashcards', [
+		validate({
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async reportFlashcardsAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		res.status(200).json({});
+	}
+
 	@Get('/:userId/flashcards', [
 		validate({
 			params: Joi.object({
@@ -71,7 +93,6 @@ export class ReportsController {
 			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
 			const enderecoConsumidor = orderItem.order.shippingAddress;
 			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
-
 			if (distancia <= Number(req.query.raio)) {
 				if (category) {
 					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
@@ -108,7 +129,7 @@ export class ReportsController {
 		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
 		const numeroEncomendasCanceladas = [...new Set(encomendasCanceladas)].length;
 		const numeroProdutosEncomendadosCancelados = [...new Set(produtosEncomendadosCancelados)].length;
-		console.log(encomendasCanceladas);
+		// console.log(encomendasCanceladas);
 
 		if (tipo === 'Consumer') {
 			res.status(200).json({
@@ -434,5 +455,110 @@ export class ReportsController {
 		}
 
 		res.status(200).json(resultado);
+	}
+
+	@Get('/:userId/test', [
+		validate({
+			params: Joi.object({
+				userId: Joi.number().integer().min(1)
+			}),
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async reportTest(@Response() res: Express.Response, @Request() req: Express.Request, @Params('userId') userId: number) {
+		const user = await container.userGateway.findById(userId);
+		if (!user) throw new NotFoundError('User not found');
+
+		const tipo = user.type === UserType.Consumer ? 'Consumer' : 'Producer';
+
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		let orderItems: OrderItem[];
+		if (tipo === 'Consumer') {
+			if (req.query.categoryId) {
+				orderItems = await container.orderItemGateway.findAllByConsumerIdNovoCategory(
+					userId,
+					Number(req.query.raio),
+					Number(req.query.categoryId)
+				);
+			} else {
+				orderItems = await container.orderItemGateway.findAllByConsumerIdNovo(userId, Number(req.query.raio));
+			}
+		} else if (req.query.categoryId) {
+			orderItems = await container.orderItemGateway.findAllByProducerIdCategory(userId, Number(req.query.raio), Number(req.query.categoryId));
+		} else {
+			orderItems = await container.orderItemGateway.findAllByProducerId(userId, Number(req.query.raio));
+		}
+
+		let orderItemsWithDate = orderItems.map((orderItem) => {
+			return { orderItem, date: orderItem.getFirstDate() };
+		});
+
+		if (req.query.dataInicio && req.query.dataFim) {
+			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
+		}
+
+		const encomendas: number[] = [];
+		let totalProdutos = 0;
+		let valorTotal = 0; // vai ser ou compras totais ou vendas totais
+		const produtosEncomendados = [];
+		const encomendasCanceladas: number[] = [];
+		let totalProdutosCancelados = 0;
+		let valorTotalCancelado = 0;
+		const produtosEncomendadosCancelados = [];
+
+		for (const oi of orderItemsWithDate) {
+			const { orderItem } = oi;
+			encomendas.push(orderItem.order.id);
+			totalProdutos += orderItem.quantity;
+			valorTotal += orderItem.quantity * orderItem.price;
+			produtosEncomendados.push(orderItem.producerProduct.id);
+
+			if (orderItem.getActualStatus() === ShipmentStatus.Canceled) {
+				encomendasCanceladas.push(orderItem.order.id);
+				totalProdutosCancelados += orderItem.quantity;
+				valorTotalCancelado += orderItem.quantity * orderItem.price;
+				produtosEncomendadosCancelados.push(orderItem.producerProduct.id);
+			}
+		}
+
+		const numeroEncomendas = [...new Set(encomendas)].length;
+		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
+		const numeroEncomendasCanceladas = [...new Set(encomendasCanceladas)].length;
+		const numeroProdutosEncomendadosCancelados = [...new Set(produtosEncomendadosCancelados)].length;
+
+		if (tipo === 'Consumer') {
+			res.status(200).json({
+				numeroEncomendas,
+				numeroEncomendasCanceladas,
+				totalProdutos,
+				totalProdutosCancelados,
+				comprasTotais: valorTotal,
+				comprasTotaisCanceladas: valorTotalCancelado,
+				numeroProdutosEncomendados,
+				numeroProdutosEncomendadosCancelados
+			});
+		} else {
+			res.status(200).json({
+				numeroEncomendas,
+				numeroEncomendasCanceladas,
+				totalProdutos,
+				totalProdutosCancelados,
+				vendasTotais: valorTotal,
+				vendasTotaisCanceladas: valorTotalCancelado,
+				numeroProdutosEncomendados,
+				numeroProdutosEncomendadosCancelados
+			});
+		}
 	}
 }

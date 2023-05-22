@@ -130,4 +130,8 @@ export class OrderGateway {
 		);
 		return orders;
 	}
+
+	public async numberOfOrders(): Promise<number> {
+		return this.repository.count();
+	}
 }

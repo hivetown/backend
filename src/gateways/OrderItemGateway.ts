@@ -170,4 +170,129 @@ export class OrderItemGateway {
 		);
 		return orderItems;
 	}
+
+	public async findAllAdmin() {
+		return this.repository.find({});
+	}
+
+	public async findAllByConsumerIdNovo(consumerId: number, distancia: number): Promise<OrderItem[]> {
+		const orderItems = await this.repository
+			.createQueryBuilder('orderItem')
+			.leftJoinAndSelect('orderItem.producerProduct', 'producerProduct')
+			.leftJoinAndSelect('producerProduct.productionUnit', 'productionUnit')
+			.leftJoinAndSelect('productionUnit.address', 'address')
+			.leftJoinAndSelect('orderItem.order', 'order')
+			.leftJoinAndSelect('order.shippingAddress', 'shippingAddress')
+			.leftJoinAndSelect('producerProduct.productSpec', 'productSpec')
+			.leftJoinAndSelect('productSpec.categories', 'categories')
+			.leftJoinAndSelect('categories.category', 'category')
+			.leftJoinAndSelect('orderItem.shipment', 'shipment')
+			.leftJoinAndSelect('shipment.events', 'events')
+			.leftJoinAndSelect('order.items', 'items')
+			.leftJoinAndSelect('items.shipment', 'itemShipment')
+			.where(
+				`order.consumer_id = ${consumerId} and (2 * 6371 * ASIN(
+					SQRT(
+						POWER(SIN((RADIANS(address.latitude) - RADIANS(shippingAddress.latitude)) / 2), 2) +
+						COS(RADIANS(shippingAddress.latitude)) * COS(RADIANS(address.latitude)) *
+						POWER(SIN((RADIANS(address.longitude) - RADIANS(shippingAddress.longitude)) / 2), 2)
+					)
+				)) <= ${distancia}`
+			)
+			.getResultList();
+
+		await this.repository.populate(orderItems, ['shipment', 'shipment.events', 'shipment.events.status']);
+
+		return orderItems;
+	}
+
+	public async findAllByConsumerIdNovoCategory(consumerId: number, distancia: number, categoryId: number): Promise<OrderItem[]> {
+		const orderItems = await this.repository
+			.createQueryBuilder('orderItem')
+			.leftJoinAndSelect('orderItem.producerProduct', 'producerProduct')
+			.leftJoinAndSelect('producerProduct.productionUnit', 'productionUnit')
+			.leftJoinAndSelect('productionUnit.address', 'address')
+			.leftJoinAndSelect('orderItem.order', 'order')
+			.leftJoinAndSelect('order.shippingAddress', 'shippingAddress')
+			.leftJoinAndSelect('producerProduct.productSpec', 'productSpec')
+			.leftJoinAndSelect('productSpec.categories', 'categories')
+			.leftJoinAndSelect('categories.category', 'category')
+			.leftJoinAndSelect('orderItem.shipment', 'shipment')
+			.leftJoinAndSelect('shipment.events', 'events')
+			.leftJoinAndSelect('order.items', 'items')
+			.leftJoinAndSelect('items.shipment', 'itemShipment')
+			.where(
+				`order.consumer_id = ${consumerId} and (2 * 6371 * ASIN(
+					SQRT(
+						POWER(SIN((RADIANS(address.latitude) - RADIANS(shippingAddress.latitude)) / 2), 2) +
+						COS(RADIANS(shippingAddress.latitude)) * COS(RADIANS(address.latitude)) *
+						POWER(SIN((RADIANS(address.longitude) - RADIANS(shippingAddress.longitude)) / 2), 2)
+					)
+				)) <= ${distancia} and ${categoryId} in (categories.category_id)`
+			)
+			.getResultList();
+
+		await this.repository.populate(orderItems, ['shipment', 'shipment.events', 'shipment.events.status']);
+		return orderItems;
+	}
+
+	public async findAllByProducerIdCategory(producerId: number, distancia: number, categoryId: number): Promise<OrderItem[]> {
+		const orderItems = await this.repository
+			.createQueryBuilder('orderItem')
+			.leftJoinAndSelect('orderItem.producerProduct', 'producerProduct')
+			.leftJoinAndSelect('producerProduct.productionUnit', 'productionUnit')
+			.leftJoinAndSelect('productionUnit.address', 'address')
+			.leftJoinAndSelect('orderItem.order', 'order')
+			.leftJoinAndSelect('order.shippingAddress', 'shippingAddress')
+			.leftJoinAndSelect('producerProduct.productSpec', 'productSpec')
+			.leftJoinAndSelect('productSpec.categories', 'categories')
+			.leftJoinAndSelect('categories.category', 'category')
+			.leftJoinAndSelect('orderItem.shipment', 'shipment')
+			.leftJoinAndSelect('shipment.events', 'events')
+			.leftJoinAndSelect('order.items', 'items')
+			.leftJoinAndSelect('items.shipment', 'itemShipment')
+			.leftJoinAndSelect('producerProduct.producer', 'producer')
+			.where(
+				`producer.id = ${producerId} and (2 * 6371 * ASIN(
+					SQRT(
+						POWER(SIN((RADIANS(address.latitude) - RADIANS(shippingAddress.latitude)) / 2), 2) +
+						COS(RADIANS(shippingAddress.latitude)) * COS(RADIANS(address.latitude)) *
+						POWER(SIN((RADIANS(address.longitude) - RADIANS(shippingAddress.longitude)) / 2), 2)
+					)
+				)) <= ${distancia} and ${categoryId} in (categories.category_id)`
+			)
+			.getResultList();
+		await this.repository.populate(orderItems, ['shipment', 'shipment.events', 'shipment.events.status']);
+		return orderItems;
+	}
+
+	public async findAllByProducerId(producerId: number, distancia: number): Promise<OrderItem[]> {
+		const orderItems = await this.repository
+			.createQueryBuilder('orderItem')
+			.leftJoinAndSelect('orderItem.producerProduct', 'producerProduct')
+			.leftJoinAndSelect('producerProduct.productionUnit', 'productionUnit')
+			.leftJoinAndSelect('productionUnit.address', 'address')
+			.leftJoinAndSelect('orderItem.order', 'order')
+			.leftJoinAndSelect('order.shippingAddress', 'shippingAddress')
+			.leftJoinAndSelect('producerProduct.productSpec', 'productSpec')
+			.leftJoinAndSelect('productSpec.categories', 'categories')
+			.leftJoinAndSelect('categories.category', 'category')
+			.leftJoinAndSelect('orderItem.shipment', 'shipment')
+			.leftJoinAndSelect('shipment.events', 'events')
+			.leftJoinAndSelect('order.items', 'items')
+			.leftJoinAndSelect('items.shipment', 'itemShipment')
+			.leftJoinAndSelect('producerProduct.producer', 'producer')
+			.where(
+				`producer.id = ${producerId} and (2 * 6371 * ASIN(
+					SQRT(
+						POWER(SIN((RADIANS(address.latitude) - RADIANS(shippingAddress.latitude)) / 2), 2) +
+						COS(RADIANS(shippingAddress.latitude)) * COS(RADIANS(address.latitude)) *
+						POWER(SIN((RADIANS(address.longitude) - RADIANS(shippingAddress.longitude)) / 2), 2)
+					)
+				)) <= ${distancia}`
+			)
+			.getResultList();
+		await this.repository.populate(orderItems, ['shipment', 'shipment.events', 'shipment.events.status']);
+		return orderItems;
+	}
 }
