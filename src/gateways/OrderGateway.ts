@@ -1,9 +1,8 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
-import { Order, ShipmentEvent } from '../entities';
+import { Order } from '../entities';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import type { BaseItems } from '../interfaces/BaseItems';
 import { paginate } from '../utils/paginate';
-import { container } from '..';
 
 export class OrderGateway {
 	private repository: EntityRepository<Order>;
@@ -139,32 +138,52 @@ export class OrderGateway {
 	//  ------------------------------ 	  CONTAS PARA O ADMIN 	--------------------------------------------
 	public async getFlashCardsInformation(dataInicio: string, dataFim: string, distancia: number, categoryId?: number): Promise<any> {
 		console.log(categoryId);
-		const innerQb = container.em
-			.createQueryBuilder(ShipmentEvent, 'se_sub')
-			.where('oi.shipment_id = se_sub.shipment_id')
-			.andWhere('se_sub.date BETWEEN ? AND ?', [dataInicio, dataFim])
-			.limit(1);
 
 		const qb = this.repository
 			.createQueryBuilder('o')
 			.select([
 				'COUNT(DISTINCT oi.order_id) as numeroEncomendas',
-				'SUM(oi.quantity) as totalProdutos',
-				'SUM(oi.quantity * oi.price) as comprasTotais',
+				'IFNULL(SUM(oi.quantity), 0) as totalProdutos',
+				'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotais',
 				'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados'
 			])
 			.leftJoin('o.shippingAddress', 'sa')
 			.leftJoin('o.items', 'oi')
 			.leftJoin('oi.producerProduct', 'pp')
 			.leftJoin('pp.productionUnit', 'pu')
-			.leftJoin('pu.address', 'pa')
-			.where(innerQb.getKnex())
+			.leftJoin('pu.address', 'pa');
+
+		if (categoryId) {
+			void qb.leftJoin('pp.productSpec', 'ps').leftJoin('ps.categories', 'psc').andWhere('psc.category_id = ?', [categoryId]);
+		}
+
+		void qb
+			.andWhere(
+				`(SELECT se_sub.date
+				FROM shipment s_sub
+						LEFT JOIN shipment_event se_sub on s_sub.id = se_sub.shipment_id
+				WHERE se_sub.id = oi.shipment_id
+				ORDER BY se_sub.date ASC
+				LIMIT 1) BETWEEN ? AND ?`,
+				[dataInicio, dataFim]
+			)
 			.andWhere(
 				`(2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(sa.latitude)) / 2), 2) + COS(RADIANS(sa.latitude)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(sa.longitude)) / 2), 2)) ) ) <= ?`,
 				[distancia]
 			);
 
-		const result = await qb.execute();
-		return result[0];
+		const result = (await qb.execute())[0] as unknown as {
+			numeroEncomendas: string;
+			totalProdutos: string;
+			comprasTotais: string;
+			numeroProdutosEncomendados: string;
+		};
+
+		return {
+			...result,
+			// Sums may return null if there are no orders, but we IFNULL them to 0. Still, they may come as strings
+			totalProdutos: parseInt(result.totalProdutos, 10),
+			comprasTotais: parseFloat(result.comprasTotais)
+		};
 	}
 }
