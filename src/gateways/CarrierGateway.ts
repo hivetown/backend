@@ -69,4 +69,8 @@ export class CarrierGateway {
 		await this.repository.persistAndFlush(carrier);
 		return carrier;
 	}
+
+	public async delete(carrier: Carrier): Promise<void> {
+		await this.repository.removeAndFlush(carrier);
+	}
 }

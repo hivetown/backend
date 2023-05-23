@@ -1146,4 +1146,44 @@ export class ProducersController {
 
 		return res.status(200).json(carrier);
 	}
+
+	@Delete('/:producerId/carriers/:carrierId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				carrierId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async deleteCarrierOfProducer(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('carrierId') carrierId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
+		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		if (carrier.status === CarrierStatus.Unavailable) throw new ForbiddenError('Carrier is unavailable so it cannot be deleted');
+
+		await container.carrierGateway.delete(carrier);
+
+		return res.status(204).send();
+	}
 }
