@@ -32,4 +32,36 @@ export class CarrierGateway {
 			pageSize: carriers.length
 		};
 	}
+
+	public async findAllByProducerId(producerId: number, options: PaginatedOptions): Promise<BaseItems<Carrier>> {
+		const paginataion = paginate(options);
+		const [carriers, totalResults] = await Promise.all([
+			this.repository.find(
+				{ productionUnit: { producer: { user: producerId } } },
+				{
+					populate: ['productionUnit'],
+					limit: paginataion.limit,
+					offset: paginataion.offset
+				}
+			),
+			this.repository.count({ productionUnit: { producer: { user: producerId } } })
+		]);
+
+		return {
+			items: carriers,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / paginataion.limit),
+			page: Math.ceil(paginataion.offset / paginataion.limit) + 1,
+			pageSize: carriers.length
+		};
+	}
+
+	public async findOneOfProducer(producerId: number, carrierId: number): Promise<Carrier | null> {
+		const carrier = await this.repository.findOne(
+			{ productionUnit: { producer: { user: producerId } }, id: carrierId },
+			{ populate: ['productionUnit', 'productionUnit.address'] }
+		);
+
+		return carrier;
+	}
 }

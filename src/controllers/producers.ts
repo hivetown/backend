@@ -967,4 +967,79 @@ export class ProducersController {
 
 		return res.status(201).json(shipment);
 	}
+
+	@Get('/:producerId/carriers', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1).optional(),
+				pageSize: Joi.number().min(1).optional()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async getCarriersOfProducer(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const carriers = await container.carrierGateway.findAllByProducerId(producer.user.id, options);
+
+		return res.status(200).json(carriers);
+	}
+
+	@Get('/:producerId/carriers/:carrierId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				carrierId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async getCarrierOfProducer(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('carrierId') carrierId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
+		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		return res.status(200).json(carrier);
+	}
 }
