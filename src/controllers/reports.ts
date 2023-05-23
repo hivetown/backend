@@ -4,7 +4,7 @@ import * as Express from 'express';
 import { container } from '..';
 import { authenticationMiddleware } from '../middlewares';
 import { NotFoundError } from '../errors/NotFoundError';
-import { ShipmentStatus, UserType } from '../enums';
+import { UserType } from '../enums';
 import { Joi, validate } from 'express-validation';
 import { filterOrderItemsByDate } from '../utils/filterReportDate';
 import { calcularDistancia } from '../utils/calculateDistance';
@@ -40,10 +40,27 @@ export class ReportsController {
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
+			'flashcards',
 			categoryId
 		);
 
-		res.status(200).json(result);
+		const resultCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			categoryId
+		);
+
+		res.status(200).json({
+			numeroEncomendas: result.numeroEncomendas,
+			numeroEncomendasCanceladas: resultCancelados.numeroEncomendasCanceladas,
+			totalProdutos: result.totalProdutos,
+			totalProdutosCancelados: resultCancelados.totalProdutosCancelados,
+			comprasTotais: result.comprasTotais,
+			comprasTotaisCanceladas: resultCancelados.comprasTotaisCanceladas,
+			numeroProdutosEncomendados: result.numeroProdutosEncomendados,
+			numeroProdutosEncomendadosCancelados: resultCancelados.numeroProdutosEncomendadosCancelados
+		});
 	}
 
 	@Get('/:userId/flashcards', [
@@ -72,94 +89,46 @@ export class ReportsController {
 			if (!category) throw new NotFoundError('Category not found');
 		}
 
-		const encomendas: number[] = [];
-		let totalProdutos = 0;
-		let valorTotal = 0; // vai ser ou compras totais ou vendas totais
-		const produtosEncomendados = [];
-		const encomendasCanceladas: number[] = [];
-		let totalProdutosCancelados = 0;
-		let valorTotalCancelado = 0;
-		const produtosEncomendadosCancelados = [];
-
-		let orderItems;
-		if (tipo === 'Consumer') {
-			orderItems = await container.orderItemGateway.findAllByConsumerId(consumerId);
-		} else {
-			orderItems = await container.orderItemGateway.findOrdersByProducerPopulated(consumerId);
-		}
-
-		let orderItemsWithDate = orderItems.map((orderItem) => {
-			return { orderItem, date: orderItem.getFirstDate() };
-		});
-
-		if (req.query.dataInicio && req.query.dataFim) {
-			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
-		}
-
-		for (const oi of orderItemsWithDate) {
-			const { orderItem } = oi;
-			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
-			const enderecoConsumidor = orderItem.order.shippingAddress;
-			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
-			if (distancia <= Number(req.query.raio)) {
-				if (category) {
-					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
-					const isCategoryPresent = categoryIds.includes(category.id);
-					if (isCategoryPresent) {
-						encomendas.push(orderItem.order.id);
-						totalProdutos += orderItem.quantity;
-						valorTotal += orderItem.quantity * orderItem.price;
-						produtosEncomendados.push(orderItem.producerProduct.id);
-						if (orderItem.getActualStatus() === ShipmentStatus.Canceled) {
-							encomendasCanceladas.push(orderItem.order.id);
-							totalProdutosCancelados += orderItem.quantity;
-							valorTotalCancelado += orderItem.quantity * orderItem.price;
-							produtosEncomendadosCancelados.push(orderItem.producerProduct.id);
-						}
-					}
-				} else {
-					encomendas.push(orderItem.order.id);
-					totalProdutos += orderItem.quantity;
-					valorTotal += orderItem.quantity * orderItem.price;
-					produtosEncomendados.push(orderItem.producerProduct.id);
-
-					if (orderItem.getActualStatus() === ShipmentStatus.Canceled) {
-						encomendasCanceladas.push(orderItem.order.id);
-						totalProdutosCancelados += orderItem.quantity;
-						valorTotalCancelado += orderItem.quantity * orderItem.price;
-						produtosEncomendadosCancelados.push(orderItem.producerProduct.id);
-					}
-				}
-			}
-		}
-
-		const numeroEncomendas = [...new Set(encomendas)].length;
-		const numeroProdutosEncomendados = [...new Set(produtosEncomendados)].length;
-		const numeroEncomendasCanceladas = [...new Set(encomendasCanceladas)].length;
-		const numeroProdutosEncomendadosCancelados = [...new Set(produtosEncomendadosCancelados)].length;
-		// console.log(encomendasCanceladas);
+		const resultado = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'flashcards',
+			category?.id,
+			tipo === 'Consumer' ? user.id : undefined,
+			tipo === 'Producer' ? user.id : undefined
+		);
+		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			// 'flashcards',
+			category?.id,
+			tipo === 'Consumer' ? user.id : undefined,
+			tipo === 'Producer' ? user.id : undefined
+		);
 
 		if (tipo === 'Consumer') {
 			res.status(200).json({
-				numeroEncomendas,
-				numeroEncomendasCanceladas,
-				totalProdutos,
-				totalProdutosCancelados,
-				comprasTotais: valorTotal,
-				comprasTotaisCanceladas: valorTotalCancelado,
-				numeroProdutosEncomendados,
-				numeroProdutosEncomendadosCancelados
+				numeroEncomendas: resultado.numeroEncomendas,
+				numeroEncomendasCanceladas: resultadoCancelados.numeroEncomendasCanceladas,
+				totalProdutos: resultado.totalProdutos,
+				totalProdutosCancelados: resultadoCancelados.totalProdutosCancelados,
+				comprasTotais: resultado.comprasTotais,
+				comprasTotaisCanceladas: resultadoCancelados.comprasTotaisCanceladas,
+				numeroProdutosEncomendados: resultado.numeroProdutosEncomendados,
+				numeroProdutosEncomendadosCancelados: resultadoCancelados.numeroProdutosEncomendadosCancelados
 			});
 		} else {
 			res.status(200).json({
-				numeroEncomendas,
-				numeroEncomendasCanceladas,
-				totalProdutos,
-				totalProdutosCancelados,
-				vendasTotais: valorTotal,
-				vendasTotaisCanceladas: valorTotalCancelado,
-				numeroProdutosEncomendados,
-				numeroProdutosEncomendadosCancelados
+				numeroEncomendas: resultado.numeroEncomendas,
+				numeroEncomendasCanceladas: resultadoCancelados.numeroEncomendasCanceladas,
+				totalProdutos: resultado.totalProdutos,
+				totalProdutosCancelados: resultadoCancelados.totalProdutosCancelados,
+				vendasTotais: resultado.comprasTotais,
+				vendasTotaisCanceladas: resultadoCancelados.comprasTotaisCanceladas,
+				numeroProdutosEncomendados: resultado.numeroProdutosEncomendados,
+				numeroProdutosEncomendadosCancelados: resultadoCancelados.numeroProdutosEncomendadosCancelados
 			});
 		}
 	}
@@ -189,6 +158,19 @@ export class ReportsController {
 			category = await container.categoryGateway.findById(Number(req.query.categoryId));
 			if (!category) throw new NotFoundError('Category not found');
 		}
+
+		const teste = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'map',
+			category?.id,
+			tipo === 'Consumer' ? user.id : undefined,
+			tipo === 'Producer' ? user.id : undefined
+		);
+
+		console.log(teste);
+		console.log(teste.length);
 
 		const resultado = [];
 		let orderItems = [];
