@@ -121,7 +121,7 @@ export class ProducerProductGateway {
 		}
 
 		// Calculate items count before grouping and paginating
-		const totalItems = await qb.clone().getCount();
+		const totalItemsQb = qb.clone();
 
 		// Paginate
 		void qb.offset(pagination.offset).limit(pagination.limit);
@@ -134,7 +134,7 @@ export class ProducerProductGateway {
 		}
 
 		// Fetch results and map them
-		const producerProducts = (await qb.execute()).map((raw: any) => ({ ...this.repository.map(raw) }));
+		const [totalItems, producerProducts] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
