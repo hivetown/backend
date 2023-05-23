@@ -1083,7 +1083,14 @@ export class ProducersController {
 		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
 		if (!carrier) throw new NotFoundError('Carrier not found');
 
-		return res.status(200).json(carrier);
+		return res.status(200).json({
+			id: carrier.id,
+			licensePlate: carrier.licensePlate,
+			status: carrier.status,
+			image: carrier.image,
+			productionUnit: carrier.productionUnit,
+			lastShipmentEvent: carrier.getLastShipmentEvent()
+		});
 	}
 
 	@Put('/:producerId/carriers/:carrierId', [

@@ -4,6 +4,7 @@ import { CarrierStatus } from '../enums/CarrierStatus';
 import { Shipment } from './Shipment';
 import type { Image } from './Image';
 import { SoftDeletable } from 'mikro-orm-soft-delete';
+import type { ShipmentEvent } from './ShipmentEvent';
 
 @SoftDeletable(() => Carrier, 'deletedAt', () => new Date())
 @Entity()
@@ -34,5 +35,16 @@ export class Carrier {
 		this.productionUnit = productionUnit;
 		this.image = image;
 		this.status = CarrierStatus.Available;
+	}
+
+	public getLastShipmentEvent(): ShipmentEvent | null {
+		if (this.shipments.length === 0) {
+			return null;
+		}
+		const lastShipment = this.shipments[this.shipments.length - 1];
+		if (lastShipment.events.length === 0) {
+			return null;
+		}
+		return lastShipment.getLastEvent();
 	}
 }

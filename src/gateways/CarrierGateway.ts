@@ -59,7 +59,7 @@ export class CarrierGateway {
 	public async findOneOfProducer(producerId: number, carrierId: number): Promise<Carrier | null> {
 		const carrier = await this.repository.findOne(
 			{ productionUnit: { producer: { user: producerId } }, id: carrierId },
-			{ populate: ['productionUnit', 'productionUnit.address'] }
+			{ populate: ['productionUnit', 'productionUnit.address', 'shipments.events', 'shipments.events.address'] }
 		);
 
 		return carrier;
