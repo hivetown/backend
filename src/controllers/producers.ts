@@ -1045,7 +1045,7 @@ export class ProducersController {
 		if (!productionUnit) throw new NotFoundError('Production unit not found');
 
 		const carrier = new Carrier(req.body.licensePlate, productionUnit, new Image(req.body.image.name, req.body.image.url, req.body.image.alt));
-		await container.carrierGateway.create(carrier);
+		await container.carrierGateway.createOrUpdate(carrier);
 
 		return res.status(201).json(carrier);
 	}
@@ -1082,6 +1082,60 @@ export class ProducersController {
 
 		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
 		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		return res.status(200).json(carrier);
+	}
+
+	@Put('/:producerId/carriers/:carrierId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				carrierId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				image: Joi.object({
+					name: Joi.string().required(),
+					url: Joi.string().required(),
+					alt: Joi.string().required()
+				}).required(),
+				productionUnitId: Joi.number().min(1).required(),
+				status: Joi.string().valid(CarrierStatus.Available, CarrierStatus.Unavailable).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async updateCarrierOfProducer(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('carrierId') carrierId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
+		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		const productionUnit = await container.productionUnitGateway.findOneFromProducer(producer.user.id, req.body.productionUnitId);
+		if (!productionUnit) throw new NotFoundError('Production unit not found');
+
+		carrier.image = new Image(req.body.image.name, req.body.image.url, req.body.image.alt);
+		carrier.productionUnit = productionUnit;
+		carrier.status = req.body.status;
+		await container.carrierGateway.createOrUpdate(carrier);
 
 		return res.status(200).json(carrier);
 	}
