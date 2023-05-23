@@ -101,7 +101,10 @@ export class ProducerProductGateway {
 		options?: ProducerProductOptions
 	): Promise<{ items: ProducerProduct[]; totalItems: number; totalPages: number; page: number; pageSize: number }> {
 		const pagination = paginate(options);
-		const qb: QueryBuilder<ProducerProduct> = this.repository.createQueryBuilder('producerProduct').select('*');
+		const qb: QueryBuilder<ProducerProduct> = this.repository
+			.createQueryBuilder('producerProduct')
+			.select('*')
+			.where('producerProduct.deleted_at is null');
 
 		if (filter?.producerId) {
 			void qb.leftJoin('producerProduct.producer', 'producer').andWhere({ 'producer.id': filter.producerId });
