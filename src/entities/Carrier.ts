@@ -3,7 +3,9 @@ import { ProductionUnit } from './ProductionUnit';
 import { CarrierStatus } from '../enums/CarrierStatus';
 import { Shipment } from './Shipment';
 import type { Image } from './Image';
+import { SoftDeletable } from 'mikro-orm-soft-delete';
 
+@SoftDeletable(() => Carrier, 'deletedAt', () => new Date())
 @Entity()
 export class Carrier {
 	@PrimaryKey()
@@ -23,4 +25,14 @@ export class Carrier {
 
 	@OneToOne({ eager: true })
 	public image?: Image;
+
+	@Property({ nullable: true })
+	public deletedAt?: Date;
+
+	public constructor(licensePlate: string, productionUnit: ProductionUnit, image: Image) {
+		this.licensePlate = licensePlate;
+		this.productionUnit = productionUnit;
+		this.image = image;
+		this.status = CarrierStatus.Available;
+	}
 }

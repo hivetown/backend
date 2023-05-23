@@ -4,7 +4,7 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Producer, ProducerProduct, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
+import { Carrier, Image, Producer, ProducerProduct, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
 import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
@@ -1005,6 +1005,49 @@ export class ProducersController {
 		const carriers = await container.carrierGateway.findAllByProducerId(producer.user.id, options);
 
 		return res.status(200).json(carriers);
+	}
+
+	@Post('/:producerId/carriers', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				licensePlate: Joi.string().required(),
+				image: Joi.object({
+					name: Joi.string().required(),
+					url: Joi.string().required(),
+					alt: Joi.string().required()
+				}).required(),
+				productionUnitId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async createCarrier(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findOneFromProducer(producer.user.id, req.body.productionUnitId);
+		if (!productionUnit) throw new NotFoundError('Production unit not found');
+
+		const carrier = new Carrier(req.body.licensePlate, productionUnit, new Image(req.body.image.name, req.body.image.url, req.body.image.alt));
+		await container.carrierGateway.create(carrier);
+
+		return res.status(201).json(carrier);
 	}
 
 	@Get('/:producerId/carriers/:carrierId', [

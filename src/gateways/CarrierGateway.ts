@@ -64,4 +64,9 @@ export class CarrierGateway {
 
 		return carrier;
 	}
+
+	public async create(carrier: Carrier): Promise<Carrier> {
+		await this.repository.persistAndFlush(carrier);
+		return carrier;
+	}
 }
