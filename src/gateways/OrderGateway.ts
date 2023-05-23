@@ -140,12 +140,12 @@ export class OrderGateway {
 		dataFim: string,
 		distancia: number,
 		opcao: string,
+		subopcao?: string,
 		categoryId?: number,
 		consumerId?: number,
 		producerId?: number
 	): Promise<any> {
 		const qb = this.repository.createQueryBuilder('o');
-
 		if (opcao === 'flashcards') {
 			void qb
 				.select([
@@ -158,14 +158,41 @@ export class OrderGateway {
 				.leftJoin('o.items', 'oi')
 				.leftJoin('oi.producerProduct', 'pp')
 				.leftJoin('pp.productionUnit', 'pu')
-				.leftJoin('pu.address', 'pa');
+				.leftJoin('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se');
 		} else if (opcao === 'map') {
 			void qb
 				.leftJoinAndSelect('o.shippingAddress', 'sa')
 				.leftJoin('o.items', 'oi')
 				.leftJoin('oi.producerProduct', 'pp')
 				.leftJoin('pp.productionUnit', 'pu')
-				.leftJoinAndSelect('pu.address', 'pa');
+				.leftJoinAndSelect('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se');
+		} else if (opcao === 'evolution') {
+			console.log('evolution');
+			if (subopcao === 'numeroEncomendas') {
+				console.log('numeroEncomendas');
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'COUNT(DISTINCT oi.order_id) as numeroEncomendas']);
+			} else if (subopcao === 'totalProdutos') {
+				console.log('totalProdutos');
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity), 0) as totalProdutos']);
+			} else if (subopcao === 'comprasTotais') {
+				console.log('comprasTotais');
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotais']);
+			} else if (subopcao === 'numeroProdutosEncomendados') {
+				console.log('numeroProdutosEncomendados');
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados']);
+			}
+			void qb
+				.leftJoin('o.shippingAddress', 'sa')
+				.leftJoin('o.items', 'oi')
+				.leftJoin('oi.producerProduct', 'pp')
+				.leftJoin('pp.productionUnit', 'pu')
+				.leftJoin('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se');
 		}
 
 		if (consumerId) {
@@ -181,19 +208,32 @@ export class OrderGateway {
 		}
 
 		void qb
+			// .andWhere(
+			// 	`(SELECT se_sub.date
+			// 	FROM shipment s_sub
+			// 			LEFT JOIN shipment_event se_sub on s_sub.id = se_sub.shipment_id
+			// 	WHERE se_sub.id = oi.shipment_id
+			// 	ORDER BY se_sub.date ASC
+			// 	LIMIT 1) BETWEEN ? AND ?`,
+			// 	[dataInicio, dataFim]
+			// )
 			.andWhere(
-				`(SELECT se_sub.date
-				FROM shipment s_sub
-						LEFT JOIN shipment_event se_sub on s_sub.id = se_sub.shipment_id
-				WHERE se_sub.id = oi.shipment_id
-				ORDER BY se_sub.date ASC
-				LIMIT 1) BETWEEN ? AND ?`,
+				`se.date =
+					(SELECT MIN(se_sub.date)
+					FROM shipment_event se_sub
+						LEFT JOIN order_item oi_sub on se_sub.shipment_id = oi_sub.shipment_id
+					WHERE oi_sub.order_id = oi.order_id AND oi_sub.producer_product_id = oi.producer_product_id
+					AND se_sub.date BETWEEN ? AND ?) `,
 				[dataInicio, dataFim]
 			)
 			.andWhere(
 				`(2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(sa.latitude)) / 2), 2) + COS(RADIANS(sa.latitude)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(sa.longitude)) / 2), 2)) ) ) <= ?`,
 				[distancia]
 			);
+
+		if (opcao === 'evolution') {
+			void qb.groupBy('1');
+		}
 
 		let result;
 
@@ -234,6 +274,9 @@ export class OrderGateway {
 			}
 
 			return toReturn;
+		} else if (opcao === 'evolution') {
+			result = await qb.execute();
+			return result;
 		}
 	}
 
@@ -241,25 +284,61 @@ export class OrderGateway {
 		dataInicio: string,
 		dataFim: string,
 		distancia: number,
+		opcao: string,
+		subopcao?: string,
 		categoryId?: number,
 		consumerId?: number,
 		producerId?: number
 	): Promise<any> {
-		const qb = this.repository
-			.createQueryBuilder('o')
-			.select([
-				'COUNT(DISTINCT oi.order_id) as numeroEncomendasCanceladas',
-				'IFNULL(SUM(oi.quantity), 0) as totalProdutosCancelados',
-				'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotaisCanceladas',
-				'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendadosCancelados'
-			])
-			.leftJoin('o.shippingAddress', 'sa')
-			.leftJoin('o.items', 'oi')
-			.leftJoin('oi.producerProduct', 'pp')
-			.leftJoin('pp.productionUnit', 'pu')
-			.leftJoin('pu.address', 'pa')
-			.leftJoin('oi.shipment', 's')
-			.leftJoin('s.events', 'se');
+		const qb = this.repository.createQueryBuilder('o');
+		if (opcao === 'flashcards') {
+			void qb
+				.select([
+					'COUNT(DISTINCT oi.order_id) as numeroEncomendas',
+					'IFNULL(SUM(oi.quantity), 0) as totalProdutos',
+					'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotais',
+					'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados'
+				])
+				.leftJoin('o.shippingAddress', 'sa')
+				.leftJoin('o.items', 'oi')
+				.leftJoin('oi.producerProduct', 'pp')
+				.leftJoin('pp.productionUnit', 'pu')
+				.leftJoin('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se');
+		} else if (opcao === 'map') {
+			void qb
+				.leftJoinAndSelect('o.shippingAddress', 'sa')
+				.leftJoin('o.items', 'oi')
+				.leftJoin('oi.producerProduct', 'pp')
+				.leftJoin('pp.productionUnit', 'pu')
+				.leftJoinAndSelect('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se');
+		} else if (opcao === 'evolution') {
+			console.log('evolution');
+			if (subopcao === 'numeroEncomendas') {
+				console.log('numeroEncomendas');
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'COUNT(DISTINCT oi.order_id) as numeroEncomendas']);
+			} else if (subopcao === 'totalProdutos') {
+				console.log('totalProdutos');
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity), 0) as totalProdutos']);
+			} else if (subopcao === 'comprasTotais') {
+				console.log('comprasTotais');
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotais']);
+			} else if (subopcao === 'numeroProdutosEncomendados') {
+				console.log('numeroProdutosEncomendados');
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados']);
+			}
+			void qb
+				.leftJoin('o.shippingAddress', 'sa')
+				.leftJoin('o.items', 'oi')
+				.leftJoin('oi.producerProduct', 'pp')
+				.leftJoin('pp.productionUnit', 'pu')
+				.leftJoin('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se');
+		}
 
 		if (consumerId) {
 			void qb.andWhere('o.consumer_id = ?', [consumerId]);
@@ -288,17 +367,52 @@ export class OrderGateway {
 				[distancia]
 			);
 
-		const result = (await qb.execute())[0] as unknown as {
-			numeroEncomendasCanceladas: string;
-			totalProdutosCancelados: string;
-			comprasTotaisCanceladas: string;
-			numeroProdutosEncomendadosCancelados: string;
-		};
-		return {
-			...result,
-			// Sums may return null if there are no orders, but we IFNULL them to 0. Still, they may come as strings
-			totalProdutosCancelados: parseInt(result.totalProdutosCancelados, 10),
-			comprasTotaisCanceladas: parseFloat(result.comprasTotaisCanceladas)
-		};
+		if (opcao === 'evolution') {
+			void qb.groupBy('1');
+		}
+
+		let result;
+
+		if (opcao === 'flashcards') {
+			result = (await qb.execute())[0] as unknown as {
+				numeroEncomendas: string;
+				totalProdutos: string;
+				comprasTotais: string;
+				numeroProdutosEncomendados: string;
+			};
+			return {
+				...result,
+				// Sums may return null if there are no orders, but we IFNULL them to 0. Still, they may come as strings
+				totalProdutos: parseInt(result.totalProdutos, 10),
+				comprasTotais: parseFloat(result.comprasTotais)
+			};
+		} else if (opcao === 'map') {
+			result = await qb.execute();
+			const toReturn = [];
+			for (const a of result) {
+				toReturn.push({
+					shippingAddress: a.shippingAddress,
+					productionUnitAddress: {
+						id: a.pa__id,
+						number: a.pa__number,
+						door: a.pa__door,
+						floor: a.pa__floor,
+						zipCode: a.pa__zip_code,
+						street: a.pa__street,
+						parish: a.pa__parish,
+						county: a.pa__county,
+						city: a.pa__city,
+						district: a.pa__district,
+						latitude: a.pa__latitude,
+						longitude: a.pa__longitude
+					}
+				});
+			}
+
+			return toReturn;
+		} else if (opcao === 'evolution') {
+			result = await qb.execute();
+			return result;
+		}
 	}
 }

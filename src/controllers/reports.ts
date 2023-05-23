@@ -8,7 +8,7 @@ import { UserType } from '../enums';
 import { Joi, validate } from 'express-validation';
 import { filterOrderItemsByDate } from '../utils/filterReportDate';
 import { calcularDistancia } from '../utils/calculateDistance';
-import { handleReportEvolution } from '../utils/handleReportEvolution';
+// import { handleReportEvolution } from '../utils/handleReportEvolution';
 import { handleReportProducts } from '../utils/handleReportProducts';
 import { handleReportClients } from '../utils/handleReportClients';
 import { BadRequestError } from '../errors/BadRequestError';
@@ -41,6 +41,7 @@ export class ReportsController {
 			String(req.query.dataFim),
 			Number(req.query.raio),
 			'flashcards',
+			undefined,
 			categoryId
 		);
 
@@ -48,6 +49,8 @@ export class ReportsController {
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
+			'flashcards',
+			undefined,
 			categoryId
 		);
 
@@ -61,6 +64,36 @@ export class ReportsController {
 			numeroProdutosEncomendados: result.numeroProdutosEncomendados,
 			numeroProdutosEncomendadosCancelados: resultCancelados.numeroProdutosEncomendadosCancelados
 		});
+	}
+
+	@Get('/admin/map', [
+		validate({
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required()
+			})
+		}),
+		authenticationMiddleware
+	])
+	public async reportMapAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const resultado = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'map',
+			undefined,
+			category?.id
+		);
+
+		res.status(200).json(resultado);
 	}
 
 	@Get('/:userId/flashcards', [
@@ -94,6 +127,7 @@ export class ReportsController {
 			String(req.query.dataFim),
 			Number(req.query.raio),
 			'flashcards',
+			undefined,
 			category?.id,
 			tipo === 'Consumer' ? user.id : undefined,
 			tipo === 'Producer' ? user.id : undefined
@@ -102,7 +136,8 @@ export class ReportsController {
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
-			// 'flashcards',
+			'flashcards',
+			undefined,
 			category?.id,
 			tipo === 'Consumer' ? user.id : undefined,
 			tipo === 'Producer' ? user.id : undefined
@@ -159,70 +194,17 @@ export class ReportsController {
 			if (!category) throw new NotFoundError('Category not found');
 		}
 
-		const teste = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getFlashCardsInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
 			'map',
+			undefined,
 			category?.id,
 			tipo === 'Consumer' ? user.id : undefined,
 			tipo === 'Producer' ? user.id : undefined
 		);
 
-		console.log(teste);
-		console.log(teste.length);
-
-		const resultado = [];
-		let orderItems = [];
-		let orderItemsWithDate = [];
-		if (tipo === 'Consumer') {
-			orderItems = await container.orderItemGateway.findAllByConsumerId(userId);
-			orderItemsWithDate = orderItems.map((orderItem) => {
-				return { orderItem, date: orderItem.order.getOrderDate() };
-			});
-		} else {
-			orderItems = await container.orderItemGateway.findOrdersByProducerPopulated(userId);
-			orderItemsWithDate = orderItems.map((orderItem) => {
-				return { orderItem, date: orderItem.getFirstDate() };
-			});
-		}
-
-		if (req.query.dataInicio && req.query.dataFim) {
-			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
-		}
-
-		if (req.query.dataInicio && req.query.dataFim) {
-			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
-		}
-
-		for (const oi of orderItemsWithDate) {
-			const { orderItem } = oi;
-			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
-			const enderecoConsumidor = orderItem.order.shippingAddress;
-			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
-
-			if (distancia <= Number(req.query.raio)) {
-				if (category) {
-					const categoryIds = orderItem.producerProduct.productSpec.categories
-						.toArray()
-						.map((c: { category: { id: any } }) => c.category.id);
-					const isCategoryPresent = categoryIds.includes(category.id);
-					if (isCategoryPresent) {
-						resultado.push({
-							enderecoUnidadeProducao: enderecoProduto,
-							enderecoConsumidor,
-							distancia
-						});
-					}
-				} else {
-					resultado.push({
-						enderecoUnidadeProducao: enderecoProduto,
-						enderecoConsumidor,
-						distancia
-					});
-				}
-			}
-		}
 		res.status(200).json(resultado);
 	}
 
@@ -257,51 +239,30 @@ export class ReportsController {
 			if (!category) throw new NotFoundError('Category not found');
 		}
 
-		let orderItems = [];
-		let orderItemsWithDate = [];
-		if (tipo === 'Consumer') {
-			orderItems = await container.orderItemGateway.findAllByConsumerId(userId);
-			orderItemsWithDate = orderItems.map((orderItem) => {
-				return { orderItem, date: orderItem.order.getOrderDate() };
-			});
-		} else {
-			orderItems = await container.orderItemGateway.findOrdersByProducerPopulated(userId);
-			orderItemsWithDate = orderItems.map((orderItem) => {
-				return { orderItem, date: orderItem.getFirstDate() };
-			});
-		}
-
-		if (req.query.dataInicio && req.query.dataFim) {
-			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
-		}
-
-		const resultado = [];
-		for (const oi of orderItemsWithDate) {
-			const { orderItem } = oi;
-			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
-			const enderecoConsumidor = orderItem.order.shippingAddress;
-			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
-
-			if (distancia <= Number(req.query.raio)) {
-				if (category) {
-					const categoryIds = orderItem.producerProduct.productSpec.categories
-						.toArray()
-						.map((c: { category: { id: any } }) => c.category.id);
-					const isCategoryPresent = categoryIds.includes(category.id);
-					if (isCategoryPresent) {
-						resultado.push(oi);
-					}
-				} else {
-					resultado.push(oi);
-				}
-			}
-		}
-
-		// ver se há uma maneira melhor
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
-		const retorno = handleReportEvolution(resultado, opcao);
+		const resultado = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'evolution',
+			opcao,
+			category?.id,
+			tipo === 'Consumer' ? user.id : undefined,
+			tipo === 'Producer' ? user.id : undefined
+		);
 
-		res.status(200).json(retorno);
+		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'evolution',
+			opcao,
+			category?.id,
+			tipo === 'Consumer' ? user.id : undefined,
+			tipo === 'Producer' ? user.id : undefined
+		);
+
+		res.status(200).json({ resultado, resultadoCancelados });
 	}
 
 	@Get('/:userId/products', [
