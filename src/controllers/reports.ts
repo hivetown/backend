@@ -8,11 +8,11 @@ import { UserType } from '../enums';
 import { Joi, validate } from 'express-validation';
 import { filterOrderItemsByDate } from '../utils/filterReportDate';
 import { calcularDistancia } from '../utils/calculateDistance';
-// import { handleReportEvolution } from '../utils/handleReportEvolution';
+// import { handleReportEvolution-OLD } from '../utils/handleReportEvolution';
 import { handleReportProducts } from '../utils/handleReportProducts';
 import { handleReportClients } from '../utils/handleReportClients';
 import { BadRequestError } from '../errors/BadRequestError';
-import { convertEvolution } from '../utils/convertEvolution';
+import { convertEvolution, mergeResults } from '../utils/handleReportEvolution';
 
 @Controller('/reports')
 @Injectable()
@@ -107,9 +107,8 @@ export class ReportsController {
 				numeroEncomendas: Joi.boolean().optional(),
 				totalProdutos: Joi.boolean().optional(),
 				comprasTotais: Joi.boolean().optional(),
-				vendasTotais: Joi.boolean().optional(),
 				numeroProdutosEncomendados: Joi.boolean().optional()
-			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'vendasTotais', 'numeroProdutosEncomendados')
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
 		authenticationMiddleware
 	])
@@ -143,7 +142,7 @@ export class ReportsController {
 		const result = convertEvolution(resultado, opcao);
 		const resultCancelados = convertEvolution(resultadoCancelados, opcao);
 
-		res.status(200).json({ result, resultCancelados });
+		res.status(200).json(mergeResults({ result, resultCancelados }, opcao, `${opcao}Cancelados`));
 	}
 
 	@Get('/:userId/flashcards', [
@@ -271,9 +270,8 @@ export class ReportsController {
 				numeroEncomendas: Joi.boolean().optional(),
 				totalProdutos: Joi.boolean().optional(),
 				comprasTotais: Joi.boolean().optional(),
-				vendasTotais: Joi.boolean().optional(),
 				numeroProdutosEncomendados: Joi.boolean().optional()
-			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'vendasTotais', 'numeroProdutosEncomendados')
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
 		authenticationMiddleware
 	])
@@ -312,35 +310,10 @@ export class ReportsController {
 			tipo === 'Producer' ? user.id : undefined
 		);
 
-		const result: { [key: string]: number } = {};
-		let i = 0;
-		if (opcao === 'numeroEncomendas' || opcao === 'numeroProdutosEncomendados') {
-			i = 1;
-		}
+		const result = convertEvolution(resultado, opcao);
+		const resultCancelados = convertEvolution(resultadoCancelados, opcao);
 
-		for (const item of resultado) {
-			const { mes_ano } = item;
-			if (item.totalProdutos) {
-				i = item.totalProdutos;
-			} else if (item.comprasTotais) {
-				i = item.comprasTotais;
-			}
-			if (result[mes_ano]) {
-				result[mes_ano] += Number(i);
-			} else {
-				result[mes_ano] = Number(i);
-			}
-		}
-
-		let sum = 0;
-		for (const key in result) {
-			if (result.hasOwnProperty(key)) {
-				sum += result[key];
-			}
-		}
-		console.log(sum);
-
-		res.status(200).json({ result, resultadoCancelados });
+		res.status(200).json(mergeResults({ result, resultCancelados }, opcao, `${opcao}Cancelados`));
 	}
 
 	@Get('/:userId/products', [

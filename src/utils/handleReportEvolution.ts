@@ -1,137 +1,56 @@
-import { ShipmentStatus } from '../enums';
-
-export function handleReportEvolution(orderItems: any[], opcao: string) {
-	// console.log('orderItems', orderItems);
-	// console.log('opcao', opcao);
-
-	let resultado;
-	let cancelados;
-
-	// para o numeroEncomendas
-	const encomendas: any[] = [];
-	const encomendasCanceladas: any[] = [];
-	const totalProdutos: any[] = [];
-	const totalProdutosCancelados: any[] = [];
-	const produtosEncomendados: any[] = [];
-	const produtosEncomendadosCancelados: any[] = [];
-	const totais: any[] = [];
-	const totaisCancelados: any[] = [];
-
-	if (opcao === 'numeroEncomendas') {
-		for (const oi of orderItems) {
-			encomendas.push({ orderId: oi.orderItem.order.id, date: oi.date });
-
-			if (oi.orderItem.getActualStatus() === ShipmentStatus.Canceled) {
-				encomendasCanceladas.push({ orderId: oi.orderItem.order.id, date: oi.date });
-			}
-		}
-
-		const encomendasFiltradas = encomendas.filter((encomenda, index, self) => self.findIndex((t) => t.orderId === encomenda.orderId) === index);
-		const encomendasCanceladasFiltradas = encomendasCanceladas.filter(
-			(encomenda, index, self) => self.findIndex((t) => t.orderId === encomenda.orderId) === index
-		);
-
-		resultado = agrupaConta(encomendasFiltradas);
-		cancelados = agrupaConta(encomendasCanceladasFiltradas);
-	} else if (opcao === 'totalProdutos') {
-		for (const oi of orderItems) {
-			totalProdutos.push({ valor: oi.orderItem.quantity, date: oi.date });
-
-			if (oi.orderItem.getActualStatus() === ShipmentStatus.Canceled) {
-				totalProdutosCancelados.push({ valor: oi.orderItem.quantity, date: oi.date });
-			}
-		}
-
-		resultado = agrupaValor(totalProdutos);
-		cancelados = agrupaValor(totalProdutosCancelados);
-	} else if (opcao === 'comprasTotais' || opcao === 'vendasTotais') {
-		for (const oi of orderItems) {
-			totais.push({ valor: oi.orderItem.quantity * oi.orderItem.price, date: oi.date });
-
-			if (oi.orderItem.getActualStatus() === ShipmentStatus.Canceled) {
-				totaisCancelados.push({ valor: oi.orderItem.quantity * oi.orderItem.price, date: oi.date });
-			}
-		}
-
-		resultado = agrupaValor(totais);
-		cancelados = agrupaValor(totaisCancelados);
-	} else if (opcao === 'numeroProdutosEncomendados') {
-		for (const oi of orderItems) {
-			produtosEncomendados.push({ producerProductId: oi.orderItem.producerProduct.id, date: oi.date });
-
-			if (oi.orderItem.getActualStatus() === ShipmentStatus.Canceled) {
-				produtosEncomendadosCancelados.push({ producerProductId: oi.orderItem.producerProduct.id, date: oi.date });
-			}
-		}
-		// console.log('produtos não filtrados', produtosEncomendados);
-		const produtosFiltrados = produtosEncomendados.filter(
-			(produto, index, self) => self.findIndex((t) => t.producerProductId === produto.producerProductId) === index
-		);
-
-		const produtosCanceladosFiltrados = produtosEncomendadosCancelados.filter(
-			(produto, index, self) => self.findIndex((t) => t.producerProductId === produto.producerProductId) === index
-		);
-
-		resultado = agrupaConta(produtosFiltrados);
-		cancelados = agrupaConta(produtosCanceladosFiltrados);
+export function convertEvolution(resultado: any, opcao: string): any {
+	const result: { [key: string]: number } = {};
+	let i = 0;
+	if (
+		opcao === 'numeroEncomendas' ||
+		opcao === 'numeroProdutosEncomendados' ||
+		opcao === 'numeroEncomendasCanceladas' ||
+		opcao === 'numeroProdutosEncomendadosCancelados'
+	) {
+		i = 1;
 	}
 
-	const resultadoOrdenado = ordena(resultado);
-	const canceladosOrdenado = ordena(cancelados);
-
-	return { resultadoOrdenado, canceladosOrdenado };
-}
-
-function agrupaConta(encomendasFiltradas: any) {
-	return encomendasFiltradas.reduce((acc: { [x: string]: number }, item: { date: string | number | Date }) => {
-		const date = new Date(item.date);
-		const month = date.getMonth() + 1; // O método getMonth() retorna um valor entre 0 e 11, então adicionamos 1 para representar o mês corretamente
-		const year = date.getFullYear();
-		const key = `${month}/${year}`;
-
-		if (acc[key]) {
-			acc[key] += 1; // Incrementa a contagem de pedidos para o grupo existente
-		} else {
-			acc[key] = 1; // Cria um novo grupo com contagem inicial de 1
+	for (const item of resultado) {
+		const { mes_ano } = item;
+		if (item.totalProdutos) {
+			i = item.totalProdutos;
+		} else if (item.comprasTotais) {
+			i = item.comprasTotais;
+		} else if (item.totalProdutosCancelados) {
+			i = item.totalProdutosCancelados;
+		} else if (item.comprasTotaisCanceladas) {
+			i = item.comprasTotaisCanceladas;
 		}
-
-		return acc;
-	}, {});
-}
-
-function agrupaValor(obj: any) {
-	return obj.reduce((acc: { [x: string]: any }, item: { date: string | number | Date; valor: any }) => {
-		const date = new Date(item.date);
-		const month = date.getMonth() + 1;
-		const year = date.getFullYear();
-		const key = `${month}/${year}`;
-
-		if (acc[key]) {
-			acc[key] += item.valor; // Soma a quantidade ao grupo existente
+		if (result[mes_ano]) {
+			result[mes_ano] += Number(i);
 		} else {
-			acc[key] = item.valor; // Cria um novo grupo com a quantidade inicial
+			result[mes_ano] = Number(i);
 		}
+	}
 
-		return acc;
-	}, {});
+	// a apagar
+	let sum = 0;
+	for (const key in result) {
+		if (result.hasOwnProperty(key)) {
+			sum += result[key];
+		}
+	}
+	console.log(sum);
+
+	return result;
 }
 
-function ordena(obj: any) {
-	const sortedData: { [key: string]: any } = {};
+export function mergeResults(data: any, opcao: string, opcaoCancelados: string): any {
+	const mergedData: { [key: string]: { [key: string]: number } } = {};
 
-	Object.keys(obj)
-		.sort((keyA, keyB) => {
-			const [monthA, yearA] = keyA.split('/').map(Number);
-			const [monthB, yearB] = keyB.split('/').map(Number);
+	for (const key in data.result) {
+		if (data.result.hasOwnProperty(key) && data.resultCancelados.hasOwnProperty(key)) {
+			mergedData[key] = {
+				[opcao]: data.result[key],
+				[opcaoCancelados]: data.resultCancelados[key]
+			};
+		}
+	}
 
-			if (yearA !== yearB) {
-				return yearA - yearB;
-			}
-
-			return monthA - monthB;
-		})
-		.forEach((key) => {
-			sortedData[key] = obj[key];
-		});
-	return sortedData;
+	return mergedData;
 }
