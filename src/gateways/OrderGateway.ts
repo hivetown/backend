@@ -201,6 +201,26 @@ export class OrderGateway {
 				.leftJoin('pu.address', 'pa')
 				.leftJoin('oi.shipment', 's')
 				.leftJoin('s.events', 'se');
+		} else if (opcao === 'products') {
+			if (subopcao === 'numeroEncomendas') {
+				void qb.select(['select oi.producer_product_id, ps.name, count(oi.order_id) as numeroEncomendas']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'totalProdutos') {
+				void qb.select(['select oi.producer_product_id, ps.name, sum(oi.quantity) as totalProdutos']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'comprasTotais') {
+				void qb.select(['select oi.producer_product_id, ps.name, sum(oi.quantity * oi.price) as comprasTotais']);
+				void qb.groupBy('1');
+			}
+			void qb
+				.leftJoin('o.shippingAddress', 'sa')
+				.leftJoin('o.items', 'oi')
+				.leftJoin('oi.producerProduct', 'pp')
+				.leftJoin('pp.productionUnit', 'pu')
+				.leftJoin('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se')
+				.leftJoin('pp.productSpec', 'ps');
 		}
 
 		if (consumerId) {
@@ -278,12 +298,13 @@ export class OrderGateway {
 			}
 
 			return toReturn;
-		} else if (opcao === 'evolution') {
+		} else if (opcao === 'evolution' || opcao === 'products') {
 			result = await qb.execute();
 			return result;
 		}
 	}
 
+	// --------------------------------------------------------------------------------------------------------------------------------------
 	public async getFlashcardsCanceledInformation(
 		dataInicio: string,
 		dataFim: string,
@@ -350,6 +371,26 @@ export class OrderGateway {
 				.leftJoin('pu.address', 'pa')
 				.leftJoin('oi.shipment', 's')
 				.leftJoin('s.events', 'se');
+		} else if (opcao === 'products') {
+			if (subopcao === 'numeroEncomendas') {
+				void qb.select(['select oi.producer_product_id, ps.name, count(oi.order_id) as numeroEncomendas']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'totalProdutos') {
+				void qb.select(['select oi.producer_product_id, ps.name, sum(oi.quantity) as totalProdutos']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'comprasTotais') {
+				void qb.select(['select oi.producer_product_id, ps.name, sum(oi.quantity * oi.price) as comprasTotais']);
+				void qb.groupBy('1');
+			}
+			void qb
+				.leftJoin('o.shippingAddress', 'sa')
+				.leftJoin('o.items', 'oi')
+				.leftJoin('oi.producerProduct', 'pp')
+				.leftJoin('pp.productionUnit', 'pu')
+				.leftJoin('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se')
+				.leftJoin('pp.productSpec', 'ps');
 		}
 
 		if (consumerId) {
@@ -418,7 +459,7 @@ export class OrderGateway {
 			}
 
 			return toReturn;
-		} else if (opcao === 'evolution') {
+		} else if (opcao === 'evolution' || opcao === 'products') {
 			result = await qb.execute();
 			return result;
 		}

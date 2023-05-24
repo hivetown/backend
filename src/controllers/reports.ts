@@ -376,6 +376,18 @@ export class ReportsController {
 				}
 			}
 		}
+		const novo = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'products',
+			opcao,
+			category?.id,
+			tipo === 'Consumer' ? user.id : undefined,
+			tipo === 'Producer' ? user.id : undefined
+		);
+
+		console.log(novo);
 
 		res.status(200).json(resultado);
 	}
