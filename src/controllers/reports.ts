@@ -192,29 +192,16 @@ export class ReportsController {
 			tipo === 'Producer' ? user.id : undefined
 		);
 
-		if (tipo === 'Consumer') {
-			res.status(200).json({
-				numeroEncomendas: resultado.numeroEncomendas,
-				numeroEncomendasCanceladas: resultadoCancelados.numeroEncomendasCanceladas,
-				totalProdutos: resultado.totalProdutos,
-				totalProdutosCancelados: Number(resultadoCancelados.totalProdutosCancelados),
-				comprasTotais: resultado.comprasTotais,
-				comprasTotaisCanceladas: resultadoCancelados.comprasTotaisCanceladas,
-				numeroProdutosEncomendados: resultado.numeroProdutosEncomendados,
-				numeroProdutosEncomendadosCancelados: resultadoCancelados.numeroProdutosEncomendadosCancelados
-			});
-		} else {
-			res.status(200).json({
-				numeroEncomendas: resultado.numeroEncomendas,
-				numeroEncomendasCanceladas: resultadoCancelados.numeroEncomendasCanceladas,
-				totalProdutos: resultado.totalProdutos,
-				totalProdutosCancelados: Number(resultadoCancelados.totalProdutosCancelados),
-				vendasTotais: resultado.comprasTotais,
-				vendasTotaisCanceladas: resultadoCancelados.comprasTotaisCanceladas,
-				numeroProdutosEncomendados: resultado.numeroProdutosEncomendados,
-				numeroProdutosEncomendadosCancelados: resultadoCancelados.numeroProdutosEncomendadosCancelados
-			});
-		}
+		res.status(200).json({
+			numeroEncomendas: resultado.numeroEncomendas,
+			numeroEncomendasCanceladas: resultadoCancelados.numeroEncomendasCanceladas,
+			totalProdutos: resultado.totalProdutos,
+			totalProdutosCancelados: Number(resultadoCancelados.totalProdutosCancelados),
+			comprasTotais: resultado.comprasTotais,
+			comprasTotaisCanceladas: resultadoCancelados.comprasTotaisCanceladas,
+			numeroProdutosEncomendados: resultado.numeroProdutosEncomendados,
+			numeroProdutosEncomendadosCancelados: resultadoCancelados.numeroProdutosEncomendadosCancelados
+		});
 	}
 
 	@Get('/:userId/map', [
