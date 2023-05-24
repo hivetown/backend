@@ -174,16 +174,24 @@ export class OrderGateway {
 			console.log('evolution');
 			if (subopcao === 'numeroEncomendas') {
 				console.log('numeroEncomendas');
-				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'COUNT(DISTINCT oi.order_id) as numeroEncomendas']);
+				void qb.select([`min(DATE_FORMAT(se.date, '%Y-%m')) AS mes_ano, oi.order_id`]);
+				void qb.groupBy('2');
+				void qb.orderBy({ '1': 'ASC' });
 			} else if (subopcao === 'totalProdutos') {
 				console.log('totalProdutos');
 				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity), 0) as totalProdutos']);
+				void qb.groupBy('1');
+				void qb.orderBy({ '1': 'ASC' });
 			} else if (subopcao === 'comprasTotais') {
 				console.log('comprasTotais');
 				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotais']);
+				void qb.groupBy('1');
+				void qb.orderBy({ '1': 'ASC' });
 			} else if (subopcao === 'numeroProdutosEncomendados') {
 				console.log('numeroProdutosEncomendados');
-				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados']);
+				void qb.select([`min(DATE_FORMAT(se.date, '%Y-%m')) AS mes_ano`, 'oi.producer_product_id as numeroProdutosEncomendados']);
+				void qb.groupBy('2');
+				void qb.orderBy({ '1': 'ASC' });
 			}
 			void qb
 				.leftJoin('o.shippingAddress', 'sa')
@@ -230,10 +238,6 @@ export class OrderGateway {
 				`(2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(sa.latitude)) / 2), 2) + COS(RADIANS(sa.latitude)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(sa.longitude)) / 2), 2)) ) ) <= ?`,
 				[distancia]
 			);
-
-		if (opcao === 'evolution') {
-			void qb.groupBy('1');
-		}
 
 		let result;
 
@@ -294,10 +298,10 @@ export class OrderGateway {
 		if (opcao === 'flashcards') {
 			void qb
 				.select([
-					'COUNT(DISTINCT oi.order_id) as numeroEncomendas',
-					'IFNULL(SUM(oi.quantity), 0) as totalProdutos',
-					'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotais',
-					'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados'
+					'COUNT(DISTINCT oi.order_id) as numeroEncomendasCanceladas',
+					'IFNULL(SUM(oi.quantity), 0) as totalProdutosCancelados',
+					'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotaisCanceladas',
+					'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendadosCancelados'
 				])
 				.leftJoin('o.shippingAddress', 'sa')
 				.leftJoin('o.items', 'oi')
@@ -319,16 +323,24 @@ export class OrderGateway {
 			console.log('evolution');
 			if (subopcao === 'numeroEncomendas') {
 				console.log('numeroEncomendas');
-				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'COUNT(DISTINCT oi.order_id) as numeroEncomendas']);
+				void qb.select([`min(DATE_FORMAT(se.date, '%Y-%m')) AS mes_ano, oi.order_id`]);
+				void qb.groupBy('2');
+				void qb.orderBy({ '1': 'ASC' });
 			} else if (subopcao === 'totalProdutos') {
 				console.log('totalProdutos');
-				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity), 0) as totalProdutos']);
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity), 0) as totalProdutosCancelados']);
+				void qb.groupBy('1');
+				void qb.orderBy({ '1': 'ASC' });
 			} else if (subopcao === 'comprasTotais') {
 				console.log('comprasTotais');
-				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotais']);
+				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'IFNULL(SUM(oi.quantity * oi.price), 0) as comprasTotaisCanceladas']);
+				void qb.groupBy('1');
+				void qb.orderBy({ '1': 'ASC' });
 			} else if (subopcao === 'numeroProdutosEncomendados') {
 				console.log('numeroProdutosEncomendados');
-				void qb.select([`DATE_FORMAT(se.date, '%Y-%m') AS mes_ano`, 'COUNT(DISTINCT oi.producer_product_id) as numeroProdutosEncomendados']);
+				void qb.select([`min(DATE_FORMAT(se.date, '%Y-%m')) AS mes_ano`, 'oi.producer_product_id as numeroProdutosEncomendadosCancelados']);
+				void qb.groupBy('2');
+				void qb.orderBy({ '1': 'ASC' });
 			}
 			void qb
 				.leftJoin('o.shippingAddress', 'sa')
@@ -367,24 +379,20 @@ export class OrderGateway {
 				[distancia]
 			);
 
-		if (opcao === 'evolution') {
-			void qb.groupBy('1');
-		}
-
 		let result;
 
 		if (opcao === 'flashcards') {
 			result = (await qb.execute())[0] as unknown as {
-				numeroEncomendas: string;
-				totalProdutos: string;
-				comprasTotais: string;
-				numeroProdutosEncomendados: string;
+				numeroEncomendasCanceladas: string;
+				totalProdutosCancelados: string;
+				comprasTotaisCanceladas: string;
+				numeroProdutosEncomendadosCancelados: string;
 			};
 			return {
 				...result,
 				// Sums may return null if there are no orders, but we IFNULL them to 0. Still, they may come as strings
-				totalProdutos: parseInt(result.totalProdutos, 10),
-				comprasTotais: parseFloat(result.comprasTotais)
+				totalProdutos: parseInt(result.totalProdutosCancelados, 10),
+				comprasTotais: parseFloat(result.comprasTotaisCanceladas)
 			};
 		} else if (opcao === 'map') {
 			result = await qb.execute();

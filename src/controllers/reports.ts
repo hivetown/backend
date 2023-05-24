@@ -12,6 +12,7 @@ import { calcularDistancia } from '../utils/calculateDistance';
 import { handleReportProducts } from '../utils/handleReportProducts';
 import { handleReportClients } from '../utils/handleReportClients';
 import { BadRequestError } from '../errors/BadRequestError';
+import { convertEvolution } from '../utils/convertEvolution';
 
 @Controller('/reports')
 @Injectable()
@@ -94,6 +95,55 @@ export class ReportsController {
 		);
 
 		res.status(200).json(resultado);
+	}
+
+	@Get('/admin/evolution', [
+		validate({
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required(),
+				numeroEncomendas: Joi.boolean().optional(),
+				totalProdutos: Joi.boolean().optional(),
+				comprasTotais: Joi.boolean().optional(),
+				vendasTotais: Joi.boolean().optional(),
+				numeroProdutosEncomendados: Joi.boolean().optional()
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'vendasTotais', 'numeroProdutosEncomendados')
+		}),
+		authenticationMiddleware
+	])
+	public async reportEvolutionAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
+
+		const resultado = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'evolution',
+			opcao,
+			category?.id
+		);
+
+		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'evolution',
+			opcao,
+			category?.id
+		);
+
+		const result = convertEvolution(resultado, opcao);
+		const resultCancelados = convertEvolution(resultadoCancelados, opcao);
+
+		res.status(200).json({ result, resultCancelados });
 	}
 
 	@Get('/:userId/flashcards', [
@@ -262,7 +312,35 @@ export class ReportsController {
 			tipo === 'Producer' ? user.id : undefined
 		);
 
-		res.status(200).json({ resultado, resultadoCancelados });
+		const result: { [key: string]: number } = {};
+		let i = 0;
+		if (opcao === 'numeroEncomendas' || opcao === 'numeroProdutosEncomendados') {
+			i = 1;
+		}
+
+		for (const item of resultado) {
+			const { mes_ano } = item;
+			if (item.totalProdutos) {
+				i = item.totalProdutos;
+			} else if (item.comprasTotais) {
+				i = item.comprasTotais;
+			}
+			if (result[mes_ano]) {
+				result[mes_ano] += Number(i);
+			} else {
+				result[mes_ano] = Number(i);
+			}
+		}
+
+		let sum = 0;
+		for (const key in result) {
+			if (result.hasOwnProperty(key)) {
+				sum += result[key];
+			}
+		}
+		console.log(sum);
+
+		res.status(200).json({ result, resultadoCancelados });
 	}
 
 	@Get('/:userId/products', [
