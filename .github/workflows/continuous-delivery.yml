@@ -20,12 +20,14 @@ jobs:
       - name: Build the Docker image
         run: docker build --no-cache --force-rm -t ${{ env.IMAGE_NAME }} .
   test:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Test the Docker image
         run: docker run --rm ${{ env.IMAGE_NAME }}
   push_to_registry:
+    needs: test
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     steps:
