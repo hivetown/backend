@@ -19,6 +19,7 @@ import { Authentication } from '../external/Authentication';
 import { hasPermissions } from '../utils/hasPermission';
 import type { ProductionUnitFilters } from '../interfaces/ProductionUnitFilters';
 import { StringSearchType } from '../enums/StringSearchType';
+import { UnauthorizedError } from '../errors/UnauthorizedError';
 
 @Controller('/producers')
 @Injectable()
@@ -56,8 +57,7 @@ export class ProducersController {
 				pageSize: Joi.number().integer().min(1),
 				includeAll: Joi.boolean().optional()
 			})
-		}),
-		authenticationMiddleware
+		})
 	])
 	public async getProducers(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const options: PaginatedOptions = {
@@ -66,7 +66,8 @@ export class ProducersController {
 		};
 		let producers;
 		if (req.query.includeAll) {
-			const user = await container.userGateway.findByAuthId(req.authUser!.uid);
+			if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
+			const user = await container.userGateway.findByAuthId(req.authUser.uid);
 			if (!hasPermissions(user!, Permission.READ_OTHER_PRODUCER)) throw new ForbiddenError('User may not include all');
 			producers = await container.producerGateway.findAllWithDeletedAt(options);
 		}
@@ -175,13 +176,13 @@ export class ProducersController {
 			query: Joi.object({
 				includeAll: Joi.boolean().optional()
 			})
-		}),
-		authenticationMiddleware
+		})
 	])
 	public async getProducer(@Response() res: Express.Response, @Params('producerId') producerId: number, @Request() req: Express.Request) {
 		let producer;
 		if (req.query.includeAll) {
-			const user = await container.userGateway.findByAuthId(req.authUser!.uid);
+			if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
+			const user = await container.userGateway.findByAuthId(req.authUser.uid);
 			if (!hasPermissions(user!, Permission.READ_OTHER_PRODUCER)) throw new ForbiddenError('User may not include all');
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
 		}
