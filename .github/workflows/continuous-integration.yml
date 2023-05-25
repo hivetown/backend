@@ -41,12 +41,7 @@ jobs:
       - name: Install Dependencies
         run: yarn --immutable
       - name: Run tests
-        run: yarn test --coverage
-      - name: Store code coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage
-          path: coverage/
+        run: yarn test
 
   Building:
     name: Compile source code
@@ -66,24 +61,3 @@ jobs:
         run: yarn --immutable
       - name: Build Code
         run: yarn build
-
-  Upload_Coverage_Report:
-    name: Upload coverage report to codecov
-    needs: [Testing]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Project
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      - name: Download Coverage report
-        uses: actions/download-artifact@v3
-        with:
-          name: coverage
-          path: coverage/
-      - name: Codecov Upload
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: coverage/
-          fail_ci_if_error: true
