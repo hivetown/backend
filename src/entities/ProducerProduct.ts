@@ -1,19 +1,23 @@
-import { Entity, Enum, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import { Producer } from './Producer';
 import { ProductionUnit } from './ProductionUnit';
 import { ProductSpec } from './ProductSpec';
-import { ProducerProductStatus } from '../enums/ProducerProductStatus';
+import { SoftDeletable } from 'mikro-orm-soft-delete';
 
+@SoftDeletable(() => ProducerProduct, 'deletedAt', () => new Date())
 @Entity()
 export class ProducerProduct {
 	@PrimaryKey()
 	public id!: number;
 
-	@Property({ type: 'numeric' })
+	@Property({ type: 'double' })
 	public currentPrice!: number;
 
 	@Property({ type: 'date' })
 	public productionDate!: Date;
+
+	@Property({ type: 'int' })
+	public stock!: number;
 
 	@ManyToOne()
 	public producer!: Producer;
@@ -24,6 +28,22 @@ export class ProducerProduct {
 	@ManyToOne()
 	public productSpec!: ProductSpec;
 
-	@Enum()
-	public status!: ProducerProductStatus;
+	@Property({ nullable: true })
+	public deletedAt?: Date;
+
+	public constructor(
+		currentPrice: number,
+		productionDate: Date,
+		stock: number,
+		producer: Producer,
+		productionUnit: ProductionUnit,
+		productSpec: ProductSpec
+	) {
+		this.currentPrice = currentPrice;
+		this.productionDate = productionDate;
+		this.stock = stock;
+		this.producer = producer;
+		this.productionUnit = productionUnit;
+		this.productSpec = productSpec;
+	}
 }

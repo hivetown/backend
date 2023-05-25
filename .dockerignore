@@ -1,0 +1,17 @@
+dist
+node_modules
+.github
+.vscode
+scripts
+temp
+tests
+.editorconfig
+.env
+.env.example
+.eslintignore
+.eslintrc
+.gitignore
+jest.config.mjs
+LICENSE.md
+README.md
+typedoc.json
