@@ -6,11 +6,6 @@ import { authenticationMiddleware } from '../middlewares';
 import { NotFoundError } from '../errors/NotFoundError';
 import { UserType } from '../enums';
 import { Joi, validate } from 'express-validation';
-// import { filterOrderItemsByDate } from '../utils/filterReportDate';
-// import { calcularDistancia } from '../utils/calculateDistance';
-// import { handleReportEvolution-OLD } from '../utils/handleReportEvolution';
-// import { handleReportProducts } from '../utils/handleReportProducts';
-// import { handleReportClients } from '../utils/handleReportClients';
 import { BadRequestError } from '../errors/BadRequestError';
 import { convertEvolution, convertProducts, mergeResultsClients, mergeResultsEvolution, mergeResultsProducts } from '../utils/handleReport';
 
