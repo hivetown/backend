@@ -221,6 +221,30 @@ export class OrderGateway {
 				.leftJoin('oi.shipment', 's')
 				.leftJoin('s.events', 'se')
 				.leftJoin('pp.productSpec', 'ps');
+		} else if (opcao === 'clients') {
+			if (subopcao === 'numeroEncomendas') {
+				void qb.select(['o.consumer_id, u.name, count(oi.order_id) as numeroEncomendas']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'totalProdutos') {
+				void qb.select(['o.consumer_id, u.name, sum(oi.quantity) as totalProdutos']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'comprasTotais') {
+				void qb.select(['o.consumer_id, u.name, sum(oi.quantity * oi.price) as comprasTotais']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'numeroProdutosEncomendados') {
+				void qb.select(['o.consumer_id, u.name, count(oi.producer_product_id) as numeroProdutosEncomendados']);
+				void qb.groupBy('1');
+			}
+			void qb
+				.leftJoin('o.shippingAddress', 'sa')
+				.leftJoin('o.items', 'oi')
+				.leftJoin('oi.producerProduct', 'pp')
+				.leftJoin('pp.productionUnit', 'pu')
+				.leftJoin('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se')
+				.leftJoin('o.consumer', 'c')
+				.leftJoin('c.user', 'u');
 		}
 
 		if (consumerId) {
@@ -298,7 +322,7 @@ export class OrderGateway {
 			}
 
 			return toReturn;
-		} else if (opcao === 'evolution' || opcao === 'products') {
+		} else if (opcao === 'evolution' || opcao === 'products' || opcao === 'clients') {
 			result = await qb.execute();
 			return result;
 		}
@@ -391,6 +415,30 @@ export class OrderGateway {
 				.leftJoin('oi.shipment', 's')
 				.leftJoin('s.events', 'se')
 				.leftJoin('pp.productSpec', 'ps');
+		} else if (opcao === 'clients') {
+			if (subopcao === 'numeroEncomendas') {
+				void qb.select(['o.consumer_id, u.name, count(oi.order_id) as numeroEncomendasCancelados']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'totalProdutos') {
+				void qb.select(['o.consumer_id, u.name, sum(oi.quantity) as totalProdutosCancelados']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'comprasTotais') {
+				void qb.select(['o.consumer_id, u.name, sum(oi.quantity * oi.price) as comprasTotaisCancelados']);
+				void qb.groupBy('1');
+			} else if (subopcao === 'numeroProdutosEncomendados') {
+				void qb.select(['o.consumer_id, u.name, count(oi.producer_product_id) as numeroProdutosEncomendadosCancelados']);
+				void qb.groupBy('1');
+			}
+			void qb
+				.leftJoin('o.shippingAddress', 'sa')
+				.leftJoin('o.items', 'oi')
+				.leftJoin('oi.producerProduct', 'pp')
+				.leftJoin('pp.productionUnit', 'pu')
+				.leftJoin('pu.address', 'pa')
+				.leftJoin('oi.shipment', 's')
+				.leftJoin('s.events', 'se')
+				.leftJoin('o.consumer', 'c')
+				.leftJoin('c.user', 'u');
 		}
 
 		if (consumerId) {
@@ -459,7 +507,7 @@ export class OrderGateway {
 			}
 
 			return toReturn;
-		} else if (opcao === 'evolution' || opcao === 'products') {
+		} else if (opcao === 'evolution' || opcao === 'products' || opcao === 'clients') {
 			result = await qb.execute();
 			return result;
 		}

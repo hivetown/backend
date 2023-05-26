@@ -111,3 +111,34 @@ export function mergeResultsProducts(resultado: any, resultadoCancelados: any, o
 
 	return mergedData;
 }
+
+export function mergeResultsClients(resultado: any, resultadoCancelados: any, opcao: string, opcaoCancelados: string) {
+	const mergedData: any[] = [];
+
+	const idsCancelados = resultadoCancelados.map((item: any) => item.consumer);
+
+	for (const obj of resultado) {
+		const newObj: {
+			id: string;
+			nome: string;
+			[key: string]: number | string;
+		} = {
+			id: '',
+			nome: ''
+		};
+
+		newObj.id = obj.consumer;
+		newObj.nome = obj.name;
+		newObj[opcao] = obj[opcao];
+
+		if (idsCancelados.includes(obj.consumer)) {
+			const index = idsCancelados.indexOf(obj.consumer);
+			newObj[opcaoCancelados] = resultadoCancelados[index][opcaoCancelados];
+		} else {
+			newObj[opcaoCancelados] = 0;
+		}
+		mergedData.push(newObj);
+	}
+
+	return mergedData;
+}

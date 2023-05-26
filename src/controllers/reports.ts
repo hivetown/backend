@@ -6,13 +6,13 @@ import { authenticationMiddleware } from '../middlewares';
 import { NotFoundError } from '../errors/NotFoundError';
 import { UserType } from '../enums';
 import { Joi, validate } from 'express-validation';
-import { filterOrderItemsByDate } from '../utils/filterReportDate';
-import { calcularDistancia } from '../utils/calculateDistance';
+// import { filterOrderItemsByDate } from '../utils/filterReportDate';
+// import { calcularDistancia } from '../utils/calculateDistance';
 // import { handleReportEvolution-OLD } from '../utils/handleReportEvolution';
 // import { handleReportProducts } from '../utils/handleReportProducts';
-import { handleReportClients } from '../utils/handleReportClients';
+// import { handleReportClients } from '../utils/handleReportClients';
 import { BadRequestError } from '../errors/BadRequestError';
-import { convertEvolution, convertProducts, mergeResultsEvolution, mergeResultsProducts } from '../utils/handleReport';
+import { convertEvolution, convertProducts, mergeResultsClients, mergeResultsEvolution, mergeResultsProducts } from '../utils/handleReport';
 
 @Controller('/reports')
 @Injectable()
@@ -192,6 +192,53 @@ export class ReportsController {
 		const final = mergeResultsProducts(result, resultCancelados, opcao, `${opcao}Cancelados`);
 
 		res.status(200).json(final);
+	}
+
+	@Get('/admin/clients', [
+		validate({
+			query: Joi.object({
+				categoryId: Joi.number().integer().min(1).optional(),
+				dataInicio: Joi.date().required(),
+				dataFim: Joi.date().required(),
+				raio: Joi.number().integer().min(1).required(),
+				numeroEncomendas: Joi.boolean().optional(),
+				totalProdutos: Joi.boolean().optional(),
+				comprasTotais: Joi.boolean().optional(),
+				numeroProdutosEncomendados: Joi.boolean().optional()
+			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
+		}),
+		authenticationMiddleware
+	])
+	public async reportClientsAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
+		let category = null;
+		if (req.query.categoryId) {
+			category = await container.categoryGateway.findById(Number(req.query.categoryId));
+			if (!category) throw new NotFoundError('Category not found');
+		}
+
+		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
+
+		const resultado = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'clients',
+			opcao,
+			category?.id
+		);
+
+		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'clients',
+			opcao,
+			category?.id
+		);
+
+		const r = mergeResultsClients(resultado, resultadoCancelados, opcao, `${opcao}Cancelados`);
+
+		res.status(200).json(r);
 	}
 
 	@Get('/:userId/flashcards', [
@@ -406,8 +453,9 @@ export class ReportsController {
 			tipo === 'Consumer' ? user.id : undefined,
 			tipo === 'Producer' ? user.id : undefined
 		);
-
+		console.log(resultado);
 		const result = convertProducts(resultado, opcao);
+		console.log(result);
 		const resultCancelados = convertProducts(resultadoCancelados, `${opcao}Cancelados`);
 		const final = mergeResultsProducts(result, resultCancelados, opcao, `${opcao}Cancelados`);
 
@@ -444,39 +492,32 @@ export class ReportsController {
 			if (!category) throw new NotFoundError('Category not found');
 		}
 
-		const orderItems = await container.orderItemGateway.findOrdersByProducerPopulated(user.id);
-		let orderItemsWithDate = orderItems.map((orderItem) => {
-			return { orderItem, date: orderItem.getFirstDate() };
-		});
-
-		if (req.query.dataInicio && req.query.dataFim) {
-			orderItemsWithDate = filterOrderItemsByDate(orderItemsWithDate, req.query.dataInicio, req.query.dataFim);
-		}
-
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
 
-		let resultado: any[] = [];
+		const resultado = await container.orderGateway.getFlashCardsInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'clients',
+			opcao,
+			category?.id,
+			undefined,
+			user.id
+		);
 
-		for (const oi of orderItemsWithDate) {
-			// console.log(oi.orderItem.order.consumer);
-			const { orderItem } = oi;
-			const enderecoProduto = orderItem.producerProduct.productionUnit.address;
-			const enderecoConsumidor = orderItem.order.shippingAddress;
-			const distancia = calcularDistancia(enderecoProduto, enderecoConsumidor);
+		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+			String(req.query.dataInicio),
+			String(req.query.dataFim),
+			Number(req.query.raio),
+			'clients',
+			opcao,
+			category?.id,
+			undefined,
+			user.id
+		);
 
-			if (distancia <= Number(req.query.raio)) {
-				if (category) {
-					const categoryIds = orderItem.producerProduct.productSpec.categories.toArray().map((c) => c.category.id);
-					const isCategoryPresent = categoryIds.includes(category.id);
-					if (isCategoryPresent) {
-						resultado = handleReportClients(resultado, orderItem, opcao);
-					}
-				} else {
-					resultado = handleReportClients(resultado, orderItem, opcao);
-				}
-			}
-		}
+		const r = mergeResultsClients(resultado, resultadoCancelados, opcao, `${opcao}Cancelados`);
 
-		res.status(200).json(resultado);
+		res.status(200).json(r);
 	}
 }
