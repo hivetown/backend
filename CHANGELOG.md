@@ -2,6 +2,92 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/hivetown/backend/compare/v0.2.0...v1.0.0) (2023-05-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* add authorization to routes
+* have user as it's own entity
+
+### Features
+
+* add authorization to routes ([543fbbe](https://github.com/hivetown/backend/commit/543fbbe42372bce90b89b07e85b7e59fb246c845))
+* add req to authorization validation ([712917b](https://github.com/hivetown/backend/commit/712917b60b4d99f8346a640c4a3546401abc78f0))
+* add role to user for role based access control (RBAC) ([798dd26](https://github.com/hivetown/backend/commit/798dd266722d9e2c9aee1887219d657c30eda225))
+* adicao das unidades de producao quando se pesquisa os fornecedores de um productSpec ([65f2fed](https://github.com/hivetown/backend/commit/65f2fed539a84b4ebd537f9e3a4ba4c3371c74b2))
+* adicionar um caminho para ver os eventos de um orderItem ([e86e236](https://github.com/hivetown/backend/commit/e86e236b562ae12686649b93de7e767a7fc85525))
+* adicionar um produto de um produtor ([fe7add9](https://github.com/hivetown/backend/commit/fe7add9bef475ad9357b85b64e3c4bd4b033793c))
+* adicionar uma categoria a um productSpec ([a837bfa](https://github.com/hivetown/backend/commit/a837bfa9c33ff2ead15f2bbc496581e8b49d7901))
+* allow search on producer production units ([7e03a1b](https://github.com/hivetown/backend/commit/7e03a1b871df01100e95846fa9c60d2b3955960a))
+* authorization ([fe15c69](https://github.com/hivetown/backend/commit/fe15c69d347392c9004ba6e4509a8ec268de659e))
+* build directly to prod image ([72e57b6](https://github.com/hivetown/backend/commit/72e57b69cfec5c4abf714e1089da188193523cfe))
+* category parents; chore: improve the rest of the field things ([5e6ce1e](https://github.com/hivetown/backend/commit/5e6ce1e39402f4cb7ed61a211a972691b62a7df9))
+* criacao de um productSpec ([ea12e9c](https://github.com/hivetown/backend/commit/ea12e9cddc7a88bea470319afc4a99445efb413f))
+* criar eventos por parte do produtor, rf24,25,26 ([6f1f810](https://github.com/hivetown/backend/commit/6f1f8101ddfed7c650cec4bcfde754a0a48c056e))
+* delete de um item do carrinho ([0917360](https://github.com/hivetown/backend/commit/09173606aba88135e3be89175e7127a111382238))
+* delete de um producerProduct (c/ softdelete) ([ba793cc](https://github.com/hivetown/backend/commit/ba793ccafd90f6e20a455a09868d58c29eeb00ae))
+* delete de um productp spec (c/soft delete) ([39954cb](https://github.com/hivetown/backend/commit/39954cb92756df48284d739c5868830824ec8389))
+* delete de uma unidade de produção feito ([da7fbf8](https://github.com/hivetown/backend/commit/da7fbf88fb4760882326ea742055e50950e73144))
+* example roles ([e49e540](https://github.com/hivetown/backend/commit/e49e540e710c7dc5a217ca8b544cc70e6003e8a5))
+* have user as it's own entity ([bd9fc9e](https://github.com/hivetown/backend/commit/bd9fc9ead7e31b6f2eb6d968a9363dd8c47ac4a9))
+* load env on startup ([5d00709](https://github.com/hivetown/backend/commit/5d0070946bc80a6300eb24d251721b211c8b5602))
+* make authorization permission and other validators OR ([28f2f01](https://github.com/hivetown/backend/commit/28f2f01c5dc6a4903c7b6246a0347d3e2ac7ea56))
+* permission enum; add details to ApiError (and forbidden) ([050aa43](https://github.com/hivetown/backend/commit/050aa43e573a93553eabe323bd2d17a75d9bd689))
+* possibilidade de ver os veiculos em transito de uma UP ([5865f91](https://github.com/hivetown/backend/commit/5865f91d852748f0768fd691276804bca3aab87a))
+* post de uma unidade de produção feito ([12820bf](https://github.com/hivetown/backend/commit/12820bfa8eeee73b49e66eb65f9d6d61e2fa8247))
+* put de uma unidade de produção feito ([1a0f405](https://github.com/hivetown/backend/commit/1a0f4056c2b7695355a043cde9d10a3e4b481510))
+* remover uma categoria a um productSpec ([4eaf884](https://github.com/hivetown/backend/commit/4eaf884853c2a52cdf540aa6ea9a5f21a8cbe0f3))
+* seed base roles ([17d8d2b](https://github.com/hivetown/backend/commit/17d8d2bb8afe4c86a7648525a330a390e9c57c66))
+* show error messages on custom validators ([76da6ee](https://github.com/hivetown/backend/commit/76da6ee3a9e637a9abc87c80fd90939ebe208476))
+* update de um productSpec ([1fee811](https://github.com/hivetown/backend/commit/1fee811ee0f680421a47692d317190fc4373656e))
+* user gateway ([6608c2f](https://github.com/hivetown/backend/commit/6608c2f68e288556a41bf0e106b851c402408095))
+* ver um produto de uma spec ([fc068a3](https://github.com/hivetown/backend/commit/fc068a3138c263fa48654a0ba5923642fb88d368))
+
+
+### Bug Fixes
+
+* add user to consumer/producer usages ([2a66c9f](https://github.com/hivetown/backend/commit/2a66c9f0ed28e7afb137443ec993c97b86fbd255))
+* addresses e urls ([0e01b59](https://github.com/hivetown/backend/commit/0e01b5913c7de745070853bd6b72c405032f51bd))
+* adicao do populate address ao findbyid do consumer ([ccd4c03](https://github.com/hivetown/backend/commit/ccd4c038c708a37b8a58ab214cc5150835b2191f))
+* allow unauthenticated users to fetch producers ([d03ad24](https://github.com/hivetown/backend/commit/d03ad244b3de67909be856a71fb35f64c1814d14))
+* canCancel da order ([12e0d59](https://github.com/hivetown/backend/commit/12e0d59b4be93a9ebd02b4ef5a389b0e608783f0))
+* consumer/producer creation ([d1bd0b6](https://github.com/hivetown/backend/commit/d1bd0b6ec050635954188b7e521606b90e3b7df9))
+* consumidores ([22aef88](https://github.com/hivetown/backend/commit/22aef88dd134bebdea55dcf78997d7c2c952d741))
+* delete cart items ([e34d33a](https://github.com/hivetown/backend/commit/e34d33a248fa8cd18d16e5e79c5b4c68760a3451))
+* enforce permissions on get producers and consumers with deleted ats ([ec61001](https://github.com/hivetown/backend/commit/ec610018ea10a5c376e39cd9c5cb127d948f30e5))
+* erros vistos na review ([02f0228](https://github.com/hivetown/backend/commit/02f0228f23736f421975981631630801df19a53d))
+* estado quando se associa um carrier a um shipment ([b2c1455](https://github.com/hivetown/backend/commit/b2c14554f800b451c0249828d5a44d288e8a2ad4))
+* filter out deleted producer products from producer products ([436645c](https://github.com/hivetown/backend/commit/436645caee13b471401f88f328689061feedc09e))
+* forgot to find producer ([d9df989](https://github.com/hivetown/backend/commit/d9df989bac38e7843d911f75c2f9fd6170b4ab50))
+* hello.ts talvez possa ser eliminado (?) ([8be3406](https://github.com/hivetown/backend/commit/8be3406f641b02ebf08d87aff33682bfb67ad417))
+* ids on consumer and producer gateways ([1056033](https://github.com/hivetown/backend/commit/105603315581dd4341d788ba2f49c52961630ddc))
+* image error on seedr ([f8d0a47](https://github.com/hivetown/backend/commit/f8d0a47aa16cf2e782f5062c1223fc334318991f))
+* mensagens de erro e canCancel para verificar também se já foi cancelado ([24635f6](https://github.com/hivetown/backend/commit/24635f622e794723a7545af2c4e08518555c33f0))
+* migracoes ([e74055a](https://github.com/hivetown/backend/commit/e74055a1b14a78eae3427b09982eca6d4e08f377))
+* migrations ([d71a58a](https://github.com/hivetown/backend/commit/d71a58a417a6760c1289b5bbea103399b50db21c))
+* mostrar o produto quando é criado ([114cf12](https://github.com/hivetown/backend/commit/114cf12588f6f1bb8df4d6d1fbe654cceaf30ecd))
+* produtores ([d5f0de4](https://github.com/hivetown/backend/commit/d5f0de45669b211961e37cc214d515f14da27cf9))
+* query para ver as ups de um produtor de um productSepc ([7d71cdc](https://github.com/hivetown/backend/commit/7d71cdc12f7058423fba6d150f92a276f172e05e))
+* remove unused methods ([7bb7f7f](https://github.com/hivetown/backend/commit/7bb7f7fb8394758ca0fa66905711a97dc16e4b1c))
+* req.user would be undefined if route did not have authorization ([4c28fc8](https://github.com/hivetown/backend/commit/4c28fc8ef04c22c070aa94520353e85aa98ce96d))
+* retirar uma linha errada ([f4e1bce](https://github.com/hivetown/backend/commit/f4e1bceb5b93697941e50a4d16bc32ffaa6fa1ab))
+* routes that differred ([fcd0b26](https://github.com/hivetown/backend/commit/fcd0b268da8ec3427d202afac7632508aac8cdf4))
+* seeder to use User ([091cd3a](https://github.com/hivetown/backend/commit/091cd3a3c05826023cfb8a06b8c1c3554fb36828))
+* show product spec and product spec images ([413da57](https://github.com/hivetown/backend/commit/413da579a8d4a7b7410560b5b1ebe1b98bff26e9))
+* show role on GET /auth ([4123d78](https://github.com/hivetown/backend/commit/4123d787b6c24b305a7a6044e195fb9148a93ab3))
+* some other routes ([79fa884](https://github.com/hivetown/backend/commit/79fa884a1685a6bafe53728b7e9907091573bcec))
+* staying invalid if user passes other validators ([6e58ae4](https://github.com/hivetown/backend/commit/6e58ae49ed23b104a8df000aa3e68de77ac9f061))
+* tratamento de erros do stripe ([e0efcc7](https://github.com/hivetown/backend/commit/e0efcc7745e1ea79bc597cbc331a1071f3d31611))
+* upsert and delete throwing funny errors ([bf3ac0b](https://github.com/hivetown/backend/commit/bf3ac0b7590f35b96e71a89533a5e624b413f9d8))
+* url das imagens no seeder ([34ce4c4](https://github.com/hivetown/backend/commit/34ce4c4d9f96efc9975eca5f6368cf1f51970812))
+* url das imagens no seeder ([33a786b](https://github.com/hivetown/backend/commit/33a786b7d290d139adb035f049e24b09ef0737bc))
+* use error middleware instead ([387de66](https://github.com/hivetown/backend/commit/387de663258d86c1241a178627bea91c60dd7c4f))
+* use getResultList instead of execute ([aeed289](https://github.com/hivetown/backend/commit/aeed289c0903eacefdfca67ecb0eaaac1168f5fa))
+* user ([43741f7](https://github.com/hivetown/backend/commit/43741f7329845133afbb6bf5102691be226f8b1f))
+* variaveis de ambiente ([fcbdc33](https://github.com/hivetown/backend/commit/fcbdc3323153c37ea2ca8f16f744001890b6605b))
+* were missing user object in some places ([5c7235f](https://github.com/hivetown/backend/commit/5c7235f4d429fcf88c5d8720b80a1fb39d41258d))
+
 ## 0.2.0 (2023-04-15)
 
 ### ⚠ BREAKING CHANGES
