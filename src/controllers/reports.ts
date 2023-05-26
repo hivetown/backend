@@ -37,7 +37,7 @@ export class ReportsController {
 			categoryId = category.id;
 		}
 
-		const result = await container.orderGateway.getFlashCardsInformation(
+		const result = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -46,7 +46,7 @@ export class ReportsController {
 			categoryId
 		);
 
-		const resultCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+		const resultCancelados = await container.orderGateway.getReportCanceledInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -85,7 +85,7 @@ export class ReportsController {
 			if (!category) throw new NotFoundError('Category not found');
 		}
 
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -121,7 +121,7 @@ export class ReportsController {
 
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
 
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -130,7 +130,7 @@ export class ReportsController {
 			category?.id
 		);
 
-		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+		const resultadoCancelados = await container.orderGateway.getReportCanceledInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -168,7 +168,7 @@ export class ReportsController {
 
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
 
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -177,7 +177,7 @@ export class ReportsController {
 			category?.id
 		);
 
-		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+		const resultadoCancelados = await container.orderGateway.getReportCanceledInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -218,7 +218,7 @@ export class ReportsController {
 
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
 
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -227,7 +227,7 @@ export class ReportsController {
 			category?.id
 		);
 
-		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+		const resultadoCancelados = await container.orderGateway.getReportCanceledInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -267,7 +267,7 @@ export class ReportsController {
 			if (!category) throw new NotFoundError('Category not found');
 		}
 
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -277,7 +277,7 @@ export class ReportsController {
 			tipo === 'Consumer' ? user.id : undefined,
 			tipo === 'Producer' ? user.id : undefined
 		);
-		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+		const resultadoCancelados = await container.orderGateway.getReportCanceledInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -326,7 +326,7 @@ export class ReportsController {
 			if (!category) throw new NotFoundError('Category not found');
 		}
 
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -371,7 +371,7 @@ export class ReportsController {
 		}
 
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -382,7 +382,7 @@ export class ReportsController {
 			tipo === 'Producer' ? user.id : undefined
 		);
 
-		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+		const resultadoCancelados = await container.orderGateway.getReportCanceledInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -432,7 +432,7 @@ export class ReportsController {
 
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
 
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -443,7 +443,7 @@ export class ReportsController {
 			tipo === 'Producer' ? user.id : undefined
 		);
 
-		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+		const resultadoCancelados = await container.orderGateway.getReportCanceledInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -494,7 +494,7 @@ export class ReportsController {
 
 		const opcao: string = Object.keys(req.query).filter((key) => req.query[key] === 'true')[0];
 
-		const resultado = await container.orderGateway.getFlashCardsInformation(
+		const resultado = await container.orderGateway.getReportInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),
@@ -505,7 +505,7 @@ export class ReportsController {
 			user.id
 		);
 
-		const resultadoCancelados = await container.orderGateway.getFlashcardsCanceledInformation(
+		const resultadoCancelados = await container.orderGateway.getReportCanceledInformation(
 			String(req.query.dataInicio),
 			String(req.query.dataFim),
 			Number(req.query.raio),

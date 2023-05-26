@@ -135,7 +135,7 @@ export class OrderGateway {
 		return this.repository.count();
 	}
 
-	public async getFlashCardsInformation(
+	public async getReportInformation(
 		dataInicio: string,
 		dataFim: string,
 		distancia: number,
@@ -329,7 +329,7 @@ export class OrderGateway {
 	}
 
 	// --------------------------------------------------------------------------------------------------------------------------------------
-	public async getFlashcardsCanceledInformation(
+	public async getReportCanceledInformation(
 		dataInicio: string,
 		dataFim: string,
 		distancia: number,
