@@ -203,13 +203,13 @@ export class OrderGateway {
 				.leftJoin('s.events', 'se');
 		} else if (opcao === 'products') {
 			if (subopcao === 'numeroEncomendas') {
-				void qb.select(['select oi.producer_product_id, ps.name, count(oi.order_id) as numeroEncomendas']);
+				void qb.select(['oi.producer_product_id, ps.name, count(oi.order_id) as numeroEncomendas']);
 				void qb.groupBy('1');
 			} else if (subopcao === 'totalProdutos') {
-				void qb.select(['select oi.producer_product_id, ps.name, sum(oi.quantity) as totalProdutos']);
+				void qb.select(['oi.producer_product_id, ps.name, sum(oi.quantity) as totalProdutos']);
 				void qb.groupBy('1');
 			} else if (subopcao === 'comprasTotais') {
-				void qb.select(['select oi.producer_product_id, ps.name, sum(oi.quantity * oi.price) as comprasTotais']);
+				void qb.select(['oi.producer_product_id, ps.name, sum(oi.quantity * oi.price) as comprasTotais']);
 				void qb.groupBy('1');
 			}
 			void qb
@@ -373,13 +373,13 @@ export class OrderGateway {
 				.leftJoin('s.events', 'se');
 		} else if (opcao === 'products') {
 			if (subopcao === 'numeroEncomendas') {
-				void qb.select(['select oi.producer_product_id, ps.name, count(oi.order_id) as numeroEncomendas']);
+				void qb.select(['oi.producer_product_id, ps.name, count(oi.order_id) as numeroEncomendasCancelados']);
 				void qb.groupBy('1');
 			} else if (subopcao === 'totalProdutos') {
-				void qb.select(['select oi.producer_product_id, ps.name, sum(oi.quantity) as totalProdutos']);
+				void qb.select(['oi.producer_product_id, ps.name, sum(oi.quantity) as totalProdutosCancelados']);
 				void qb.groupBy('1');
 			} else if (subopcao === 'comprasTotais') {
-				void qb.select(['select oi.producer_product_id, ps.name, sum(oi.quantity * oi.price) as comprasTotais']);
+				void qb.select(['oi.producer_product_id, ps.name, sum(oi.quantity * oi.price) as comprasTotaisCancelados']);
 				void qb.groupBy('1');
 			}
 			void qb
