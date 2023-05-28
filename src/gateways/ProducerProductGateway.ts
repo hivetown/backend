@@ -101,7 +101,10 @@ export class ProducerProductGateway {
 		options?: ProducerProductOptions
 	): Promise<{ items: ProducerProduct[]; totalItems: number; totalPages: number; page: number; pageSize: number }> {
 		const pagination = paginate(options);
-		const qb: QueryBuilder<ProducerProduct> = this.repository.createQueryBuilder('producerProduct').select('*');
+		const qb: QueryBuilder<ProducerProduct> = this.repository
+			.createQueryBuilder('producerProduct')
+			.select('*')
+			.where('producerProduct.deleted_at is null');
 
 		if (filter?.producerId) {
 			void qb.leftJoin('producerProduct.producer', 'producer').andWhere({ 'producer.id': filter.producerId });
@@ -121,7 +124,7 @@ export class ProducerProductGateway {
 		}
 
 		// Calculate items count before grouping and paginating
-		const totalItems = await qb.clone().getCount();
+		const totalItemsQb = qb.clone();
 
 		// Paginate
 		void qb.offset(pagination.offset).limit(pagination.limit);
@@ -134,7 +137,7 @@ export class ProducerProductGateway {
 		}
 
 		// Fetch results and map them
-		const producerProducts = (await qb.execute()).map((raw: any) => ({ ...this.repository.map(raw) }));
+		const [totalItems, producerProducts] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;

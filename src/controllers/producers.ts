@@ -17,6 +17,9 @@ import { throwError } from '../utils/throw';
 import { ForbiddenError } from '../errors/ForbiddenError';
 import { Authentication } from '../external/Authentication';
 import { hasPermissions } from '../utils/hasPermission';
+import type { ProductionUnitFilters } from '../interfaces/ProductionUnitFilters';
+import { StringSearchType } from '../enums/StringSearchType';
+import { UnauthorizedError } from '../errors/UnauthorizedError';
 
 @Controller('/producers')
 @Injectable()
@@ -54,8 +57,7 @@ export class ProducersController {
 				pageSize: Joi.number().integer().min(1),
 				includeAll: Joi.boolean().optional()
 			})
-		}),
-		authenticationMiddleware
+		})
 	])
 	public async getProducers(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const options: PaginatedOptions = {
@@ -63,9 +65,14 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 		let producers;
-		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_PRODUCER)) {
+		if (req.query.includeAll) {
+			if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
+			const user = await container.userGateway.findByAuthId(req.authUser.uid);
+			if (!hasPermissions(user!, Permission.READ_OTHER_PRODUCER)) throw new ForbiddenError('User may not include all');
 			producers = await container.producerGateway.findAllWithDeletedAt(options);
-		} else {
+		}
+
+		if (!producers) {
 			producers = await container.producerGateway.findAll(options);
 		}
 		return res.json(producers);
@@ -144,7 +151,7 @@ export class ProducersController {
 	])
 	public async updateProducer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		let producer;
-		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.WRITE_OTHER_CONSUMER)) {
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
 		} else {
 			producer = await container.producerGateway.findById(producerId);
@@ -169,14 +176,18 @@ export class ProducersController {
 			query: Joi.object({
 				includeAll: Joi.boolean().optional()
 			})
-		}),
-		authenticationMiddleware
+		})
 	])
 	public async getProducer(@Response() res: Express.Response, @Params('producerId') producerId: number, @Request() req: Express.Request) {
 		let producer;
-		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
+		if (req.query.includeAll) {
+			if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
+			const user = await container.userGateway.findByAuthId(req.authUser.uid);
+			if (!hasPermissions(user!, Permission.READ_OTHER_PRODUCER)) throw new ForbiddenError('User may not include all');
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
-		} else {
+		}
+
+		if (!producer) {
 			producer = await container.producerGateway.findById(producerId);
 		}
 
@@ -671,7 +682,12 @@ export class ProducersController {
 
 	@Get('/:producerId/units', [
 		validate({
-			params: Joi.object({ producerId: Joi.number().required() })
+			params: Joi.object({ producerId: Joi.number().required() }),
+			query: Joi.object({
+				search: Joi.string().optional(),
+				page: Joi.number().min(1).optional(),
+				pageSize: Joi.number().min(1).optional()
+			})
 		})
 	])
 	public async getUnits(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
@@ -683,7 +699,10 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const units = await container.productionUnitGateway.findFromProducer(producer.user.id, options);
+		const filter: ProductionUnitFilters = { producerId: producer.user.id };
+		if (req.query.search) filter.search = { type: StringSearchType.CONTAINS, value: req.query.search as string };
+
+		const units = await container.productionUnitGateway.findFromProducer(filter, options);
 		return res.status(200).json(units);
 	}
 
