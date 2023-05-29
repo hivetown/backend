@@ -3,10 +3,8 @@ import { ProductionUnit } from './ProductionUnit';
 import { CarrierStatus } from '../enums/CarrierStatus';
 import { Shipment } from './Shipment';
 import type { Image } from './Image';
-import { SoftDeletable } from 'mikro-orm-soft-delete';
 import type { ShipmentEvent } from './ShipmentEvent';
 
-@SoftDeletable(() => Carrier, 'deletedAt', () => new Date())
 @Entity()
 export class Carrier {
 	@PrimaryKey()

@@ -15,14 +15,14 @@ export class CarrierGateway {
 		const pagination = paginate(options);
 		const [carriers, totalResults] = await Promise.all([
 			this.repository.find(
-				{ productionUnit: productionUnitId, status: 'UNAVAILABLE' },
+				{ productionUnit: productionUnitId, status: 'UNAVAILABLE', deletedAt: null },
 				{
 					populate: ['productionUnit'],
 					limit: pagination.limit,
 					offset: pagination.offset
 				}
 			),
-			this.repository.count({ productionUnit: productionUnitId, status: 'UNAVAILABLE' })
+			this.repository.count({ productionUnit: productionUnitId, status: 'UNAVAILABLE', deletedAt: null })
 		]);
 		return {
 			items: carriers,
@@ -37,14 +37,14 @@ export class CarrierGateway {
 		const paginataion = paginate(options);
 		const [carriers, totalResults] = await Promise.all([
 			this.repository.find(
-				{ productionUnit: { producer: { user: producerId } } },
+				{ productionUnit: { producer: { user: producerId } }, deletedAt: null },
 				{
 					populate: ['productionUnit'],
 					limit: paginataion.limit,
 					offset: paginataion.offset
 				}
 			),
-			this.repository.count({ productionUnit: { producer: { user: producerId } } })
+			this.repository.count({ productionUnit: { producer: { user: producerId } }, deletedAt: null })
 		]);
 
 		return {
@@ -58,7 +58,7 @@ export class CarrierGateway {
 
 	public async findOneOfProducer(producerId: number, carrierId: number): Promise<Carrier | null> {
 		const carrier = await this.repository.findOne(
-			{ productionUnit: { producer: { user: producerId } }, id: carrierId },
+			{ productionUnit: { producer: { user: producerId } }, id: carrierId, deletedAt: null },
 			{ populate: ['productionUnit', 'productionUnit.address', 'shipments.events', 'shipments.events.address'] }
 		);
 
@@ -68,9 +68,5 @@ export class CarrierGateway {
 	public async createOrUpdate(carrier: Carrier): Promise<Carrier> {
 		await this.repository.persistAndFlush(carrier);
 		return carrier;
-	}
-
-	public async delete(carrier: Carrier): Promise<void> {
-		await this.repository.removeAndFlush(carrier);
 	}
 }

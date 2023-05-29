@@ -1182,7 +1182,8 @@ export class ProducersController {
 
 		if (carrier.status === CarrierStatus.Unavailable) throw new ForbiddenError('Carrier is unavailable so it cannot be deleted');
 
-		await container.carrierGateway.delete(carrier);
+		carrier.deletedAt = new Date();
+		await container.carrierGateway.createOrUpdate(carrier);
 
 		return res.status(204).send();
 	}

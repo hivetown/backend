@@ -1048,7 +1048,8 @@
 					"localTableName": "shipment",
 					"referencedColumnNames": ["id"],
 					"referencedTableName": "carrier",
-					"deleteRule": "set null"
+					"deleteRule": "set null",
+					"updateRule": "cascade"
 				}
 			}
 		},
