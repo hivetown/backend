@@ -686,7 +686,9 @@ export class ProducersController {
 			query: Joi.object({
 				search: Joi.string().optional(),
 				page: Joi.number().min(1).optional(),
-				pageSize: Joi.number().min(1).optional()
+				pageSize: Joi.number().min(1).optional(),
+				raio: Joi.number().min(1).optional(),
+				addressId: Joi.number().min(1).optional() // ver se há outra opção
 			})
 		})
 	])
@@ -701,6 +703,12 @@ export class ProducersController {
 
 		const filter: ProductionUnitFilters = { producerId: producer.user.id };
 		if (req.query.search) filter.search = { type: StringSearchType.CONTAINS, value: req.query.search as string };
+		if (req.query.raio && req.query.addressId) {
+			const address = await container.addressGateway.findById(Number(req.query.addressId));
+			if (!address) throw new NotFoundError('Address not found');
+			filter.address = address;
+			filter.raio = Number(req.query.raio);
+		}
 
 		const units = await container.productionUnitGateway.findFromProducer(filter, options);
 		return res.status(200).json(units);

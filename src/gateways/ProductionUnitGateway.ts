@@ -30,12 +30,21 @@ export class ProductionUnitGateway {
 			.createQueryBuilder('pu')
 			.select('*')
 			.where({ producer: { id: filter.producerId }, deletedAt: null })
-			.leftJoinAndSelect('pu.address', 'a');
+			.leftJoinAndSelect('pu.address', 'pa');
 
 		if (filter.search) {
 			void qb.andWhere({
 				$or: [{ 'lower(pu.name)': { $like: stringSearchType(filter.search) } }]
 			});
+		}
+
+		if (filter.raio) {
+			const consumerAddress = filter.address;
+
+			void qb.andWhere(
+				`(2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(?)) / 2), 2) + COS(RADIANS(?)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(?)) / 2), 2)) ) ) <= ?`,
+				[consumerAddress!.latitude, consumerAddress!.latitude, consumerAddress!.longitude, filter.raio]
+			);
 		}
 
 		const totalItemsQb = qb.clone();
@@ -53,7 +62,7 @@ export class ProductionUnitGateway {
 			totalItems,
 			totalPages,
 			page,
-			pageSize: pagination.limit
+			pageSize: productionUnits.length
 		};
 	}
 

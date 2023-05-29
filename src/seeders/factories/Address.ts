@@ -9,12 +9,21 @@ const validDoors = baseValidDoors
 	.concat(baseValidDoors.map((door) => door.slice(0, 3).concat('.')))
 	.concat(baseValidDoors.map((door) => door.slice(0, 1).concat('.')));
 
+// Define as coordenadas geográficas limites para Portugal continental
+const portugalLatitudeRange = {
+	min: 36.838,
+	max: 42.28
+};
+
+const portugalLongitudeRange = {
+	min: -9.498,
+	max: -6.189
+};
 export class AddressFactory extends Factory<Address> {
 	public model = Address;
 
 	protected definition(faker: Faker): EntityData<Address> {
 		const county = faker.address.county();
-
 		return {
 			number: Number(faker.address.buildingNumber()),
 			door: faker.helpers.arrayElement(validDoors),
@@ -25,8 +34,8 @@ export class AddressFactory extends Factory<Address> {
 			county,
 			city: faker.address.cityName(),
 			district: faker.address.state(),
-			latitude: Number(faker.address.latitude()),
-			longitude: Number(faker.address.longitude())
+			latitude: faker.datatype.float({ min: portugalLatitudeRange.min, max: portugalLatitudeRange.max }),
+			longitude: faker.datatype.float({ min: portugalLongitudeRange.min, max: portugalLongitudeRange.max })
 		};
 	}
 }
