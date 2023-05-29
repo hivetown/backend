@@ -29,15 +29,51 @@ export class ProducerProductGateway {
 	}
 
 	// Pesquisa produtos por id de uma ProductSpec
-	public async findBySpecificationId(id: number, options: PaginatedOptions): Promise<BaseItems<ProducerProduct>> {
+	public async findBySpecificationId(filters: ProducerProductFilters, options: PaginatedOptions): Promise<BaseItems<ProducerProduct>> {
 		const pagination = paginate(options);
-		const [products, totalResults] = await Promise.all([
-			this.repository.find(
-				{ productSpec: id },
-				{ populate: ['producer', 'productionUnit'], limit: pagination.limit, offset: pagination.offset }
-			),
-			this.repository.count({ productSpec: id })
-		]);
+		// const [products, totalResults] = await Promise.all([
+		// 	this.repository.find(
+		// 		{ productSpec: filters.productSpecId },
+		// 		{ populate: ['producer', 'productionUnit'], limit: pagination.limit, offset: pagination.offset }
+		// 	),
+		// 	this.repository.count({ productSpec: filters.productSpecId })
+		// ]);
+
+		const qb = this.repository
+			.createQueryBuilder('pp')
+			.select('*')
+			.where({ productSpec: { id: filters.productSpecId }, deletedAt: null })
+			.leftJoinAndSelect('pp.producer', 'p')
+			.leftJoinAndSelect('p.user', 'u')
+			.leftJoinAndSelect('u.image', 'ui')
+			.leftJoinAndSelect('pp.productionUnit', 'pu')
+			.leftJoin('pu.address', 'pa');
+
+		if (filters.producerId) {
+			void qb.andWhere({ producer: { id: filters.producerId } });
+		}
+
+		if (filters.productionUnitId) {
+			void qb.andWhere({ productionUnit: { id: filters.productionUnitId } });
+		}
+
+		if (filters.raio && filters.consumerAddress) {
+			const { consumerAddress } = filters;
+
+			void qb.andWhere(
+				`(2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(?)) / 2), 2) + COS(RADIANS(?)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(?)) / 2), 2)) ) ) <= ?`,
+				[consumerAddress!.latitude, consumerAddress!.latitude, consumerAddress!.longitude, filters.raio]
+			);
+		}
+
+		const totalItemsQb = qb.clone();
+
+		// Paginate
+		void qb.offset(pagination.offset).limit(pagination.limit);
+
+		// Fetch results and map them
+		const [totalResults, products] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
+
 		return {
 			items: products,
 			totalItems: totalResults,
@@ -45,7 +81,6 @@ export class ProducerProductGateway {
 			page: Math.ceil(pagination.offset / pagination.limit) + 1,
 			pageSize: products.length
 		};
-		// { items: productSpecs, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
 
 	public async findOneBySpecificationId(specId: number, producerProductId: number): Promise<ProducerProduct | null> {
