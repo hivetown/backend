@@ -108,10 +108,10 @@ export class ReportsController {
 				dataInicio: Joi.date().required(),
 				dataFim: Joi.date().required(),
 				raio: Joi.number().integer().min(1).required(),
-				numeroEncomendas: Joi.boolean().optional(),
-				totalProdutos: Joi.boolean().optional(),
-				comprasTotais: Joi.boolean().optional(),
-				numeroProdutosEncomendados: Joi.boolean().optional()
+				numeroEncomendas: Joi.boolean().equal(true).optional(),
+				totalProdutos: Joi.boolean().equal(true).optional(),
+				comprasTotais: Joi.boolean().equal(true).optional(),
+				numeroProdutosEncomendados: Joi.boolean().equal(true).optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
 		authenticationMiddleware,
@@ -159,9 +159,9 @@ export class ReportsController {
 				dataInicio: Joi.date().required(),
 				dataFim: Joi.date().required(),
 				raio: Joi.number().integer().min(1).required(),
-				numeroEncomendas: Joi.boolean().optional(),
-				totalProdutos: Joi.boolean().optional(),
-				comprasTotais: Joi.boolean().optional()
+				numeroEncomendas: Joi.boolean().equal(true).optional(),
+				totalProdutos: Joi.boolean().equal(true).optional(),
+				comprasTotais: Joi.boolean().equal(true).optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais')
 		}),
 		authenticationMiddleware,
@@ -211,10 +211,10 @@ export class ReportsController {
 				dataInicio: Joi.date().required(),
 				dataFim: Joi.date().required(),
 				raio: Joi.number().integer().min(1).required(),
-				numeroEncomendas: Joi.boolean().optional(),
-				totalProdutos: Joi.boolean().optional(),
-				comprasTotais: Joi.boolean().optional(),
-				numeroProdutosEncomendados: Joi.boolean().optional()
+				numeroEncomendas: Joi.boolean().equal(true).optional(),
+				totalProdutos: Joi.boolean().equal(true).optional(),
+				comprasTotais: Joi.boolean().equal(true).optional(),
+				numeroProdutosEncomendados: Joi.boolean().equal(true).optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
 		authenticationMiddleware,
@@ -379,10 +379,10 @@ export class ReportsController {
 				dataInicio: Joi.date().required(),
 				dataFim: Joi.date().required(),
 				raio: Joi.number().integer().min(1).required(),
-				numeroEncomendas: Joi.boolean().optional(),
-				totalProdutos: Joi.boolean().optional(),
-				comprasTotais: Joi.boolean().optional(),
-				numeroProdutosEncomendados: Joi.boolean().optional()
+				numeroEncomendas: Joi.boolean().equal(true).optional(),
+				totalProdutos: Joi.boolean().equal(true).optional(),
+				comprasTotais: Joi.boolean().equal(true).optional(),
+				numeroProdutosEncomendados: Joi.boolean().equal(true).optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
 		authenticationMiddleware,
@@ -446,11 +446,11 @@ export class ReportsController {
 				dataInicio: Joi.date().required(),
 				dataFim: Joi.date().required(),
 				raio: Joi.number().integer().min(1).required(),
-				numeroEncomendas: Joi.boolean().optional(),
-				totalProdutos: Joi.boolean().optional(),
-				comprasTotais: Joi.boolean().optional(),
-				vendasTotais: Joi.boolean().optional(),
-				numeroProdutosEncomendados: Joi.boolean().optional()
+				numeroEncomendas: Joi.boolean().equal(true).optional(),
+				totalProdutos: Joi.boolean().equal(true).optional(),
+				comprasTotais: Joi.boolean().equal(true).optional(),
+				vendasTotais: Joi.boolean().equal(true).optional(),
+				numeroProdutosEncomendados: Joi.boolean().equal(true).optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'vendasTotais', 'numeroProdutosEncomendados')
 		}),
 		authenticationMiddleware,
@@ -517,10 +517,10 @@ export class ReportsController {
 				dataInicio: Joi.date().required(),
 				dataFim: Joi.date().required(),
 				raio: Joi.number().integer().min(1).required(),
-				numeroEncomendas: Joi.boolean().optional(),
-				totalProdutos: Joi.boolean().optional(),
-				comprasTotais: Joi.boolean().optional(),
-				numeroProdutosEncomendados: Joi.boolean().optional()
+				numeroEncomendas: Joi.boolean().equal(true).optional(),
+				totalProdutos: Joi.boolean().equal(true).optional(),
+				comprasTotais: Joi.boolean().equal(true).optional(),
+				numeroProdutosEncomendados: Joi.boolean().equal(true).optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
 		authenticationMiddleware,
