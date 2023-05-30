@@ -13,7 +13,8 @@ const baseRole = [
 	},
 	{
 		name: 'AccountEditor',
-		permissions: Permission.READ_OTHER_CONSUMER | Permission.WRITE_OTHER_CONSUMER | Permission.READ_OTHER_PRODUCER | Permission.WRITE_OTHER_PRODUCER
+		permissions:
+			Permission.READ_OTHER_CONSUMER | Permission.WRITE_OTHER_CONSUMER | Permission.READ_OTHER_PRODUCER | Permission.WRITE_OTHER_PRODUCER
 	},
 	{
 		name: 'ContentManager',
