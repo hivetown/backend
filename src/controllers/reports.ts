@@ -2,12 +2,15 @@ import { Injectable } from '@decorators/di';
 import { Controller, Get, Params, Request, Response } from '@decorators/express';
 import * as Express from 'express';
 import { container } from '..';
-import { authenticationMiddleware } from '../middlewares';
+import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { NotFoundError } from '../errors/NotFoundError';
 import { UserType } from '../enums';
 import { Joi, validate } from 'express-validation';
 import { BadRequestError } from '../errors/BadRequestError';
 import { convertEvolution, convertProducts, mergeResultsClients, mergeResultsEvolution, mergeResultsProducts } from '../utils/handleReport';
+import { Permission } from '../enums/Permission';
+import { ForbiddenError } from '../errors/ForbiddenError';
+import { throwError } from '../utils/throw';
 
 @Controller('/reports')
 @Injectable()
@@ -21,7 +24,10 @@ export class ReportsController {
 				raio: Joi.number().integer().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER | Permission.READ_OTHER_PRODUCER
+		})
 	])
 	public async reportFlashcardsAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
 		let category = null;
@@ -71,7 +77,10 @@ export class ReportsController {
 				raio: Joi.number().integer().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER | Permission.READ_OTHER_PRODUCER
+		})
 	])
 	public async reportMapAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
 		let category = null;
@@ -105,7 +114,10 @@ export class ReportsController {
 				numeroProdutosEncomendados: Joi.boolean().optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER | Permission.READ_OTHER_PRODUCER
+		})
 	])
 	public async reportEvolutionAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
 		let category = null;
@@ -152,7 +164,10 @@ export class ReportsController {
 				comprasTotais: Joi.boolean().optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais')
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER | Permission.READ_OTHER_PRODUCER
+		})
 	])
 	public async reportProductsAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
 		let category = null;
@@ -202,7 +217,10 @@ export class ReportsController {
 				numeroProdutosEncomendados: Joi.boolean().optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_CONSUMER | Permission.READ_OTHER_PRODUCER
+		})
 	])
 	public async reportClientsAdmin(@Response() res: Express.Response, @Request() req: Express.Request) {
 		let category = null;
@@ -248,7 +266,15 @@ export class ReportsController {
 				raio: Joi.number().integer().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.ALL_CONSUMER | Permission.ALL_PRODUCER,
+			otherValidations: [
+				(user, req) => {
+					user.id === Number(req.params.userId) || throwError(new ForbiddenError('You can only see your own reports'));
+				}
+			]
+		})
 	])
 	public async reportFlashcards(@Response() res: Express.Response, @Request() req: Express.Request, @Params('userId') consumerId: number) {
 		const user = await container.userGateway.findById(consumerId);
@@ -307,7 +333,15 @@ export class ReportsController {
 				raio: Joi.number().integer().min(1).required()
 			})
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.ALL_CONSUMER | Permission.ALL_PRODUCER,
+			otherValidations: [
+				(user, req) => {
+					user.id === Number(req.params.userId) || throwError(new ForbiddenError('You can only see your own reports'));
+				}
+			]
+		})
 	])
 	public async reportMap(@Response() res: Express.Response, @Request() req: Express.Request, @Params('userId') userId: number) {
 		const user = await container.userGateway.findById(userId);
@@ -351,7 +385,15 @@ export class ReportsController {
 				numeroProdutosEncomendados: Joi.boolean().optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.ALL_CONSUMER | Permission.ALL_PRODUCER,
+			otherValidations: [
+				(user, req) => {
+					user.id === Number(req.params.userId) || throwError(new ForbiddenError('You can only see your own reports'));
+				}
+			]
+		})
 	])
 	public async reportEvolution(@Response() res: Express.Response, @Request() req: Express.Request, @Params('userId') userId: number) {
 		const user = await container.userGateway.findById(userId);
@@ -411,7 +453,15 @@ export class ReportsController {
 				numeroProdutosEncomendados: Joi.boolean().optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'vendasTotais', 'numeroProdutosEncomendados')
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.ALL_CONSUMER | Permission.ALL_PRODUCER,
+			otherValidations: [
+				(user, req) => {
+					user.id === Number(req.params.userId) || throwError(new ForbiddenError('You can only see your own reports'));
+				}
+			]
+		})
 	])
 	public async reportProducts(@Response() res: Express.Response, @Request() req: Express.Request, @Params('userId') userId: number) {
 		const user = await container.userGateway.findById(userId);
@@ -473,7 +523,15 @@ export class ReportsController {
 				numeroProdutosEncomendados: Joi.boolean().optional()
 			}).xor('numeroEncomendas', 'totalProdutos', 'comprasTotais', 'numeroProdutosEncomendados')
 		}),
-		authenticationMiddleware
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.ALL_CONSUMER | Permission.ALL_PRODUCER,
+			otherValidations: [
+				(user, req) => {
+					user.id === Number(req.params.userId) || throwError(new ForbiddenError('You can only see your own reports'));
+				}
+			]
+		})
 	])
 	public async reportClients(@Response() res: Express.Response, @Request() req: Express.Request, @Params('userId') userId: number) {
 		const user = await container.userGateway.findById(userId);
