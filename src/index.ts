@@ -34,6 +34,7 @@ import { WebhookController } from './controllers/webhook';
 
 // ENV
 import { config } from 'dotenv-cra';
+import { ReportsController } from './controllers/reports';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 config();
 
@@ -96,7 +97,7 @@ export const main = async () => {
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
-	await attachControllers(app, [ProductsController, CategoryController, ConsumerController, WebhookController]);
+	await attachControllers(app, [ProductsController, CategoryController, ConsumerController, WebhookController, ReportsController]);
 	await attachControllers(app, [AuthController, ProductsController, CategoryController, ConsumerController, ProducersController]);
 
 	app.use('/', (_req, res) => {

@@ -33,4 +33,8 @@ export class OrderItem {
 	public getActualStatus(): ShipmentStatus {
 		return this.shipment.getLastEvent().status;
 	}
+
+	public getFirstDate(): Date {
+		return this.shipment.getFirstEvent().date;
+	}
 }
