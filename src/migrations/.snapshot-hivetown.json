@@ -933,6 +933,7 @@
 					"autoincrement": false,
 					"primary": false,
 					"nullable": false,
+					"default": "'AVAILABLE'",
 					"enumItems": ["AVAILABLE", "UNAVAILABLE"],
 					"mappedType": "enum"
 				},
@@ -944,6 +945,16 @@
 					"primary": false,
 					"nullable": true,
 					"mappedType": "integer"
+				},
+				"deleted_at": {
+					"name": "deleted_at",
+					"type": "datetime",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"length": 0,
+					"mappedType": "datetime"
 				}
 			},
 			"name": "carrier",

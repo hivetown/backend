@@ -3,6 +3,7 @@ import { ProductionUnit } from './ProductionUnit';
 import { CarrierStatus } from '../enums/CarrierStatus';
 import { Shipment } from './Shipment';
 import type { Image } from './Image';
+import type { ShipmentEvent } from './ShipmentEvent';
 
 @Entity()
 export class Carrier {
@@ -23,4 +24,25 @@ export class Carrier {
 
 	@OneToOne({ eager: true })
 	public image?: Image;
+
+	@Property({ nullable: true })
+	public deletedAt?: Date;
+
+	public constructor(licensePlate: string, productionUnit: ProductionUnit, image: Image) {
+		this.licensePlate = licensePlate;
+		this.productionUnit = productionUnit;
+		this.image = image;
+		this.status = CarrierStatus.Available;
+	}
+
+	public getLastShipmentEvent(): ShipmentEvent | null {
+		if (this.shipments.length === 0) {
+			return null;
+		}
+		const lastShipment = this.shipments[this.shipments.length - 1];
+		if (lastShipment.events.length === 0) {
+			return null;
+		}
+		return lastShipment.getLastEvent();
+	}
 }

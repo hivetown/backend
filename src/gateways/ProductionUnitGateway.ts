@@ -91,4 +91,12 @@ export class ProductionUnitGateway {
 		);
 		return productionUnits;
 	}
+
+	public async findOneFromProducer(producerId: number, productionUnitId: number): Promise<ProductionUnit | null> {
+		const productionUnit = await this.repository.findOne({
+			id: productionUnitId,
+			producer: { user: producerId }
+		});
+		return productionUnit;
+	}
 }
