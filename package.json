@@ -26,7 +26,8 @@
 		"upgrade": "yarn upgrade",
 		"docker:build": "docker build --no-cache -t luckspt/hivetown-api .",
 		"docker:run": "docker run -p 3000:3000 luckspt/hivetown-api",
-		"docker:push": "docker push luckspt/hivetown-api"
+		"docker:push": "docker push luckspt/hivetown-api",
+		"prepare": "husky install"
 	},
 	"dependencies": {
 		"@decorators/di": "^2.0.0",
