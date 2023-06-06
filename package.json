@@ -1,6 +1,6 @@
 {
 	"name": "@hivetown/backend",
-	"version": "0.2.0",
+	"version": "1.0.0",
 	"description": "Hivetown Backend",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -26,7 +26,8 @@
 		"upgrade": "yarn upgrade",
 		"docker:build": "docker build --no-cache -t luckspt/hivetown-api .",
 		"docker:run": "docker run -p 3000:3000 luckspt/hivetown-api",
-		"docker:push": "docker push luckspt/hivetown-api"
+		"docker:push": "docker push luckspt/hivetown-api",
+		"prepare": "husky install"
 	},
 	"dependencies": {
 		"@decorators/di": "^2.0.0",
@@ -38,6 +39,7 @@
 		"@mikro-orm/reflection": "5.6.15",
 		"cookie-parser": "^1.4.6",
 		"cors": "^2.8.5",
+		"countries-and-timezones": "^3.4.1",
 		"dotenv-cra": "^3.0.2",
 		"express": "^4.18.2",
 		"express-validation": "^4.1.0",

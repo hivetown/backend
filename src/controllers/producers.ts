@@ -4,7 +4,7 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Notification, Producer, ProducerProduct, ProductionUnit, ShipmentEvent, User } from '../entities';
+import { Notification, Carrier, Image, Producer, ProducerProduct, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
 import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
@@ -17,6 +17,9 @@ import { throwError } from '../utils/throw';
 import { ForbiddenError } from '../errors/ForbiddenError';
 import { Authentication } from '../external/Authentication';
 import { hasPermissions } from '../utils/hasPermission';
+import type { ProductionUnitFilters } from '../interfaces/ProductionUnitFilters';
+import { StringSearchType } from '../enums/StringSearchType';
+import { UnauthorizedError } from '../errors/UnauthorizedError';
 
 @Controller('/producers')
 @Injectable()
@@ -64,8 +67,7 @@ export class ProducersController {
 				pageSize: Joi.number().integer().min(1),
 				includeAll: Joi.boolean().optional()
 			})
-		}),
-		authenticationMiddleware
+		})
 	])
 	public async getProducers(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const options: PaginatedOptions = {
@@ -73,9 +75,14 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 		let producers;
-		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_PRODUCER)) {
+		if (req.query.includeAll) {
+			if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
+			const user = await container.userGateway.findByAuthId(req.authUser.uid);
+			if (!hasPermissions(user!, Permission.READ_OTHER_PRODUCER)) throw new ForbiddenError('User may not include all');
 			producers = await container.producerGateway.findAllWithDeletedAt(options);
-		} else {
+		}
+
+		if (!producers) {
 			producers = await container.producerGateway.findAll(options);
 		}
 		return res.json(producers);
@@ -163,7 +170,7 @@ export class ProducersController {
 	])
 	public async updateProducer(@Response() res: Express.Response, @Request() req: Express.Request, @Params('producerId') producerId: number) {
 		let producer;
-		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
+		if (req.query.includeAll && hasPermissions(req.user!, Permission.WRITE_OTHER_CONSUMER)) {
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
 		} else {
 			producer = await container.producerGateway.findById(producerId);
@@ -189,14 +196,18 @@ export class ProducersController {
 			query: Joi.object({
 				includeAll: Joi.boolean().optional()
 			})
-		}),
-		authenticationMiddleware
+		})
 	])
 	public async getProducer(@Response() res: Express.Response, @Params('producerId') producerId: number, @Request() req: Express.Request) {
 		let producer;
-		if (req.query.includeAll && hasPermissions(req.user!, Permission.READ_OTHER_CONSUMER)) {
+		if (req.query.includeAll) {
+			if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
+			const user = await container.userGateway.findByAuthId(req.authUser.uid);
+			if (!hasPermissions(user!, Permission.READ_OTHER_PRODUCER)) throw new ForbiddenError('User may not include all');
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
-		} else {
+		}
+
+		if (!producer) {
 			producer = await container.producerGateway.findById(producerId);
 		}
 
@@ -705,7 +716,14 @@ export class ProducersController {
 
 	@Get('/:producerId/units', [
 		validate({
-			params: Joi.object({ producerId: Joi.number().required() })
+			params: Joi.object({ producerId: Joi.number().required() }),
+			query: Joi.object({
+				search: Joi.string().optional(),
+				page: Joi.number().min(1).optional(),
+				pageSize: Joi.number().min(1).optional(),
+				raio: Joi.number().min(1).optional(),
+				addressId: Joi.number().min(1).optional() // ver se há outra opção
+			})
 		})
 	])
 	public async getUnits(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
@@ -717,7 +735,16 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const units = await container.productionUnitGateway.findFromProducer(producer.user.id, options);
+		const filter: ProductionUnitFilters = { producerId: producer.user.id };
+		if (req.query.search) filter.search = { type: StringSearchType.CONTAINS, value: req.query.search as string };
+		if (req.query.raio && req.query.addressId) {
+			const address = await container.addressGateway.findById(Number(req.query.addressId));
+			if (!address) throw new NotFoundError('Address not found');
+			filter.address = address;
+			filter.raio = Number(req.query.raio);
+		}
+
+		const units = await container.productionUnitGateway.findFromProducer(filter, options);
 		return res.status(200).json(units);
 	}
 
@@ -990,5 +1017,225 @@ export class ProducersController {
 		await container.shipmentGateway.update(shipment);
 
 		return res.status(201).json(shipment);
+	}
+
+	@Get('/:producerId/carriers', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1).optional(),
+				pageSize: Joi.number().min(1).optional()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async getCarriersOfProducer(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const carriers = await container.carrierGateway.findAllByProducerId(producer.user.id, options);
+
+		return res.status(200).json(carriers);
+	}
+
+	@Post('/:producerId/carriers', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				licensePlate: Joi.string().required(),
+				image: Joi.object({
+					name: Joi.string().required(),
+					url: Joi.string().required(),
+					alt: Joi.string().required()
+				}).required(),
+				productionUnitId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async createCarrier(@Request() req: Express.Request, @Response() res: Express.Response, @Params('producerId') producerId: number) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = await container.productionUnitGateway.findOneFromProducer(producer.user.id, req.body.productionUnitId);
+		if (!productionUnit) throw new NotFoundError('Production unit not found');
+
+		const carrier = new Carrier(req.body.licensePlate, productionUnit, new Image(req.body.image.name, req.body.image.url, req.body.image.alt));
+		await container.carrierGateway.createOrUpdate(carrier);
+
+		return res.status(201).json(carrier);
+	}
+
+	@Get('/:producerId/carriers/:carrierId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				carrierId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async getCarrierOfProducer(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('carrierId') carrierId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
+		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		return res.status(200).json({
+			id: carrier.id,
+			licensePlate: carrier.licensePlate,
+			status: carrier.status,
+			image: carrier.image,
+			productionUnit: carrier.productionUnit,
+			lastShipmentEvent: carrier.getLastShipmentEvent()
+		});
+	}
+
+	@Put('/:producerId/carriers/:carrierId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				carrierId: Joi.number().min(1).required()
+			}),
+			body: Joi.object({
+				image: Joi.object({
+					name: Joi.string().required(),
+					url: Joi.string().required(),
+					alt: Joi.string().required()
+				}).required(),
+				productionUnitId: Joi.number().min(1).required(),
+				status: Joi.string().valid(CarrierStatus.Available, CarrierStatus.Unavailable).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async updateCarrierOfProducer(
+		@Request() req: Express.Request,
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('carrierId') carrierId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
+		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		const productionUnit = await container.productionUnitGateway.findOneFromProducer(producer.user.id, req.body.productionUnitId);
+		if (!productionUnit) throw new NotFoundError('Production unit not found');
+
+		carrier.image = new Image(req.body.image.name, req.body.image.url, req.body.image.alt);
+		carrier.productionUnit = productionUnit;
+		carrier.status = req.body.status;
+		await container.carrierGateway.createOrUpdate(carrier);
+
+		return res.status(200).json(carrier);
+	}
+
+	@Delete('/:producerId/carriers/:carrierId', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().min(1).required(),
+				carrierId: Joi.number().min(1).required()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.WRITE_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async deleteCarrierOfProducer(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('carrierId') carrierId: number
+	) {
+		const producer = await container.producerGateway.findById(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
+		if (!carrier) throw new NotFoundError('Carrier not found');
+
+		if (carrier.status === CarrierStatus.Unavailable) throw new ForbiddenError('Carrier is unavailable so it cannot be deleted');
+
+		carrier.deletedAt = new Date();
+		await container.carrierGateway.createOrUpdate(carrier);
+
+		return res.status(204).send();
 	}
 }

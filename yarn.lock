@@ -911,6 +911,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.40.1
     cookie-parser: ^1.4.6
     cors: ^2.8.5
+    countries-and-timezones: ^3.4.1
     cz-conventional-changelog: ^3.3.0
     dotenv-cra: ^3.0.2
     eslint: ^8.26.0
@@ -3524,6 +3525,13 @@ __metadata:
     parse-json: ^5.0.0
     path-type: ^4.0.0
   checksum: b3d277bc3a8a9e649bf4c3fc9740f4c52bf07387481302aa79839f595045368903bf26ea24a8f7f7b8b180bf46037b027c5cb63b1391ab099f3f78814a147b2b
+  languageName: node
+  linkType: hard
+
+"countries-and-timezones@npm:^3.4.1":
+  version: 3.4.1
+  resolution: "countries-and-timezones@npm:3.4.1"
+  checksum: 5033a16f0d063f8060c021d10171d1b3e848bba53e62c97987903b8a65568ea4130300a629452525abe33061b2000f8ccd22b5d5816bfa16595c8478738541f5
   languageName: node
   linkType: hard
 

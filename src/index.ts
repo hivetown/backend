@@ -33,10 +33,11 @@ import { ProducersController } from './controllers/producers';
 import { AuthController } from './controllers/auth';
 import { WebhookController } from './controllers/webhook';
 import { NotificationController } from './controllers/notifications';
+import { Email } from './external/Email';
+import { ReportsController } from './controllers/reports';
 
 // ENV
 import { config } from 'dotenv-cra';
-import { Email } from './external/Email';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 config();
 
@@ -110,7 +111,8 @@ export const main = async () => {
 		ConsumerController,
 		NotificationController,
 		ProducersController,
-		WebhookController
+		WebhookController,
+    ReportsController
 	]);
 
 	app.use('/', (_req, res) => {

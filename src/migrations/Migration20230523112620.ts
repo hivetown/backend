@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class Migration20230518122631 extends Migration {
+export class Migration20230523112620 extends Migration {
 	async up(): Promise<void> {
 		this.addSql(
 			"create table `field` (`id` int unsigned not null auto_increment primary key, `name` varchar(255) not null, `unit` varchar(255) not null, `type` enum('TEXT', 'NUMBER', 'DATE', 'BOOLEAN', 'ENUM') not null) default character set utf8mb4 engine = InnoDB;"
@@ -60,7 +60,7 @@ export class Migration20230518122631 extends Migration {
 		this.addSql('alter table `cart_item` add index `cart_item_consumer_id_index`(`consumer_id`);');
 
 		this.addSql(
-			"create table `carrier` (`id` int unsigned not null auto_increment primary key, `license_plate` varchar(255) not null, `production_unit_id` int unsigned not null, `status` enum('AVAILABLE', 'UNAVAILABLE') not null, `image_id` int unsigned null) default character set utf8mb4 engine = InnoDB;"
+			"create table `carrier` (`id` int unsigned not null auto_increment primary key, `license_plate` varchar(255) not null, `production_unit_id` int unsigned not null, `status` enum('AVAILABLE', 'UNAVAILABLE') not null default 'AVAILABLE', `image_id` int unsigned null, `deleted_at` datetime null) default character set utf8mb4 engine = InnoDB;"
 		);
 		this.addSql('alter table `carrier` add index `carrier_production_unit_id_index`(`production_unit_id`);');
 		this.addSql('alter table `carrier` add unique `carrier_image_id_unique`(`image_id`);');
@@ -258,5 +258,125 @@ export class Migration20230518122631 extends Migration {
 		this.addSql(
 			'alter table `order_item` add constraint `order_item_shipment_id_foreign` foreign key (`shipment_id`) references `shipment` (`id`) on update cascade;'
 		);
+	}
+
+	async down(): Promise<void> {
+		this.addSql('alter table `field_possible_value` drop foreign key `field_possible_value_field_id_foreign`;');
+
+		this.addSql('alter table `product_spec_field` drop foreign key `product_spec_field_field_id_foreign`;');
+
+		this.addSql('alter table `category_fields` drop foreign key `category_fields_field_id_foreign`;');
+
+		this.addSql('alter table `producer_product` drop foreign key `producer_product_product_spec_id_foreign`;');
+
+		this.addSql('alter table `image` drop foreign key `image_product_spec_id_foreign`;');
+
+		this.addSql('alter table `product_spec_category` drop foreign key `product_spec_category_product_spec_id_foreign`;');
+
+		this.addSql('alter table `user` drop foreign key `user_role_id_foreign`;');
+
+		this.addSql('alter table `producer` drop foreign key `producer_id_foreign`;');
+
+		this.addSql('alter table `consumer` drop foreign key `consumer_id_foreign`;');
+
+		this.addSql('alter table `production_unit` drop foreign key `production_unit_producer_id_foreign`;');
+
+		this.addSql('alter table `producer_product` drop foreign key `producer_product_producer_id_foreign`;');
+
+		this.addSql('alter table `image` drop foreign key `image_producer_image_id_foreign`;');
+
+		this.addSql('alter table `image` drop foreign key `image_producer_images_id_foreign`;');
+
+		this.addSql('alter table `address` drop foreign key `address_consumer_id_foreign`;');
+
+		this.addSql('alter table `cart_item` drop foreign key `cart_item_consumer_id_foreign`;');
+
+		this.addSql('alter table `image` drop foreign key `image_consumer_id_foreign`;');
+
+		this.addSql('alter table `order` drop foreign key `order_consumer_id_foreign`;');
+
+		this.addSql('alter table `production_unit` drop foreign key `production_unit_address_id_foreign`;');
+
+		this.addSql('alter table `shipment_event` drop foreign key `shipment_event_address_id_foreign`;');
+
+		this.addSql('alter table `order` drop foreign key `order_shipping_address_id_foreign`;');
+
+		this.addSql('alter table `producer_product` drop foreign key `producer_product_production_unit_id_foreign`;');
+
+		this.addSql('alter table `carrier` drop foreign key `carrier_production_unit_id_foreign`;');
+
+		this.addSql('alter table `image` drop foreign key `image_production_unit_id_foreign`;');
+
+		this.addSql('alter table `cart_item` drop foreign key `cart_item_producer_product_id_foreign`;');
+
+		this.addSql('alter table `order_item` drop foreign key `order_item_producer_product_id_foreign`;');
+
+		this.addSql('alter table `shipment` drop foreign key `shipment_carrier_id_foreign`;');
+
+		this.addSql('alter table `image` drop foreign key `image_carrier_id_foreign`;');
+
+		this.addSql('alter table `shipment_event` drop foreign key `shipment_event_shipment_id_foreign`;');
+
+		this.addSql('alter table `order_item` drop foreign key `order_item_shipment_id_foreign`;');
+
+		this.addSql('alter table `user` drop foreign key `user_image_id_foreign`;');
+
+		this.addSql('alter table `carrier` drop foreign key `carrier_image_id_foreign`;');
+
+		this.addSql('alter table `category` drop foreign key `category_image_id_foreign`;');
+
+		this.addSql('alter table `image` drop foreign key `image_category_id_foreign`;');
+
+		this.addSql('alter table `category` drop foreign key `category_parent_id_foreign`;');
+
+		this.addSql('alter table `product_spec_category` drop foreign key `product_spec_category_category_id_foreign`;');
+
+		this.addSql('alter table `category_fields` drop foreign key `category_fields_category_id_foreign`;');
+
+		this.addSql('alter table `product_spec_field` drop foreign key `product_spec_field_product_spec_category_product__c0575_foreign`;');
+
+		this.addSql('alter table `order_item` drop foreign key `order_item_order_id_foreign`;');
+
+		this.addSql('drop table if exists `field`;');
+
+		this.addSql('drop table if exists `field_possible_value`;');
+
+		this.addSql('drop table if exists `product_spec`;');
+
+		this.addSql('drop table if exists `role`;');
+
+		this.addSql('drop table if exists `user`;');
+
+		this.addSql('drop table if exists `producer`;');
+
+		this.addSql('drop table if exists `consumer`;');
+
+		this.addSql('drop table if exists `address`;');
+
+		this.addSql('drop table if exists `production_unit`;');
+
+		this.addSql('drop table if exists `producer_product`;');
+
+		this.addSql('drop table if exists `cart_item`;');
+
+		this.addSql('drop table if exists `carrier`;');
+
+		this.addSql('drop table if exists `shipment`;');
+
+		this.addSql('drop table if exists `shipment_event`;');
+
+		this.addSql('drop table if exists `image`;');
+
+		this.addSql('drop table if exists `category`;');
+
+		this.addSql('drop table if exists `product_spec_category`;');
+
+		this.addSql('drop table if exists `product_spec_field`;');
+
+		this.addSql('drop table if exists `category_fields`;');
+
+		this.addSql('drop table if exists `order`;');
+
+		this.addSql('drop table if exists `order_item`;');
 	}
 }

@@ -23,6 +23,28 @@ export class OrderItemGateway {
 		return orderIds;
 	}
 
+	public async findOrdersByProducerPopulated(producerId: number): Promise<OrderItem[]> {
+		const orderIds = await this.repository.find(
+			{ producerProduct: { producer: { user: producerId } } },
+			{
+				populate: [
+					'producerProduct.productionUnit.address',
+					'order.shippingAddress',
+					'producerProduct.productSpec',
+					'producerProduct.productSpec.categories',
+					'producerProduct.productSpec.categories.category',
+					'shipment.events.status',
+					'order.items',
+					'order.consumer',
+					'order.consumer.user',
+					'order.items.shipment.events.status'
+				]
+			}
+		);
+
+		return orderIds;
+	}
+
 	public async findOrderByProducerAndOrderId(producerId: number, orderId: number): Promise<OrderItem | null> {
 		const orderItem = await this.repository.findOne({ order: orderId, producerProduct: { producer: { user: producerId } } });
 		return orderItem;
@@ -128,5 +150,24 @@ export class OrderItemGateway {
 			}
 		);
 		return products;
+	}
+
+	public async findAllByConsumerId(consumerId: number): Promise<OrderItem[]> {
+		const orderItems = await this.repository.find(
+			{ order: { consumer: { user: consumerId } } },
+			{
+				populate: [
+					'producerProduct.productionUnit.address',
+					'order.shippingAddress',
+					'producerProduct.productSpec',
+					'producerProduct.productSpec.categories',
+					'producerProduct.productSpec.categories.category',
+					'shipment.events.status',
+					'order.items',
+					'order.items.shipment.events.status'
+				]
+			}
+		);
+		return orderItems;
 	}
 }

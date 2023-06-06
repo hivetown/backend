@@ -29,15 +29,51 @@ export class ProducerProductGateway {
 	}
 
 	// Pesquisa produtos por id de uma ProductSpec
-	public async findBySpecificationId(id: number, options: PaginatedOptions): Promise<BaseItems<ProducerProduct>> {
+	public async findBySpecificationId(filters: ProducerProductFilters, options: PaginatedOptions): Promise<BaseItems<ProducerProduct>> {
 		const pagination = paginate(options);
-		const [products, totalResults] = await Promise.all([
-			this.repository.find(
-				{ productSpec: id },
-				{ populate: ['producer', 'productionUnit'], limit: pagination.limit, offset: pagination.offset }
-			),
-			this.repository.count({ productSpec: id })
-		]);
+		// const [products, totalResults] = await Promise.all([
+		// 	this.repository.find(
+		// 		{ productSpec: filters.productSpecId },
+		// 		{ populate: ['producer', 'productionUnit'], limit: pagination.limit, offset: pagination.offset }
+		// 	),
+		// 	this.repository.count({ productSpec: filters.productSpecId })
+		// ]);
+
+		const qb = this.repository
+			.createQueryBuilder('pp')
+			.select('*')
+			.where({ productSpec: { id: filters.productSpecId }, deletedAt: null })
+			.leftJoinAndSelect('pp.producer', 'p')
+			.leftJoinAndSelect('p.user', 'u')
+			.leftJoinAndSelect('u.image', 'ui')
+			.leftJoinAndSelect('pp.productionUnit', 'pu')
+			.leftJoin('pu.address', 'pa');
+
+		if (filters.producerId) {
+			void qb.andWhere({ producer: { id: filters.producerId } });
+		}
+
+		if (filters.productionUnitId) {
+			void qb.andWhere({ productionUnit: { id: filters.productionUnitId } });
+		}
+
+		if (filters.raio && filters.consumerAddress) {
+			const { consumerAddress } = filters;
+
+			void qb.andWhere(
+				`(2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(?)) / 2), 2) + COS(RADIANS(?)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(?)) / 2), 2)) ) ) <= ?`,
+				[consumerAddress!.latitude, consumerAddress!.latitude, consumerAddress!.longitude, filters.raio]
+			);
+		}
+
+		const totalItemsQb = qb.clone();
+
+		// Paginate
+		void qb.offset(pagination.offset).limit(pagination.limit);
+
+		// Fetch results and map them
+		const [totalResults, products] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
+
 		return {
 			items: products,
 			totalItems: totalResults,
@@ -45,7 +81,6 @@ export class ProducerProductGateway {
 			page: Math.ceil(pagination.offset / pagination.limit) + 1,
 			pageSize: products.length
 		};
-		// { items: productSpecs, totalItems, totalPages, page, pageSize: pagination.limit };
 	}
 
 	public async findOneBySpecificationId(specId: number, producerProductId: number): Promise<ProducerProduct | null> {
@@ -101,7 +136,10 @@ export class ProducerProductGateway {
 		options?: ProducerProductOptions
 	): Promise<{ items: ProducerProduct[]; totalItems: number; totalPages: number; page: number; pageSize: number }> {
 		const pagination = paginate(options);
-		const qb: QueryBuilder<ProducerProduct> = this.repository.createQueryBuilder('producerProduct').select('*');
+		const qb: QueryBuilder<ProducerProduct> = this.repository
+			.createQueryBuilder('producerProduct')
+			.select('*')
+			.where('producerProduct.deleted_at is null');
 
 		if (filter?.producerId) {
 			void qb.leftJoin('producerProduct.producer', 'producer').andWhere({ 'producer.id': filter.producerId });
@@ -121,7 +159,7 @@ export class ProducerProductGateway {
 		}
 
 		// Calculate items count before grouping and paginating
-		const totalItems = await qb.clone().getCount();
+		const totalItemsQb = qb.clone();
 
 		// Paginate
 		void qb.offset(pagination.offset).limit(pagination.limit);
@@ -134,7 +172,7 @@ export class ProducerProductGateway {
 		}
 
 		// Fetch results and map them
-		const producerProducts = (await qb.execute()).map((raw: any) => ({ ...this.repository.map(raw) }));
+		const [totalItems, producerProducts] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
 
 		const totalPages = Math.ceil(totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;

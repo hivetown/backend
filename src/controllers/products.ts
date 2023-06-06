@@ -14,6 +14,7 @@ import { Image, ProductSpec, ProductSpecCategory, ProductSpecField } from '../en
 import { BadRequestError } from '../errors/BadRequestError';
 import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { Permission } from '../enums/Permission';
+import type { ProducerProductFilters } from '../interfaces/ProducerProductFilters';
 
 @Controller('/products')
 @Injectable()
@@ -174,7 +175,9 @@ export class ProductsController {
 			}),
 			query: Joi.object({
 				page: Joi.number().integer().min(1),
-				pageSize: Joi.number().integer().min(1)
+				pageSize: Joi.number().integer().min(1),
+				raio: Joi.number().integer().min(1).optional(),
+				addressId: Joi.number().integer().min(1).optional()
 			})
 		})
 	])
@@ -186,12 +189,24 @@ export class ProductsController {
 		const productSpec = await container.productSpecGatway.findSimpleById(productSpecId);
 		if (!productSpec) throw new NotFoundError('Product specification not found');
 
+		const filters: ProducerProductFilters = {
+			productSpecId
+		};
+
+		if (req.query.raio && req.query.addressId) {
+			const address = await container.addressGateway.findById(Number(req.query.addressId));
+			if (!address) throw new NotFoundError('Address not found');
+
+			filters.consumerAddress = address;
+			filters.raio = Number(req.query.raio);
+		}
+
 		const options: ProductSpecOptions = {
 			page: Number(req.query.page) || -1,
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const results = await container.producerProductGateway.findBySpecificationId(productSpecId, options);
+		const results = await container.producerProductGateway.findBySpecificationId(filters, options);
 		return res.status(200).json(results);
 	}
 

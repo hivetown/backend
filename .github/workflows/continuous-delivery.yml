@@ -1,53 +1,56 @@
-name: Continuous Delivery
+name: Build and Push Docker Image to Docker Hub
 
 on:
   workflow_dispatch:
-    inputs:
-      prNumber:
-        description: The number of the PR that is being deployed
-        required: true
-      ref:
-        description: The branch that is being deployed. Should be a branch on the given repository
-        required: false
-        default: main
-      repository:
-        description: The {owner}/{repository} that is being deployed.
-        required: false
-        default: hivetown/backend
+  release:
+    types: [created]
   push:
     branches:
-      - main
+      - 'main'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - 'main'
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: docker.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  Publish:
-    name: Publish Next to npm
+  push_to_registry:
+    name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Project
+      - name: Check out the repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          repository: ${{ github.event.inputs.repository || 'hivetown/backend' }}
-          ref: ${{ github.event.inputs.ref || 'main' }}
-      - name: Add TypeScript problem matcher
-        run: echo "::add-matcher::.github/problemMatchers/tsc.json"
-      - name: Use Node.js v16
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: yarn
-          registry-url: https://registry.npmjs.org/
-      - name: Install Dependencies
-        run: yarn --immutable
-      - name: Bump Version & Publish
-        run: |
-          # Resolve the tag to be used. "next" for push events, "pr-{prNumber}" for dispatch events.
-          TAG=$([[ ${{ github.event_name }} == 'push' ]] && echo 'next' || echo 'pr-${{ github.event.inputs.prNumber }}')
 
-          # Bump the version
-          yarn standard-version --skip.commit --skip.tag --prerelease "${TAG}.$(git rev-parse --verify --short HEAD)"
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-          # Publish to NPM
-          npm publish --tag ${TAG} --dry-run || true
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{raw}}
+            type=semver,pattern=v{{major}}
+            type=ref,event=branch
+            type=ref,event=pr
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: '.'
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

@@ -3,6 +3,8 @@ import { ProductionUnit } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
+import type { ProductionUnitFilters } from '../interfaces/ProductionUnitFilters';
+import { stringSearchType } from '../utils/stringSearchType';
 
 export class ProductionUnitGateway {
 	private repository: EntityRepository<ProductionUnit>;
@@ -21,14 +23,29 @@ export class ProductionUnitGateway {
 		return productionUnit;
 	}
 
-	public async findFromProducer(producerId: number, options: PaginatedOptions): Promise<BaseItems<ProductionUnit>> {
+	public async findFromProducer(filter: ProductionUnitFilters, options: PaginatedOptions): Promise<BaseItems<ProductionUnit>> {
 		const pagination = paginate(options);
 
 		const qb = this.repository
 			.createQueryBuilder('pu')
 			.select('*')
-			.where({ producer: { id: producerId }, deletedAt: null })
-			.leftJoinAndSelect('pu.address', 'a');
+			.where({ producer: { id: filter.producerId }, deletedAt: null })
+			.leftJoinAndSelect('pu.address', 'pa');
+
+		if (filter.search) {
+			void qb.andWhere({
+				$or: [{ 'lower(pu.name)': { $like: stringSearchType(filter.search) } }]
+			});
+		}
+
+		if (filter.raio) {
+			const consumerAddress = filter.address;
+
+			void qb.andWhere(
+				`(2 * 6371 * ASIN( SQRT( POWER(SIN((RADIANS(pa.latitude) - RADIANS(?)) / 2), 2) + COS(RADIANS(?)) * COS(RADIANS(pa.latitude)) * POWER(SIN((RADIANS(pa.longitude) - RADIANS(?)) / 2), 2)) ) ) <= ?`,
+				[consumerAddress!.latitude, consumerAddress!.latitude, consumerAddress!.longitude, filter.raio]
+			);
+		}
 
 		const totalItemsQb = qb.clone();
 
@@ -45,7 +62,7 @@ export class ProductionUnitGateway {
 			totalItems,
 			totalPages,
 			page,
-			pageSize: pagination.limit
+			pageSize: productionUnits.length
 		};
 	}
 
@@ -73,5 +90,13 @@ export class ProductionUnitGateway {
 			{ populate: ['address'] }
 		);
 		return productionUnits;
+	}
+
+	public async findOneFromProducer(producerId: number, productionUnitId: number): Promise<ProductionUnit | null> {
+		const productionUnit = await this.repository.findOne({
+			id: productionUnitId,
+			producer: { user: producerId }
+		});
+		return productionUnit;
 	}
 }

@@ -15,14 +15,14 @@ export class CarrierGateway {
 		const pagination = paginate(options);
 		const [carriers, totalResults] = await Promise.all([
 			this.repository.find(
-				{ productionUnit: productionUnitId, status: 'UNAVAILABLE' },
+				{ productionUnit: productionUnitId, status: 'UNAVAILABLE', deletedAt: null },
 				{
 					populate: ['productionUnit'],
 					limit: pagination.limit,
 					offset: pagination.offset
 				}
 			),
-			this.repository.count({ productionUnit: productionUnitId, status: 'UNAVAILABLE' })
+			this.repository.count({ productionUnit: productionUnitId, status: 'UNAVAILABLE', deletedAt: null })
 		]);
 		return {
 			items: carriers,
@@ -31,5 +31,42 @@ export class CarrierGateway {
 			page: Math.ceil(pagination.offset / pagination.limit) + 1,
 			pageSize: carriers.length
 		};
+	}
+
+	public async findAllByProducerId(producerId: number, options: PaginatedOptions): Promise<BaseItems<Carrier>> {
+		const paginataion = paginate(options);
+		const [carriers, totalResults] = await Promise.all([
+			this.repository.find(
+				{ productionUnit: { producer: { user: producerId } }, deletedAt: null },
+				{
+					populate: ['productionUnit'],
+					limit: paginataion.limit,
+					offset: paginataion.offset
+				}
+			),
+			this.repository.count({ productionUnit: { producer: { user: producerId } }, deletedAt: null })
+		]);
+
+		return {
+			items: carriers,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / paginataion.limit),
+			page: Math.ceil(paginataion.offset / paginataion.limit) + 1,
+			pageSize: carriers.length
+		};
+	}
+
+	public async findOneOfProducer(producerId: number, carrierId: number): Promise<Carrier | null> {
+		const carrier = await this.repository.findOne(
+			{ productionUnit: { producer: { user: producerId } }, id: carrierId, deletedAt: null },
+			{ populate: ['productionUnit', 'productionUnit.address', 'shipments.events', 'shipments.events.address'] }
+		);
+
+		return carrier;
+	}
+
+	public async createOrUpdate(carrier: Carrier): Promise<Carrier> {
+		await this.repository.persistAndFlush(carrier);
+		return carrier;
 	}
 }
