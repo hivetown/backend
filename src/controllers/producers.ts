@@ -1024,7 +1024,7 @@ export class ProducersController {
 		}),
 		authenticationMiddleware,
 		authorizationMiddleware({
-			permissions: Permission.READ_OTHER_PRODUCER,
+			permissions: Permission.WRITE_OTHER_PRODUCER,
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
@@ -1111,7 +1111,7 @@ export class ProducersController {
 		}),
 		authenticationMiddleware,
 		authorizationMiddleware({
-			permissions: Permission.READ_OTHER_PRODUCER,
+			permissions: Permission.WRITE_OTHER_PRODUCER,
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
@@ -1156,7 +1156,7 @@ export class ProducersController {
 		}),
 		authenticationMiddleware,
 		authorizationMiddleware({
-			permissions: Permission.READ_OTHER_PRODUCER,
+			permissions: Permission.WRITE_OTHER_PRODUCER,
 			otherValidations: [
 				(user, req) =>
 					user.id === Number(req.params.producerId) ||
