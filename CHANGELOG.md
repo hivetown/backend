@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/hivetown/backend/compare/v1.0.0...v1.0.1) (2023-06-09)
+
+
+### Bug Fixes
+
+* force report optional booleans to be true ([b004439](https://github.com/hivetown/backend/commit/b004439f2ce558e57bb52e400ee1bbf2af975aa6))
+
 ## 1.0.0 (2023-05-30)
 
 
