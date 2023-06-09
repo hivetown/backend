@@ -112,7 +112,7 @@ export const main = async () => {
 		NotificationController,
 		ProducersController,
 		WebhookController,
-    ReportsController
+		ReportsController
 	]);
 
 	app.use('/', (_req, res) => {
