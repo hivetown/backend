@@ -4,7 +4,7 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Notification, Carrier, Image, Producer, ProducerProduct, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
+import { Notification, Carrier, Image, Producer, ProducerProduct, ProductionUnit, ShipmentEvent, User } from '../entities';
 import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
