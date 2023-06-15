@@ -35,6 +35,7 @@ import { WebhookController } from './controllers/webhook';
 // ENV
 import { config } from 'dotenv-cra';
 import { ReportsController } from './controllers/reports';
+import { HealthController } from './controllers/healthz';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 config();
 
@@ -97,12 +98,16 @@ export const main = async () => {
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
 	await attachControllers(app, [HelloController]);
-	await attachControllers(app, [ProductsController, CategoryController, ConsumerController, WebhookController, ReportsController]);
-	await attachControllers(app, [AuthController, ProductsController, CategoryController, ConsumerController, ProducersController]);
-
-	app.use('/', (_req, res) => {
-		res.status(200).send('Hello Hivetown!');
-	});
+	await attachControllers(app, [
+		AuthController,
+		ProductsController,
+		CategoryController,
+		ConsumerController,
+		WebhookController,
+		ReportsController,
+		ProducersController,
+		HealthController
+	]);
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
