@@ -659,8 +659,14 @@ export class ConsumerController {
 		const order = await container.orderGateway.findByConsumerAndOrder(consumerId, orderId);
 		if (!order) throw new NotFoundError('Order not found');
 
-		const orderRes = { id: order.id, shippingAddress: order.shippingAddress };
-		return res.status(200).json({ order: orderRes, status: order.getGeneralStatus() });
+		const orderRes = {
+			id: order.id,
+			shippingAddress: order.shippingAddress,
+			generalStatus: order.getGeneralStatus(),
+			totalPrice: order.getTotalPrice(),
+			orderDate: order.getOrderDate()
+		};
+		return res.status(200).json(orderRes);
 	}
 
 	@Delete('/:consumerId/orders/:orderId', [
