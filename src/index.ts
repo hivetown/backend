@@ -35,6 +35,7 @@ import { WebhookController } from './controllers/webhook';
 import { NotificationController } from './controllers/notifications';
 import { Email } from './external/Email';
 import { ReportsController } from './controllers/reports';
+import { HealthController } from './controllers/healthz';
 
 // ENV
 import { config } from 'dotenv-cra';
@@ -112,7 +113,8 @@ export const main = async () => {
 		NotificationController,
 		ProducersController,
 		WebhookController,
-		ReportsController
+		ReportsController,
+		HealthController
 	]);
 
 	app.use('/', (_req, res) => {
