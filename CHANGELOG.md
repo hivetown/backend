@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/hivetown/backend/compare/v1.0.1...v1.1.0) (2023-06-16)
+
+
+### Features
+
+* funny easter egg com o joao pedro pais ([d4465cd](https://github.com/hivetown/backend/commit/d4465cdd1d40e2e8971cb4c949dfefdafb742415))
+
+
+### Bug Fixes
+
+* put healthz in its own controller ([d4465cd](https://github.com/hivetown/backend/commit/d4465cdd1d40e2e8971cb4c949dfefdafb742415))
+
 ## [1.0.1](https://github.com/hivetown/backend/compare/v1.0.0...v1.0.1) (2023-06-09)
 
 
