@@ -12,28 +12,6 @@ export class CarrierGateway {
 		this.repository = orm.em.getRepository(Carrier);
 	}
 
-	public async findAllinTranstit(productionUnitId: number, options: PaginatedOptions): Promise<BaseItems<Carrier>> {
-		const pagination = paginate(options);
-		const [carriers, totalResults] = await Promise.all([
-			this.repository.find(
-				{ productionUnit: productionUnitId, status: 'UNAVAILABLE', deletedAt: null },
-				{
-					populate: ['productionUnit'],
-					limit: pagination.limit,
-					offset: pagination.offset
-				}
-			),
-			this.repository.count({ productionUnit: productionUnitId, status: 'UNAVAILABLE', deletedAt: null })
-		]);
-		return {
-			items: carriers,
-			totalItems: totalResults,
-			totalPages: Math.ceil(totalResults / pagination.limit),
-			page: Math.ceil(pagination.offset / pagination.limit) + 1,
-			pageSize: carriers.length
-		};
-	}
-
 	public async findFromProductionUnit(filters: CarrierFilters, options: PaginatedOptions): Promise<BaseItems<Carrier>> {
 		const paginataion = paginate(options);
 		const qb = this.repository
