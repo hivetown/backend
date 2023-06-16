@@ -21,6 +21,7 @@ import { ProducerProduct, ProductSpecField } from '../entities';
 import { createFields } from './factories/Field';
 import { generateImageUrl, generateValueFromField } from './helpers';
 import { createRoles } from './factories/Role';
+import { NotificationFactory } from './factories/Notification';
 
 export class HivetownSeeder extends Seeder {
 	public async run(em: EntityManager): Promise<void> {
@@ -40,6 +41,7 @@ export class HivetownSeeder extends Seeder {
 		const shipmentEventFactory = new ShipmentEventFactory(em);
 		const carrierFactory = new CarrierFactory(em);
 		const userFactory = new UserFactory(em);
+		const notificationFactory = new NotificationFactory(em);
 
 		console.log('Seeding Hivetown...');
 		console.log('Generating roles...');
@@ -270,6 +272,14 @@ export class HivetownSeeder extends Seeder {
 														.filter((item) => typeof item === 'number')
 														.map((item) => Number(item))
 												);
+
+												// Create notification for each shipment event
+												notificationFactory.makeOne({
+													actor: orderItem.producerProduct.producer.user,
+													notifier: consumer.user,
+													templateTitle: 'New shipment event of your order',
+													templateMessage: event.makeMessage()
+												});
 											})
 											.make(faker.datatype.number({ min: 1, max: 5 }))
 									);

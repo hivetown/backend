@@ -4,6 +4,7 @@ export * from './ProductSpecGateway';
 export * from './CategoryGateway';
 export * from './ProductSpecCategoryGateway';
 export * from './FieldGateway';
+export * from './NotificationGateway';
 export * from './ConsumerGateway';
 export * from './OrderGateway';
 export * from './OrderItemGateway';

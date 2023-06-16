@@ -4,13 +4,13 @@ import { Joi, validate } from 'express-validation';
 import { container } from '..';
 import type { ProducerProductOptions } from '../interfaces/ProducerProductOptions';
 import { Controller, Delete, Get, Params, Post, Put, Request, Response } from '@decorators/express';
-import { Carrier, Image, Producer, ProducerProduct, ProductionUnit, ShipmentEvent, ShipmentStatus, User } from '../entities';
+import { Notification, Carrier, Image, Producer, ProducerProduct, ProductionUnit, ShipmentEvent, User } from '../entities';
 import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { NotFoundError } from '../errors/NotFoundError';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
-import { CarrierStatus, UserType } from '../enums';
+import { CarrierStatus, ShipmentStatus, UserType } from '../enums';
 import { BadRequestError } from '../errors/BadRequestError';
 import { Permission } from '../enums/Permission';
 import { throwError } from '../utils/throw';
@@ -42,8 +42,18 @@ export class ProducersController {
 		data.type = UserType.Producer;
 
 		try {
-			const user = await container.producerGateway.create({ user: data } as Producer);
-			return res.status(201).json(user);
+			await container.producerGateway.create({ user: data } as Producer);
+			const producer = (await container.producerGateway.findByAuthId(req.authUser!.uid))!;
+
+			const notification = await Notification.create(
+				producer.user,
+				producer.user,
+				`Welcome to Hivetown!`,
+				`We're so thrilled to have you here!`
+			);
+			await container.notificationGateway.create(notification);
+
+			return res.status(201).json(producer);
 		} catch (error) {
 			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Producer already exists');
 			throw error;
@@ -120,6 +130,14 @@ export class ProducersController {
 
 		await Authentication.updateUserStatus(true, producer.user);
 
+		const notification = await Notification.create(
+			producer.user,
+			producer.user,
+			'Bye-bye HiveTown',
+			`We're sad to see you go :(\nYour account has been disabled. If you think this is a mistake, please contact us.`
+		);
+		await container.notificationGateway.create(notification);
+
 		res.status(204).json();
 	}
 
@@ -131,7 +149,8 @@ export class ProducersController {
 			body: Joi.object({
 				name: Joi.string().required(),
 				email: Joi.string().email().required(),
-				phone: Joi.string().required()
+				phone: Joi.string().required(),
+				disableEmails: Joi.boolean().optional()
 			}),
 			query: Joi.object({
 				includeAll: Joi.boolean().optional()
@@ -162,6 +181,7 @@ export class ProducersController {
 		producer.user.name = req.body.name;
 		producer.user.email = req.body.email;
 		producer.user.phone = req.body.phone;
+		producer.user.disableEmails = Boolean(req.body.disableEmails);
 
 		await container.producerGateway.update(producer);
 
@@ -232,6 +252,14 @@ export class ProducersController {
 			producerProduct.deletedAt = undefined;
 			await container.producerProductGateway.update(producerProduct);
 		}
+
+		const notification = await Notification.create(
+			producer.user,
+			producer.user,
+			'Welcome back to HiveTown!',
+			`We're really glad to see you back! :)`
+		);
+		await container.notificationGateway.create(notification);
 
 		res.status(201).json(producer);
 	}
@@ -655,8 +683,10 @@ export class ProducersController {
 			size: Number(req.query.pageSize) || -1
 		};
 
+		const order = await container.orderGateway.findById(orderId);
+		if (!order) throw new NotFoundError('Order not found');
+
 		const orderItems = await container.orderItemGateway.findByProducerAndOrderId(producerId, orderId, options);
-		// pode ser assim porque não existem orders vazias, então ao verificar garantimos se a order é ou não do cliente
 		if (!orderItems.totalItems) throw new NotFoundError('Order not found');
 
 		const orderItem = await container.orderItemGateway.findByProducerAndOrderAndProducerProductWithShipment(
@@ -674,6 +704,10 @@ export class ProducersController {
 
 		const newEvent = new ShipmentEvent().create(orderItem.shipment, status, address);
 		orderItem.shipment.events.add(newEvent);
+
+		// Create notification
+		const notification = await Notification.create(order.consumer.user, producer.user, `Hivetown Shipment Update!`, newEvent.makeMessage());
+		await container.notificationGateway.create(notification);
 
 		await container.shipmentGateway.update(orderItem.shipment);
 

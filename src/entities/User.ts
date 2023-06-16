@@ -30,6 +30,9 @@ export class User {
 	@Enum()
 	public type!: UserType;
 
+	@Property()
+	public disableEmails = false;
+
 	@OneToOne({ eager: true })
 	public image?: Image;
 }

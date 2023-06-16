@@ -4,7 +4,7 @@ import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import * as Express from 'express';
 import { Joi, validate } from 'express-validation';
 import { container } from '..';
-import { Address, CartItem, Consumer, Order, User } from '../entities';
+import { Address, CartItem, Consumer, Notification, Order, User } from '../entities';
 import { ShipmentStatus, UserType } from '../enums';
 import { ConflictError } from '../errors/ConflictError';
 import { authenticationMiddleware, authorizationMiddleware } from '../middlewares';
@@ -44,8 +44,18 @@ export class ConsumerController {
 		data.type = UserType.Consumer;
 
 		try {
-			const user = await container.consumerGateway.create({ user: data } as Consumer);
-			return res.status(201).json(user);
+			await container.consumerGateway.create({ user: data } as Consumer);
+			const consumer = (await container.consumerGateway.findByAuthId(req.authUser!.uid))!;
+
+			const notification = await Notification.create(
+				consumer.user,
+				consumer.user,
+				`Welcome to Hivetown!`,
+				`We're so thrilled to have you here!`
+			);
+			await container.notificationGateway.create(notification);
+
+			return res.status(201).json(consumer);
 		} catch (error) {
 			if (error instanceof UniqueConstraintViolationException) throw new ConflictError('Consumer already exists');
 			throw error;
@@ -147,6 +157,14 @@ export class ConsumerController {
 
 		await Authentication.updateUserStatus(true, consumer.user);
 
+		const notification = await Notification.create(
+			consumer.user,
+			consumer.user,
+			'Bye-bye HiveTown',
+			`We're sad to see you go :(\nYour account has been disabled. If you think this is a mistake, please contact us.`
+		);
+		await container.notificationGateway.create(notification);
+
 		return res.status(204).send();
 	}
 
@@ -158,7 +176,8 @@ export class ConsumerController {
 			body: Joi.object({
 				name: Joi.string().required(),
 				email: Joi.string().email().required(),
-				phone: Joi.string().required()
+				phone: Joi.string().required(),
+				disableEmails: Joi.boolean().optional()
 			}),
 			query: Joi.object({
 				includeAll: Joi.boolean().optional()
@@ -189,6 +208,7 @@ export class ConsumerController {
 		consumer.user.name = req.body.name;
 		consumer.user.email = req.body.email;
 		consumer.user.phone = req.body.phone;
+		consumer.user.disableEmails = Boolean(req.body.disableEmails);
 
 		await container.consumerGateway.update(consumer);
 
@@ -221,6 +241,13 @@ export class ConsumerController {
 		await container.consumerGateway.update(consumer);
 
 		await Authentication.updateUserStatus(false, consumer.user);
+		const notification = await Notification.create(
+			consumer.user,
+			consumer.user,
+			'Welcome back to HiveTown!',
+			`We're really glad to see you back! :)`
+		);
+		await container.notificationGateway.create(notification);
 
 		res.status(201).json(consumer);
 	}

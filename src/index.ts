@@ -22,7 +22,8 @@ import {
 	ProductionUnitGateway,
 	ShipmentGateway,
 	CarrierGateway,
-	UserGateway
+	UserGateway,
+	NotificationGateway
 } from './gateways';
 import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
@@ -31,11 +32,13 @@ import { ConsumerController } from './controllers/consumer';
 import { ProducersController } from './controllers/producers';
 import { AuthController } from './controllers/auth';
 import { WebhookController } from './controllers/webhook';
+import { NotificationController } from './controllers/notifications';
+import { Email } from './external/Email';
+import { ReportsController } from './controllers/reports';
+import { HealthController } from './controllers/healthz';
 
 // ENV
 import { config } from 'dotenv-cra';
-import { ReportsController } from './controllers/reports';
-import { HealthController } from './controllers/healthz';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 config();
 
@@ -43,6 +46,7 @@ export const container = {} as {
 	server: http.Server;
 	orm: MikroORM;
 	em: EntityManager;
+	email: Email;
 	addressGateway: AddressGateway;
 	producerGateway: ProducerGateway;
 	producerProductGateway: ProducerProductGateway;
@@ -51,6 +55,7 @@ export const container = {} as {
 	productSpecGatway: ProductSpecGateway;
 	fieldGateway: FieldGateway;
 	consumerGateway: ConsumerGateway;
+	notificationGateway: NotificationGateway;
 	orderGateway: OrderGateway;
 	orderItemGateway: OrderItemGateway;
 	productSpecFieldGateway: ProductSpecFieldGateway;
@@ -67,6 +72,7 @@ const port = Number(process.env.PORT) || 3000;
 export const main = async () => {
 	container.orm = await MikroORM.init<MySqlDriver>();
 	container.em = container.orm.em;
+	container.email = new Email(process.env.EMAIL_FROM!, { user: process.env.EMAIL_USER!, pass: process.env.EMAIL_PASSWORD! });
 	container.addressGateway = new AddressGateway(container.orm);
 	container.producerGateway = new ProducerGateway(container.orm);
 	container.producerProductGateway = new ProducerProductGateway(container.orm);
@@ -75,6 +81,7 @@ export const main = async () => {
 	container.productSpecGatway = new ProductSpecGateway(container.orm);
 	container.fieldGateway = new FieldGateway(container.orm);
 	container.consumerGateway = new ConsumerGateway(container.orm);
+	container.notificationGateway = new NotificationGateway(container.orm);
 	container.orderGateway = new OrderGateway(container.orm);
 	container.orderItemGateway = new OrderItemGateway(container.orm);
 	container.productSpecFieldGateway = new ProductSpecFieldGateway(container.orm);
@@ -103,11 +110,16 @@ export const main = async () => {
 		ProductsController,
 		CategoryController,
 		ConsumerController,
+		NotificationController,
+		ProducersController,
 		WebhookController,
 		ReportsController,
-		ProducersController,
 		HealthController
 	]);
+
+	app.use('/', (_req, res) => {
+		res.status(200).send('Hello Hivetown!');
+	});
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
