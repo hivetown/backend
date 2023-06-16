@@ -3,6 +3,7 @@ import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
+import type { CarrierFilters } from '../interfaces/CarrierFilters';
 
 export class CarrierGateway {
 	private repository: EntityRepository<Carrier>;
@@ -29,6 +30,35 @@ export class CarrierGateway {
 			totalItems: totalResults,
 			totalPages: Math.ceil(totalResults / pagination.limit),
 			page: Math.ceil(pagination.offset / pagination.limit) + 1,
+			pageSize: carriers.length
+		};
+	}
+
+	public async findFromProductionUnit(filters: CarrierFilters, options: PaginatedOptions): Promise<BaseItems<Carrier>> {
+		const paginataion = paginate(options);
+		const qb = this.repository
+			.createQueryBuilder('c')
+			.select('*')
+			.where({ productionUnit: { id: filters.productionUnitId }, deletedAt: null })
+			.leftJoinAndSelect('c.image', 'ci');
+
+		if (filters.status) {
+			void qb.andWhere({ status: filters.status });
+		}
+
+		const totalItemsQb = qb.clone();
+
+		// Paginate
+		void qb.offset(paginataion.offset).limit(paginataion.limit);
+
+		// Fetch results and map them
+		const [totalResults, carriers] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
+
+		return {
+			items: carriers,
+			totalItems: totalResults,
+			totalPages: Math.ceil(totalResults / paginataion.limit),
+			page: Math.ceil(paginataion.offset / paginataion.limit) + 1,
 			pageSize: carriers.length
 		};
 	}

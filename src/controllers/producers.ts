@@ -20,6 +20,7 @@ import { hasPermissions } from '../utils/hasPermission';
 import type { ProductionUnitFilters } from '../interfaces/ProductionUnitFilters';
 import { StringSearchType } from '../enums/StringSearchType';
 import { UnauthorizedError } from '../errors/UnauthorizedError';
+import type { CarrierFilters } from '../interfaces/CarrierFilters';
 
 @Controller('/producers')
 @Injectable()
@@ -913,6 +914,60 @@ export class ProducersController {
 
 		const products = await container.producerProductGateway.findFromProductionUnit(productionUnit.id, options);
 		return res.status(200).json(products);
+	}
+
+	@Get('/:producerId/units/:unitId/carriers', [
+		validate({
+			params: Joi.object({
+				producerId: Joi.number().required(),
+				unitId: Joi.number().required()
+			}),
+			query: Joi.object({
+				page: Joi.number().optional(),
+				pageSize: Joi.number().optional(),
+				status: Joi.string().valid('Available', 'Unavailable').optional()
+			})
+		}),
+		authenticationMiddleware,
+		authorizationMiddleware({
+			permissions: Permission.READ_OTHER_PRODUCER,
+			otherValidations: [
+				(user, req) =>
+					user.id === Number(req.params.producerId) ||
+					throwError(
+						new ForbiddenError("User may not interact with others' production units", {
+							user: user.id,
+							producer: Number(req.params.producerId)
+						})
+					)
+			]
+		})
+	])
+	public async getProductionUnitCarriers(
+		@Response() res: Express.Response,
+		@Params('producerId') producerId: number,
+		@Params('unitId') unitId: number,
+		@Request() req: Express.Request
+	) {
+		const producer = await container.producerGateway.findByIdWithUnits(producerId);
+		if (!producer) throw new NotFoundError('Producer not found');
+
+		const productionUnit = producer.productionUnits.getItems().find((unit) => unit.id === Number(unitId));
+		if (!productionUnit) throw new NotFoundError('Production unit not found for this producer');
+
+		const options: PaginatedOptions = {
+			page: Number(req.query.page) || -1,
+			size: Number(req.query.pageSize) || -1
+		};
+
+		const filters: CarrierFilters = {
+			productionUnitId: productionUnit.id,
+			status: req.query.status === 'Available' || req.query.status === 'Unavailable' ? req.query.status : undefined
+		};
+
+		const carriers = await container.carrierGateway.findFromProductionUnit(filters, options);
+
+		return res.status(200).json(carriers);
 	}
 
 	@Get('/:producerId/units/:unitId/carriers/inTransit', [
