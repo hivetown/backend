@@ -9,4 +9,6 @@ export interface ProductSpecFilters {
 	 */
 	fields?: { [key: number]: FieldTypeType[] };
 	search?: StringSearch;
+	minPrice?: number;
+	maxPrice?: number;
 }

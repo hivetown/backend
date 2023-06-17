@@ -26,7 +26,9 @@ export class ProductsController {
 				search: Joi.string().min(3),
 				page: Joi.number().integer().min(1),
 				pageSize: Joi.number().integer().min(1),
-				field: Joi.object().pattern(/^'\d+'$/, Joi.array())
+				field: Joi.object().pattern(/^'\d+'$/, Joi.array()),
+				minPrice: Joi.number().integer().min(0),
+				maxPrice: Joi.number().integer().min(0)
 			})
 		})
 	])
@@ -51,6 +53,14 @@ export class ProductsController {
 
 		if ('search' in req.query) {
 			filters.search = { value: req.query.search as string, type: StringSearchType.CONTAINS };
+		}
+
+		if ('minPrice' in req.query) {
+			filters.minPrice = Number(req.query.minPrice);
+		}
+
+		if ('maxPrice' in req.query) {
+			filters.maxPrice = Number(req.query.maxPrice);
 		}
 
 		const options: ProductSpecOptions = {

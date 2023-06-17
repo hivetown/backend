@@ -66,7 +66,8 @@ export class HivetownSeeder extends Seeder {
 			if (faker.datatype.number({ min: 1, max: 100 }) <= 5) return;
 
 			// The remaining 95% get a random parent
-			const parent = faker.helpers.arrayElement(categories);
+			// Limitation: the parent must have a lower id than the child
+			const parent = faker.helpers.arrayElement(categories.filter((c) => c.id < category.id));
 			if (parent.id !== category.id) category.parent = parent;
 		});
 
