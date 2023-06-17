@@ -30,7 +30,8 @@ export class ProductionUnitGateway {
 			.createQueryBuilder('pu')
 			.select('*')
 			.where({ producer: { id: filter.producerId }, deletedAt: null })
-			.leftJoinAndSelect('pu.address', 'pa');
+			.leftJoinAndSelect('pu.address', 'pa')
+			.leftJoinAndSelect('pu.images', 'pi');
 
 		if (filter.search) {
 			void qb.andWhere({
