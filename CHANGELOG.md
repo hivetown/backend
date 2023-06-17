@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/hivetown/backend/compare/v1.1.0...v1.2.0) (2023-06-17)
+
+
+### Features
+
+* testes unitarios ([7e8115d](https://github.com/hivetown/backend/commit/7e8115d7ea3e8e5d1362d8c6bc47a5613b0b852b))
+
 ## [1.1.0](https://github.com/hivetown/backend/compare/v1.0.1...v1.1.0) (2023-06-16)
 
 
