@@ -28,7 +28,6 @@ export const authorizationMiddleware = ({
 		const user = await container.userGateway.findByAuthId(req.authUser.uid, { populate: ['role'] });
 		if (!user) throw new NotFoundError('Authenticated user not found');
 		req.user = user;
-
 		// Bitwise AND operator to check if the user has the required permission(s)
 		let hasBasePermission = true;
 		// Default to none if the user has no role
