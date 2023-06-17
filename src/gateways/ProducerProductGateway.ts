@@ -97,7 +97,8 @@ export class ProducerProductGateway {
 		const qb = this.repository
 			.createQueryBuilder('producerProduct')
 			.select('*')
-			.where({ productionUnit: { id: productionUnitId } });
+			.where({ productionUnit: { id: productionUnitId } })
+			.andWhere('producerProduct.deleted_at is null');
 
 		const totalItemsQb = qb.clone();
 
