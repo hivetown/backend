@@ -10,6 +10,5 @@ export const paginate = (options: PaginatedOptions = { page: 1, size: 24 }, max 
 
 	const offset = (page - 1) * size;
 	const limit = size;
-
 	return { offset, limit };
 };
