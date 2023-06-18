@@ -19,7 +19,6 @@ import { Authentication } from '../external/Authentication';
 import { hasPermissions } from '../utils/hasPermission';
 import type { ProductionUnitFilters } from '../interfaces/ProductionUnitFilters';
 import { StringSearchType } from '../enums/StringSearchType';
-import { UnauthorizedError } from '../errors/UnauthorizedError';
 import type { CarrierFilters } from '../interfaces/CarrierFilters';
 
 @Controller('/producers')
@@ -68,7 +67,16 @@ export class ProducersController {
 				pageSize: Joi.number().integer().min(1),
 				includeAll: Joi.boolean().optional()
 			})
-		})
+		}),
+		async (req, res, next) => {
+			if (req.query.includeAll) {
+				// eslint-disable-next-line @typescript-eslint/no-empty-function
+				await authenticationMiddleware(req, res, () => {});
+				// eslint-disable-next-line @typescript-eslint/no-empty-function
+				await authorizationMiddleware({ permissions: Permission.READ_OTHER_PRODUCER })(req, res, () => {});
+			}
+			next();
+		}
 	])
 	public async getProducers(@Response() res: Express.Response, @Request() req: Express.Request) {
 		const options: PaginatedOptions = {
@@ -77,9 +85,6 @@ export class ProducersController {
 		};
 		let producers;
 		if (req.query.includeAll) {
-			if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
-			const user = await container.userGateway.findByAuthId(req.authUser.uid);
-			if (!hasPermissions(user!, Permission.READ_OTHER_PRODUCER)) throw new ForbiddenError('User may not include all');
 			producers = await container.producerGateway.findAllWithDeletedAt(options);
 		}
 
@@ -197,14 +202,20 @@ export class ProducersController {
 			query: Joi.object({
 				includeAll: Joi.boolean().optional()
 			})
-		})
+		}),
+		async (req, res, next) => {
+			if (req.query.includeAll) {
+				// eslint-disable-next-line @typescript-eslint/no-empty-function
+				await authenticationMiddleware(req, res, () => {});
+				// eslint-disable-next-line @typescript-eslint/no-empty-function
+				await authorizationMiddleware({ permissions: Permission.READ_OTHER_PRODUCER })(req, res, () => {});
+			}
+			next();
+		}
 	])
 	public async getProducer(@Response() res: Express.Response, @Params('producerId') producerId: number, @Request() req: Express.Request) {
 		let producer;
 		if (req.query.includeAll) {
-			if (!req.authUser) throw new UnauthorizedError('User is not authenticated');
-			const user = await container.userGateway.findByAuthId(req.authUser.uid);
-			if (!hasPermissions(user!, Permission.READ_OTHER_PRODUCER)) throw new ForbiddenError('User may not include all');
 			producer = await container.producerGateway.findByIdWithDeletedAt(producerId);
 		}
 
