@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/hivetown/backend/compare/v1.2.1...v1.2.2) (2023-06-18)
+
+
+### Bug Fixes
+
+* sometimes parent is undefined, so check for it ([f2c2e13](https://github.com/hivetown/backend/commit/f2c2e132ab7d4d713b9a36edce0d89146a0c1ba4))
+
 ## [1.2.1](https://github.com/hivetown/backend/compare/v1.2.0...v1.2.1) (2023-06-18)
 
 
