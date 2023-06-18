@@ -70,7 +70,7 @@ export class HivetownSeeder extends Seeder {
 			// The remaining 95% get a random parent
 			// Limitation: the parent must have a lower id than the child
 			const parent = faker.helpers.arrayElement(categories.filter((c) => c.id < category.id));
-			if (parent.id !== category.id) category.parent = parent;
+			if (parent && parent.id !== category.id) category.parent = parent;
 		});
 
 		console.log('Generating product specs...');
