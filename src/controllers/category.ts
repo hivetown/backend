@@ -9,6 +9,7 @@ import { NotFoundError } from '../errors/NotFoundError';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { Permission } from '../enums/Permission';
+import type { CategoryFilters } from '../interfaces/CategoryFilters';
 
 @Controller('/categories')
 @Injectable()
@@ -17,7 +18,11 @@ export class CategoryController {
 		validate({
 			query: Joi.object({
 				page: Joi.number().min(1),
-				pageSize: Joi.number().min(1)
+				pageSize: Joi.number().min(1),
+				productMinPrice: Joi.number().min(0),
+				productMaxPrice: Joi.number().min(0),
+				productSearch: Joi.string(),
+				parentId: Joi.number().min(1)
 			})
 		})
 	])
@@ -27,7 +32,14 @@ export class CategoryController {
 			size: Number(req.query.pageSize) || -1
 		};
 
-		const items = await container.categoryGateway.findAllRoot(options);
+		const filters: CategoryFilters = {
+			productMinPrice: Number(req.query.productMinPrice) || undefined,
+			productMaxPrice: Number(req.query.productMaxPrice) || undefined,
+			productSearch: req.query.productSearch?.toString() || undefined,
+			parentId: Number(req.query.parentId) || undefined
+		};
+
+		const items = await container.categoryGateway.findAll(filters, options);
 		return res.status(200).json(items);
 	}
 
@@ -112,30 +124,6 @@ export class CategoryController {
 		await container.categoryGateway.remove(categoryToRemove);
 
 		return res.status(204).send();
-	}
-
-	@Get('/:categoryId/categories', [
-		validate({
-			params: Joi.object({
-				categoryId: Joi.number().min(1).required()
-			}),
-			query: Joi.object({
-				page: Joi.number().min(1),
-				pageSize: Joi.number().min(1)
-			})
-		})
-	])
-	public async categoryCategories(@Response() res: Express.Response, @Params('categoryId') categoryId: number, @Request() req: Express.Request) {
-		const category = await container.categoryGateway.findById(categoryId);
-		if (!category) throw new NotFoundError('Category not found');
-
-		const options: PaginatedOptions = {
-			page: Number(req.query.page) || -1,
-			size: Number(req.query.pageSize) || -1
-		};
-
-		const items = await container.categoryGateway.findAllChildrenOfCategory(categoryId, options);
-		return res.status(200).json(items);
 	}
 
 	@Get('/:categoryId/fields', [

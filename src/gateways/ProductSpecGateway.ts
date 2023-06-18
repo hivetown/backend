@@ -1,4 +1,4 @@
-import type { EntityRepository, MikroORM, QueryBuilder } from '@mikro-orm/mysql';
+import type { EntityRepository, MikroORM, QueryBuilder, SelectQueryBuilder } from '@mikro-orm/mysql';
 import { isEmpty } from 'lodash';
 import { ProductSpec } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
@@ -22,12 +22,40 @@ export class ProductSpecGateway {
 		return this.repository.removeAndFlush(productSpec);
 	}
 
-	public async findAll(filter?: ProductSpecFilters, options?: ProductSpecOptions): Promise<BaseItems<ProductSpec>> {
+	public async findAll(
+		filter?: ProductSpecFilters,
+		options?: ProductSpecOptions
+	): Promise<BaseItems<ProductSpec> | { minPrice: number; maxPrice: number }> {
 		const pagination = paginate(options);
 		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');
 
 		if (filter?.categoryId) {
-			void qb.leftJoin('spec.categories', 'specCategory').andWhere({ 'specCategory.category_id': filter.categoryId });
+			// Number() to prevent SQL injection
+			const categoryId = Number(filter.categoryId);
+
+			void qb.leftJoin('spec.categories', 'specCategory').andWhere(`
+			(specCategory.category_id = ${categoryId} OR
+			specCategory.category_id IN
+				(select category.parent_id
+				 from (select *
+					   from category c
+					   order by parent_id, id) category,
+					  (select @pv := '${categoryId}') initialisation
+				 where find_in_set(parent_id, @pv) > 0
+						   and @pv := concat(@pv, ',', category.id)))
+			`);
+		}
+
+		if (filter?.minPrice) {
+			void qb.leftJoin('spec.producerProducts', 'producerProduct').andWhere({
+				'producerProduct.current_price': { $gte: filter.minPrice }
+			});
+		}
+
+		if (filter?.maxPrice) {
+			void qb.leftJoin('spec.producerProducts', 'producerProduct').andWhere({
+				'producerProduct.current_price': { $lte: filter.maxPrice }
+			});
 		}
 
 		if (filter?.search) {
@@ -48,7 +76,16 @@ export class ProductSpecGateway {
 		}
 
 		// Calculate items count before grouping and paginating
-		const totalItemsQb = qb.clone();
+		const miscQb = qb
+			.clone()
+			.select('COUNT(*) as totalItems')
+			.addSelect('MIN(producerProduct.current_price) as minPrice')
+			.addSelect('MAX(producerProduct.current_price) as maxPrice')
+			.leftJoin('spec.producerProducts', 'producerProduct') as unknown as SelectQueryBuilder<{
+			totalItems: number;
+			minPrice: number;
+			maxPrice: number;
+		}>;
 
 		// Add producers count, min and max price
 		void qb
@@ -63,11 +100,20 @@ export class ProductSpecGateway {
 		void qb.offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
-		const [totalItems, productSpecs] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
+		const [miscData, productSpecs] = await Promise.all([miscQb.execute('get'), qb.getResultList()]);
+		console.log('\n\n\n\n\n\n', qb.getQuery(), '\n\n\n\n\n\n');
 
-		const totalPages = Math.ceil(totalItems / pagination.limit);
+		const totalPages = Math.ceil(miscData.totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
-		return { items: productSpecs, totalItems, totalPages, page, pageSize: productSpecs.length };
+		return {
+			items: productSpecs,
+			totalItems: miscData.totalItems,
+			totalPages,
+			page,
+			pageSize: productSpecs.length,
+			maxPrice: miscData.maxPrice,
+			minPrice: miscData.minPrice
+		};
 	}
 
 	public async findById(id: number): Promise<ProductSpec | null> {
