@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/hivetown/backend/compare/v1.2.0...v1.2.1) (2023-06-18)
+
+
+### Bug Fixes
+
+* add deleted_at to producer products of unit ([d5cea65](https://github.com/hivetown/backend/commit/d5cea65b8c933b485ee8bc3ce57641e060b2a7a1))
+
 ## [1.2.0](https://github.com/hivetown/backend/compare/v1.1.0...v1.2.0) (2023-06-17)
 
 ### Features
