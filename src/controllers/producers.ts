@@ -462,7 +462,24 @@ export class ProducersController {
 		};
 
 		const orders = await container.orderGateway.findByIds(ordersId, options);
-		return res.status(200).json(orders);
+		const newItems: any[] = [];
+		for (const order of orders.items) {
+			const newOrder = {
+				id: order.id,
+				shippingAddress: order.shippingAddress,
+				orderDate: order.getOrderDate(),
+				status: order.getGeneralStatusForProducer(producerId)
+			};
+
+			newItems.push(newOrder);
+		}
+
+		return res.status(200).json({
+			items: newItems,
+			totalPages: orders.totalPages,
+			page: orders.page,
+			pageSize: orders.pageSize
+		});
 	}
 
 	@Get('/:producerId/orders/:orderId', [

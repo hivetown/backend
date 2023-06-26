@@ -27,7 +27,15 @@ export class OrderGateway {
 		const pagination = paginate(options);
 
 		const [orders, totalResults] = await Promise.all([
-			this.repository.find({ id: { $in: orderIds } }, { fields: ['shippingAddress'], limit: pagination.limit, offset: pagination.offset }),
+			this.repository.find(
+				{ id: { $in: orderIds } },
+				{
+					fields: ['shippingAddress'],
+					limit: pagination.limit,
+					offset: pagination.offset,
+					populate: ['items', 'items.shipment.events.status', 'shippingAddress', 'items.producerProduct.producer']
+				}
+			),
 			this.repository.count({ id: { $in: orderIds } })
 		]);
 
