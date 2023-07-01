@@ -9,6 +9,7 @@ import { NotFoundError } from '../errors/NotFoundError';
 
 // ENV
 import { config } from 'dotenv-cra';
+import { Notification } from '../entities';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 config();
 
@@ -50,6 +51,16 @@ export class WebhookController {
 						order.addShipmentEvent(ShipmentStatus.Paid, order.shippingAddress);
 						order.payment = session.payment_intent as string;
 						await container.orderGateway.updateOrder(order);
+
+						for (const item of order.items.getItems()) {
+							const notification = await Notification.create(
+								consumer.user,
+								item.producerProduct.producer.user,
+								'New order',
+								`You have a new order from ${consumer.user.name} for ${item.quantity} ${item.producerProduct.productSpec.name} (${item.producerProduct.productionUnit.name})`
+							);
+							await container.notificationGateway.create(notification);
+						}
 					} else {
 						throw new NotFoundError('Consumer not found');
 					}
