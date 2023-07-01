@@ -462,7 +462,24 @@ export class ProducersController {
 		};
 
 		const orders = await container.orderGateway.findByIds(ordersId, options);
-		return res.status(200).json(orders);
+		const newItems: any[] = [];
+		for (const order of orders.items) {
+			const newOrder = {
+				id: order.id,
+				shippingAddress: order.shippingAddress,
+				orderDate: order.getOrderDate(),
+				status: order.getGeneralStatusForProducer(producerId)
+			};
+
+			newItems.push(newOrder);
+		}
+
+		return res.status(200).json({
+			items: newItems,
+			totalPages: orders.totalPages,
+			page: orders.page,
+			pageSize: orders.pageSize
+		});
 	}
 
 	@Get('/:producerId/orders/:orderId', [
@@ -494,7 +511,12 @@ export class ProducersController {
 		const order = await container.orderGateway.findByIdWithShippingAddress(orderId);
 		if (!order) throw new NotFoundError('Order not found');
 
-		const orderRes = { id: order.id, shippingAddress: order.shippingAddress, status: order.getGeneralStatusForProducer(producerId) };
+		const orderRes = {
+			id: order.id,
+			shippingAddress: order.shippingAddress,
+			orderDate: order.getOrderDate(),
+			status: order.getGeneralStatusForProducer(producerId)
+		};
 		return res.status(200).json(orderRes);
 	}
 
@@ -543,7 +565,8 @@ export class ProducersController {
 		for (let i = 0; i < orderItems.items.length; i++) {
 			const orderItem = orderItems.items[i];
 			const status = ShipmentStatus[orderItem.shipment.getLastEvent().status];
-			items[i] = { producerProduct: orderItem.producerProduct, status, quantity: orderItem.quantity, price: orderItem.price };
+			const orderDate = orderItem.getFirstDate();
+			items[i] = { producerProduct: orderItem.producerProduct, status, orderDate, quantity: orderItem.quantity, price: orderItem.price };
 		}
 
 		return res.status(200).json({
