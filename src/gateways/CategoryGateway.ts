@@ -93,7 +93,6 @@ export class CategoryGateway {
 
 	public async create(category: Category): Promise<Category> {
 		const cat = this.repository.create(category);
-		console.log(cat.fields);
 		await this.repository.persistAndFlush(cat);
 		return cat;
 	}

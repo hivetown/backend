@@ -3,17 +3,20 @@ import type { EntityData } from '@mikro-orm/core';
 import { Notification } from '../../entities';
 
 const templateMessages = [
-	'{actor} has followed you!',
-	'{actor} has liked your post!',
-	'{actor} has commented on your post!',
-	'{actor} has replied to your comment!',
-	'Your order from {actor} has been shipped!',
-	'Your order from {actor} has been delivered!',
-	'Your order from {actor} has been cancelled!',
-	'Your order from {actor} is in Margem Sul!',
-	'Your order from {actor} is in Leiria!',
-	'Your account has been disabled for illegal activity.',
-	'Your account has been re-enabled.'
+	'A sua encomenda de {actor} está a ser preparada!',
+	'A sua encomenda de {actor} foi enviada!',
+	'A sua encomenda de {actor} foi entregue!',
+	'A sua encomenda de {actor} foi cancelada!',
+	'A sua encomenda de {actor} está na Margem Sul!',
+	'A sua encomenda de {actor} está em Leiria!',
+	'A sua conta foi desativada por atividades ilegais.',
+	'A sua conta foi desativada por sonambulismo.',
+	'A sua conta foi desativada por comer demasiado chocolate.',
+	'A sua conta foi reativada.',
+	'A sua conta foi reativada porque bebeu sumo de laranja Compal.',
+	'A sua encomenda do Tuix está com o João Pedro Pais!',
+	'A Bandida comeu a sua encomenda :(.',
+	'Adoro gelados.'
 ];
 
 export class NotificationFactory extends Factory<Notification> {
