@@ -103,10 +103,7 @@ export class ProducerProductGateway {
 		const totalItemsQb = qb.clone();
 
 		// Order & Paginate
-		void qb
-			.orderBy({ productSpec: { name: 'ASC' } })
-			.offset(pagination.offset)
-			.limit(pagination.limit);
+		void qb.orderBy({ 'producerProduct_productSpec.name': 'ASC' }).offset(pagination.offset).limit(pagination.limit);
 
 		// Populate
 		if (options?.populate) {
