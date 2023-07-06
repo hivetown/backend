@@ -27,7 +27,10 @@ export class ProductSpecGateway {
 		options?: ProductSpecOptions
 	): Promise<BaseItems<ProductSpec> | { minPrice: number; maxPrice: number }> {
 		const pagination = paginate(options);
-		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');
+		const qb: QueryBuilder<ProductSpec> = this.repository
+			.createQueryBuilder('spec')
+			.select('*')
+			.leftJoin('spec.producerProducts', 'producerProduct');
 
 		if (filter?.categoryId) {
 			// Number() to prevent SQL injection
@@ -47,13 +50,13 @@ export class ProductSpecGateway {
 		}
 
 		if (filter?.minPrice) {
-			void qb.leftJoin('spec.producerProducts', 'producerProduct').andWhere({
+			void qb.andWhere({
 				'producerProduct.current_price': { $gte: filter.minPrice }
 			});
 		}
 
 		if (filter?.maxPrice) {
-			void qb.leftJoin('spec.producerProducts', 'producerProduct').andWhere({
+			void qb.andWhere({
 				'producerProduct.current_price': { $lte: filter.maxPrice }
 			});
 		}
@@ -78,10 +81,9 @@ export class ProductSpecGateway {
 		// Calculate items count before grouping and paginating
 		const miscQb = qb
 			.clone()
-			.select('COUNT(*) as totalItems')
+			.select('COUNT(DISTINCT spec.id) as totalItems')
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
-			.addSelect('MAX(producerProduct.current_price) as maxPrice')
-			.leftJoin('spec.producerProducts', 'producerProduct') as unknown as SelectQueryBuilder<{
+			.addSelect('MAX(producerProduct.current_price) as maxPrice') as unknown as SelectQueryBuilder<{
 			totalItems: number;
 			minPrice: number;
 			maxPrice: number;
@@ -90,7 +92,6 @@ export class ProductSpecGateway {
 		// Add producers count, min and max price
 		void qb
 			.leftJoinAndSelect('spec.images', 'image')
-			.leftJoin('spec.producerProducts', 'producerProduct')
 			.groupBy(['spec.id', 'image.id'])
 			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
