@@ -278,7 +278,7 @@ export class HivetownSeeder extends Seeder {
 												notificationFactory.makeOne({
 													actor: orderItem.producerProduct.producer.user,
 													notifier: consumer.user,
-													templateTitle: 'New shipment event of your order',
+													templateTitle: 'Atualização de entrega da sua entrega',
 													templateMessage: event.makeMessage()
 												});
 											})

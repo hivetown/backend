@@ -25,7 +25,6 @@ import {
 	UserGateway,
 	NotificationGateway
 } from './gateways';
-import { HelloController } from './controllers/hello';
 import { ProductsController } from './controllers/products';
 import { CategoryController } from './controllers/category';
 import { ConsumerController } from './controllers/consumer';
@@ -104,7 +103,6 @@ export const main = async () => {
 	const serverErrorMiddleware = new ServerErrorMiddleware();
 	app.use(serverErrorMiddleware.use.bind(serverErrorMiddleware));
 
-	await attachControllers(app, [HelloController]);
 	await attachControllers(app, [
 		AuthController,
 		ProductsController,
@@ -116,10 +114,6 @@ export const main = async () => {
 		ReportsController,
 		HealthController
 	]);
-
-	app.use('/', (_req, res) => {
-		res.status(200).send('Hello Hivetown!');
-	});
 
 	container.server = app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 };
