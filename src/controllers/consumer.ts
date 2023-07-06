@@ -738,6 +738,17 @@ export class ConsumerController {
 			reason: 'requested_by_customer' // motivo do reembolso (opcional)
 		});
 
+		// Criar notificação para o produtor
+		for (const item of orderPopulated.items.getItems()) {
+			const notification = await Notification.create(
+				consumer.user,
+				item.producerProduct.producer.user,
+				'Order Canceled',
+				`The order ${order.id} was canceled by the consumer ${consumer.user.name}`
+			);
+			await container.notificationGateway.create(notification);
+		}
+
 		res.json({ message: 'Order canceled', refund });
 	}
 

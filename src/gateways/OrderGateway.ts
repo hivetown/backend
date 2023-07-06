@@ -126,7 +126,10 @@ export class OrderGateway {
 				'shippingAddress',
 				'items.producerProduct',
 				'items.producerProduct.productionUnit',
-				'items.producerProduct.productionUnit.address'
+				'items.producerProduct.productionUnit.address',
+				'items.producerProduct.productSpec',
+				'items.producerProduct.producer',
+				'items.producerProduct.producer.user'
 			],
 			orderBy: { id: 'DESC' }
 		});
