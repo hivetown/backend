@@ -33,7 +33,8 @@ export class OrderGateway {
 					fields: ['shippingAddress'],
 					limit: pagination.limit,
 					offset: pagination.offset,
-					populate: ['items', 'items.shipment.events.status', 'shippingAddress', 'items.producerProduct.producer']
+					populate: ['items', 'items.shipment.events.status', 'shippingAddress', 'items.producerProduct.producer'],
+					orderBy: { id: 'DESC' }
 				}
 			),
 			this.repository.count({ id: { $in: orderIds } })
@@ -57,7 +58,8 @@ export class OrderGateway {
 					populate: ['items', 'items.shipment.events.status', 'shippingAddress'],
 					fields: ['shippingAddress'],
 					limit: pagination.limit,
-					offset: pagination.offset
+					offset: pagination.offset,
+					orderBy: { id: 'DESC' }
 				}
 			),
 			this.repository.count({ consumer: { user: consumerId } })
@@ -85,7 +87,8 @@ export class OrderGateway {
 					'items.producerProduct.productSpec',
 					'items.producerProduct.producer',
 					'shippingAddress'
-				]
+				],
+				orderBy: { id: 'DESC' }
 			}
 		);
 		return orders;
@@ -94,7 +97,7 @@ export class OrderGateway {
 	public async findByConsumerAndOrder(consumerId: number, orderId: number): Promise<Order | null> {
 		const order = await this.repository.findOne(
 			{ consumer: { user: consumerId }, id: orderId },
-			{ populate: ['items', 'items.shipment.events.status', 'shippingAddress'] }
+			{ populate: ['items', 'items.shipment.events.status', 'shippingAddress'], orderBy: { id: 'DESC' } }
 		);
 		return order;
 	}
@@ -124,7 +127,8 @@ export class OrderGateway {
 				'items.producerProduct',
 				'items.producerProduct.productionUnit',
 				'items.producerProduct.productionUnit.address'
-			]
+			],
+			orderBy: { id: 'DESC' }
 		});
 		return order;
 	}
@@ -133,7 +137,8 @@ export class OrderGateway {
 		const orders = await this.repository.find(
 			{ consumer: { user: consumerId } },
 			{
-				populate: ['items', 'items.shipment', 'items.shipment.events', 'items.shipment.events.status']
+				populate: ['items', 'items.shipment', 'items.shipment.events', 'items.shipment.events.status'],
+				orderBy: { id: 'DESC' }
 			}
 		);
 		return orders;

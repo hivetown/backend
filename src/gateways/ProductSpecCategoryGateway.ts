@@ -29,6 +29,7 @@ export class ProductSpecCategoryGateway {
 				.leftJoinAndSelect('category.parent', 'parent')
 				.limit(pagination.limit)
 				.offset(pagination.offset)
+				.orderBy({ category: { name: 'ASC' } })
 				.getResult(),
 			this.repository
 				.createQueryBuilder('productSpecCategory')

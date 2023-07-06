@@ -18,6 +18,7 @@ export class OrderItemGateway {
 			.select('oi.order_id', true)
 			.leftJoin('oi.producerProduct', 'pp')
 			.where(`oi.producer_product_id = pp.id and pp.producer_id = '${producerId}'`)
+			.orderBy({ order: { id: 'DESC' } })
 			.getResult();
 
 		return orderIds;
@@ -38,7 +39,8 @@ export class OrderItemGateway {
 					'order.consumer',
 					'order.consumer.user',
 					'order.items.shipment.events.status'
-				]
+				],
+				orderBy: { order: { id: 'DESC' } }
 			}
 		);
 
@@ -65,7 +67,8 @@ export class OrderItemGateway {
 						'shipment.events.status'
 					],
 					limit: pagination.limit,
-					offset: pagination.offset
+					offset: pagination.offset,
+					orderBy: { producerProduct: { productSpec: { name: 'ASC' } } }
 				}
 			),
 			this.repository.count({ order: orderId, producerProduct: { producer: { user: producerId } } })
@@ -83,7 +86,8 @@ export class OrderItemGateway {
 		const orderItem = await this.repository.findOne(
 			{ order: orderId, producerProduct: { producer: { user: producerId }, id: producerProductId } },
 			{
-				populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec']
+				populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec'],
+				orderBy: { order: { id: 'DESC' } }
 			}
 		);
 		return orderItem;
@@ -96,7 +100,7 @@ export class OrderItemGateway {
 	): Promise<OrderItem | null> {
 		const orderItem = await this.repository.findOne(
 			{ order: orderId, producerProduct: { producer: { user: producerId }, id: producerProductId } },
-			{ populate: ['shipment', 'shipment.carrier', 'shipment.events.address'] }
+			{ populate: ['shipment', 'shipment.carrier', 'shipment.events.address'], orderBy: { order: { id: 'DESC' } } }
 		);
 		return orderItem;
 	}
@@ -116,7 +120,8 @@ export class OrderItemGateway {
 					],
 					limit: pagination.limit,
 					offset: pagination.offset,
-					filters: { [SOFT_DELETABLE_FILTER]: false }
+					filters: { [SOFT_DELETABLE_FILTER]: false },
+					orderBy: { producerProduct: { productSpec: { name: 'ASC' } } }
 				}
 			),
 			this.repository.count({ order: { id: orderId, consumer: { user: consumerId } } })
@@ -136,7 +141,8 @@ export class OrderItemGateway {
 			{ order: { id: orderId, consumer: { user: consumerId } }, producerProduct: { id: producerProductId } },
 			{
 				populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec'],
-				filters: { [SOFT_DELETABLE_FILTER]: false }
+				filters: { [SOFT_DELETABLE_FILTER]: false },
+				orderBy: { order: { id: 'DESC' } }
 			}
 		);
 		return q2;
@@ -146,7 +152,8 @@ export class OrderItemGateway {
 		const products = await this.repository.find(
 			{ producerProduct: { producer: { user: producerId } } },
 			{
-				populate: ['shipment', 'shipment.events', 'shipment.events.status']
+				populate: ['shipment', 'shipment.events', 'shipment.events.status'],
+				orderBy: { order: { id: 'DESC' } }
 			}
 		);
 		return products;
@@ -165,7 +172,8 @@ export class OrderItemGateway {
 					'shipment.events.status',
 					'order.items',
 					'order.items.shipment.events.status'
-				]
+				],
+				orderBy: { order: { id: 'DESC' } }
 			}
 		);
 		return orderItems;

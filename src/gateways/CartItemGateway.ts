@@ -19,7 +19,8 @@ export class CartItemGateway {
 				{
 					populate: ['producerProduct', 'producerProduct.producer', 'producerProduct.productionUnit', 'producerProduct.productSpec'],
 					limit: pagination.limit,
-					offset: pagination.offset
+					offset: pagination.offset,
+					orderBy: { producerProduct: { productSpec: { name: 'ASC' } } }
 				}
 			),
 			this.repository.count({ consumer: { user: consumerId } })

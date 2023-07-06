@@ -283,7 +283,8 @@ export class ProducersController {
 			}),
 			query: Joi.object({
 				page: Joi.number().min(1).optional(),
-				pageSize: Joi.number().min(1).optional()
+				pageSize: Joi.number().min(1).optional(),
+				orderBy: Joi.string().valid('currentPrice', 'name').optional()
 			})
 		})
 	])
@@ -294,7 +295,8 @@ export class ProducersController {
 		const options: ProducerProductOptions = {
 			page: Number(req.query.page) || -1,
 			size: Number(req.query.pageSize) || -1,
-			populate: ['producerProduct.productSpec', 'producerProduct.productionUnit', 'producerProduct_productSpec.images']
+			populate: ['producerProduct.productSpec', 'producerProduct.productionUnit', 'producerProduct_productSpec.images'],
+			orderBy: req.query.orderBy as any // as any is fine here because Joi validates the value
 		};
 
 		const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);

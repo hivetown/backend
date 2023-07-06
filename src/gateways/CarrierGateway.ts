@@ -26,8 +26,8 @@ export class CarrierGateway {
 
 		const totalItemsQb = qb.clone();
 
-		// Paginate
-		void qb.offset(paginataion.offset).limit(paginataion.limit);
+		// Order & Paginate
+		void qb.orderBy({ licensePlate: 'ASC' }).offset(paginataion.offset).limit(paginataion.limit);
 
 		// Fetch results and map them
 		const [totalResults, carriers] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
@@ -49,7 +49,8 @@ export class CarrierGateway {
 				{
 					populate: ['productionUnit'],
 					limit: paginataion.limit,
-					offset: paginataion.offset
+					offset: paginataion.offset,
+					orderBy: { licensePlate: 'ASC' }
 				}
 			),
 			this.repository.count({ productionUnit: { producer: { user: producerId } }, deletedAt: null })

@@ -68,8 +68,8 @@ export class ProducerProductGateway {
 
 		const totalItemsQb = qb.clone();
 
-		// Paginate
-		void qb.offset(pagination.offset).limit(pagination.limit);
+		// Order & Paginate
+		void qb.orderBy({ currentPrice: 'ASC' }).offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
 		const [totalResults, products] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
@@ -102,8 +102,11 @@ export class ProducerProductGateway {
 
 		const totalItemsQb = qb.clone();
 
-		// Paginate
-		void qb.offset(pagination.offset).limit(pagination.limit);
+		// Order & Paginate
+		void qb
+			.orderBy({ productSpec: { name: 'ASC' } })
+			.offset(pagination.offset)
+			.limit(pagination.limit);
 
 		// Populate
 		if (options?.populate) {
@@ -151,16 +154,26 @@ export class ProducerProductGateway {
 		}
 
 		if (filter?.search) {
-			void qb.leftJoin('producerProduct.specification', 'spec').andWhere({
+			void qb.andWhere({
 				$or: [
-					{ 'lower(spec.name)': { $like: stringSearchType(filter.search) } },
-					{ 'lower(spec.description)': { $like: stringSearchType(filter.search) } }
+					{ 'lower(producerProduct_productSpec.name)': { $like: stringSearchType(filter.search) } },
+					{ 'lower(producerProduct_productSpec.description)': { $like: stringSearchType(filter.search) } }
 				]
 			});
 		}
 
 		// Calculate items count before grouping and paginating
 		const totalItemsQb = qb.clone();
+
+		// Order
+		switch (options?.orderBy) {
+			case 'currentPrice':
+				void qb.orderBy({ currentPrice: 'ASC' });
+				break;
+			case 'name':
+			default:
+				void qb.orderBy({ 'producerProduct_productSpec.name': 'ASC' });
+		}
 
 		// Paginate
 		void qb.offset(pagination.offset).limit(pagination.limit);
