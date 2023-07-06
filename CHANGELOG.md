@@ -1,18 +1,22 @@
 # Changelog
 
-## [1.2.2](https://github.com/hivetown/backend/compare/v1.2.1...v1.2.2) (2023-06-18)
+## [1.3.0](https://github.com/hivetown/backend/compare/v1.2.2...v1.3.0) (2023-07-06)
 
+### Features
+
+-   order by when returning multiple rows ([01e2717](https://github.com/hivetown/backend/commit/01e271761473156ea6a3b16c053e279a83fc9786))
+
+## [1.2.2](https://github.com/hivetown/backend/compare/v1.2.1...v1.2.2) (2023-06-18)
 
 ### Bug Fixes
 
-* sometimes parent is undefined, so check for it ([f2c2e13](https://github.com/hivetown/backend/commit/f2c2e132ab7d4d713b9a36edce0d89146a0c1ba4))
+-   sometimes parent is undefined, so check for it ([f2c2e13](https://github.com/hivetown/backend/commit/f2c2e132ab7d4d713b9a36edce0d89146a0c1ba4))
 
 ## [1.2.1](https://github.com/hivetown/backend/compare/v1.2.0...v1.2.1) (2023-06-18)
 
-
 ### Bug Fixes
 
-* add deleted_at to producer products of unit ([d5cea65](https://github.com/hivetown/backend/commit/d5cea65b8c933b485ee8bc3ce57641e060b2a7a1))
+-   add deleted_at to producer products of unit ([d5cea65](https://github.com/hivetown/backend/commit/d5cea65b8c933b485ee8bc3ce57641e060b2a7a1))
 
 ## [1.2.0](https://github.com/hivetown/backend/compare/v1.1.0...v1.2.0) (2023-06-17)
 

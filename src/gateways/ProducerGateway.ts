@@ -16,7 +16,7 @@ export class ProducerGateway {
 	public async findAll(options: PaginatedOptions): Promise<BaseItems<Producer>> {
 		const pagination = paginate(options);
 		const [producers, totalResults] = await Promise.all([
-			this.repository.find({}, { limit: pagination.limit, offset: pagination.offset }),
+			this.repository.find({}, { limit: pagination.limit, offset: pagination.offset, orderBy: { user: { name: 'ASC' } } }),
 			this.repository.count()
 		]);
 
@@ -59,7 +59,8 @@ export class ProducerGateway {
 				{
 					populate: ['productionUnits'],
 					limit: pagination.limit,
-					offset: pagination.offset
+					offset: pagination.offset,
+					orderBy: { user: { name: 'ASC' } }
 				}
 			),
 			this.repository.count({
@@ -89,7 +90,8 @@ export class ProducerGateway {
 			{ user: id },
 			{
 				populate: ['productionUnits', 'producerProducts'],
-				filters: { [SOFT_DELETABLE_FILTER]: false }
+				filters: { [SOFT_DELETABLE_FILTER]: false },
+				orderBy: { user: { name: 'ASC' } }
 			}
 		);
 		return producer;
@@ -103,7 +105,15 @@ export class ProducerGateway {
 	public async findAllWithDeletedAt(options: PaginatedOptions): Promise<BaseItems<Producer>> {
 		const pagination = paginate(options);
 		const [producers, totalResults] = await Promise.all([
-			this.repository.find({}, { filters: { [SOFT_DELETABLE_FILTER]: false }, limit: pagination.limit, offset: pagination.offset }),
+			this.repository.find(
+				{},
+				{
+					filters: { [SOFT_DELETABLE_FILTER]: false },
+					limit: pagination.limit,
+					offset: pagination.offset,
+					orderBy: { user: { name: 'ASC' } }
+				}
+			),
 			this.repository.count({}, { filters: { [SOFT_DELETABLE_FILTER]: false } })
 		]);
 

@@ -50,8 +50,8 @@ export class ProductionUnitGateway {
 
 		const totalItemsQb = qb.clone();
 
-		// Paginate
-		void qb.offset(pagination.offset).limit(pagination.limit);
+		// Order & Paginate
+		void qb.orderBy({ name: 'ASC' }).offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
 		const [totalItems, productionUnits] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);
@@ -88,7 +88,7 @@ export class ProductionUnitGateway {
 				products: { productSpec: specId },
 				producer: { user: producerId }
 			},
-			{ populate: ['address'] }
+			{ populate: ['address'], orderBy: { name: 'ASC' } }
 		);
 		return productionUnits;
 	}

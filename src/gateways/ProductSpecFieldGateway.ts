@@ -28,7 +28,12 @@ export class ProductSpecFieldGateway {
 		const [productSpecField, totalResults] = await Promise.all([
 			this.repository.find(
 				{ productSpecCategory: { productSpec: productSpecId, category: categoryId } },
-				{ fields: ['field', 'value'], limit: pagination.limit, offset: pagination.offset }
+				{
+					fields: ['field', 'value'],
+					limit: pagination.limit,
+					offset: pagination.offset,
+					orderBy: { productSpecCategory: { category: { name: 'ASC' } }, field: { name: 'ASC' } }
+				}
 			),
 			this.repository.count({ productSpecCategory: { productSpec: productSpecId, category: categoryId } })
 		]);

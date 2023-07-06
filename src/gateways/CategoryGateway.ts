@@ -69,7 +69,8 @@ export class CategoryGateway {
 
 		const totalResultsQb = qb.clone();
 
-		void qb.leftJoinAndSelect('category.image', 'image').limit(pagination.limit).offset(pagination.offset);
+		// Order and Pagination
+		void qb.leftJoinAndSelect('category.image', 'image').orderBy({ name: 'ASC' }).limit(pagination.limit).offset(pagination.offset);
 
 		const [categories, totalResults] = await Promise.all([qb.getResult(), totalResultsQb.count()]);
 		return {
@@ -93,7 +94,6 @@ export class CategoryGateway {
 
 	public async create(category: Category): Promise<Category> {
 		const cat = this.repository.create(category);
-		console.log(cat.fields);
 		await this.repository.persistAndFlush(cat);
 		return cat;
 	}

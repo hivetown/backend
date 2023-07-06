@@ -280,6 +280,11 @@ export class ProducersController {
 		validate({
 			params: Joi.object({
 				producerId: Joi.number().min(1).required()
+			}),
+			query: Joi.object({
+				page: Joi.number().min(1).optional(),
+				pageSize: Joi.number().min(1).optional(),
+				orderBy: Joi.string().valid('currentPrice', 'name').optional()
 			})
 		})
 	])
@@ -290,7 +295,8 @@ export class ProducersController {
 		const options: ProducerProductOptions = {
 			page: Number(req.query.page) || -1,
 			size: Number(req.query.pageSize) || -1,
-			populate: ['producerProduct.productSpec', 'producerProduct.productionUnit', 'producerProduct_productSpec.images']
+			populate: ['producerProduct.productSpec', 'producerProduct.productionUnit', 'producerProduct_productSpec.images'],
+			orderBy: req.query.orderBy as any // as any is fine here because Joi validates the value
 		};
 
 		const producerProducts = await container.producerProductGateway.findAll({ producerId }, options);
@@ -746,6 +752,7 @@ export class ProducersController {
 
 		await container.shipmentGateway.update(orderItem.shipment);
 
+		// TODO shipmentEvent?
 		return res.status(201).json(orderItem.shipment);
 	}
 
@@ -925,6 +932,10 @@ export class ProducersController {
 			params: Joi.object({
 				producerId: Joi.number().required(),
 				unitId: Joi.number().required()
+			}),
+			query: Joi.object({
+				page: Joi.number().optional(),
+				pageSize: Joi.number().optional()
 			})
 		})
 	])
@@ -1272,7 +1283,7 @@ export class ProducersController {
 		const carrier = await container.carrierGateway.findOneOfProducer(producer.user.id, carrierId);
 		if (!carrier) throw new NotFoundError('Carrier not found');
 
-		if (carrier.status === CarrierStatus.Unavailable) throw new ForbiddenError('Carrier is unavailable so it cannot be deleted');
+		if (carrier.status === CarrierStatus.Unavailable) throw new BadRequestError('Carrier is unavailable so it cannot be deleted');
 
 		carrier.deletedAt = new Date();
 		await container.carrierGateway.createOrUpdate(carrier);
