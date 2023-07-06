@@ -29,7 +29,13 @@ export class OrderGateway {
 		const [orders, totalResults] = await Promise.all([
 			this.repository.find(
 				{ id: { $in: orderIds } },
-				{ fields: ['shippingAddress'], limit: pagination.limit, offset: pagination.offset, orderBy: { id: 'DESC' } }
+				{
+					fields: ['shippingAddress'],
+					limit: pagination.limit,
+					offset: pagination.offset,
+					populate: ['items', 'items.shipment.events.status', 'shippingAddress', 'items.producerProduct.producer'],
+					orderBy: { id: 'DESC' }
+				}
 			),
 			this.repository.count({ id: { $in: orderIds } })
 		]);
