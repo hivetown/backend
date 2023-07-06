@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/hivetown/backend/compare/v1.2.2...v1.3.0) (2023-07-06)
+
+
+### Features
+
+* order by when returning multiple rows ([01e2717](https://github.com/hivetown/backend/commit/01e271761473156ea6a3b16c053e279a83fc9786))
+
 ## [1.2.2](https://github.com/hivetown/backend/compare/v1.2.1...v1.2.2) (2023-06-18)
 
 
