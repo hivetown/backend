@@ -31,8 +31,8 @@ export class AddressGateway {
 
 		const totalItemsQb = qb.clone();
 
-		// Paginate
-		void qb.offset(pagination.offset).limit(pagination.limit);
+		// Order & Paginate
+		void qb.orderBy({ id: 'DESC' }).offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
 		const [totalItems, addresses] = await Promise.all([totalItemsQb.getCount(), qb.getResultList()]);

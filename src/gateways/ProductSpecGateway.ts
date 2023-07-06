@@ -96,12 +96,11 @@ export class ProductSpecGateway {
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
 			.addSelect('MAX(producerProduct.current_price) as maxPrice');
 
-		// Paginate
-		void qb.offset(pagination.offset).limit(pagination.limit);
+		// Order & Paginate
+		void qb.orderBy({ name: 'ASC' }).offset(pagination.offset).limit(pagination.limit);
 
 		// Fetch results and map them
 		const [miscData, productSpecs] = await Promise.all([miscQb.execute('get'), qb.getResultList()]);
-		console.log('\n\n\n\n\n\n', qb.getQuery(), '\n\n\n\n\n\n');
 
 		const totalPages = Math.ceil(miscData.totalItems / pagination.limit);
 		const page = Math.ceil(pagination.offset / pagination.limit) + 1;
