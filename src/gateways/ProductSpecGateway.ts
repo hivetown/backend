@@ -102,7 +102,7 @@ export class ProductSpecGateway {
 
 		// ----- Pagination subquery (because we want to LIMIT before grouping)
 		// Process the order by
-		let orderBy = `spec.name ASC`;
+		let innerOrderBy = `spec.name ASC`;
 		const leftJoins = [];
 		switch (options?.orderBy) {
 			case 'priceAsc':
@@ -112,7 +112,10 @@ export class ProductSpecGateway {
 				on spec.id = producerProduct.product_spec_id`
 				);
 
-				orderBy = `AVG(producerProduct.current_price) ASC`;
+				innerOrderBy = `AVG(producerProduct.current_price) ASC`;
+
+				// Outter order by
+				void qb.orderBy({ 'AVG(producerProduct.current_price)': 'ASC' });
 				break;
 			case 'priceDesc':
 				// We need to join producerProduct to get the price
@@ -121,7 +124,10 @@ export class ProductSpecGateway {
 				on spec.id = producerProduct.product_spec_id`
 				);
 
-				orderBy = `AVG(producerProduct.current_price) DESC`;
+				innerOrderBy = `AVG(producerProduct.current_price) DESC`;
+
+				// Outter order by
+				void qb.orderBy({ 'AVG(producerProduct.current_price)': 'DESC' });
 				break;
 			case 'popularityAsc':
 				// We need to join producerProduct to get the orderItems
@@ -133,7 +139,10 @@ export class ProductSpecGateway {
 				leftJoins.push(`left join order_item as orderItem
 				on producerProduct.id = orderItem.producer_product_id`);
 
-				orderBy = `SUM(orderItem.quantity) ASC`;
+				innerOrderBy = `SUM(orderItem.quantity) ASC`;
+
+				// Outter order by
+				void qb.orderBy({ 'SUM(orderItem.quantity)': 'ASC' });
 				break;
 			case 'popularityDesc':
 				// We need to join producerProduct to get the orderItems
@@ -145,14 +154,23 @@ export class ProductSpecGateway {
 				leftJoins.push(`left join order_item as orderItem
 				on producerProduct.id = orderItem.producer_product_id`);
 
-				orderBy = `SUM(orderItem.quantity) DESC`;
+				innerOrderBy = `SUM(orderItem.quantity) DESC`;
+
+				// Outter order by
+				void qb.orderBy({ 'SUM(orderItem.quantity)': 'DESC' });
 				break;
 			case 'ZA':
-				orderBy = `spec.name DESC`;
+				innerOrderBy = `spec.name DESC`;
+
+				// Outter order by
+				void qb.orderBy({ 'spec.name': 'DESC' });
 				break;
 			case 'AZ':
 			default:
-				orderBy = `spec.name ASC`;
+				innerOrderBy = `spec.name ASC`;
+
+				// Outter order by
+				void qb.orderBy({ 'spec.name': 'ASC' });
 				break;
 		}
 
@@ -163,7 +181,7 @@ export class ProductSpecGateway {
                             from product_spec as spec
                               ${leftJoins.join(' ')}
                             group by spec.id
-                            order by ${orderBy}
+                            order by ${innerOrderBy}
                             limit ?, ?) as spec
 		)`,
 			[pagination.offset, pagination.limit]
