@@ -10,6 +10,7 @@ import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ConflictError } from '../errors/ConflictError';
 import { Permission } from '../enums/Permission';
 import type { CategoryFilters } from '../interfaces/CategoryFilters';
+import type { CategoryOptions } from '../interfaces/CategoryOptions';
 
 @Controller('/categories')
 @Injectable()
@@ -22,14 +23,16 @@ export class CategoryController {
 				productMinPrice: Joi.number().min(0),
 				productMaxPrice: Joi.number().min(0),
 				productSearch: Joi.string(),
-				parentId: Joi.number().min(1)
+				parentId: Joi.number().min(1),
+				orderBy: Joi.string().valid('AZ', 'ZA', 'popularityAsc', 'popularityDesc')
 			})
 		})
 	])
 	public async allParentCategories(@Response() res: Express.Response, @Request() req: Express.Request) {
-		const options: PaginatedOptions = {
+		const options: CategoryOptions = {
 			page: Number(req.query.page) || -1,
-			size: Number(req.query.pageSize) || -1
+			size: Number(req.query.pageSize) || -1,
+			orderBy: req.query.orderBy as CategoryOptions['orderBy']
 		};
 
 		const filters: CategoryFilters = {

@@ -1,9 +1,9 @@
 import type { EntityRepository, MikroORM } from '@mikro-orm/mysql';
 import { Category } from '../entities';
 import type { BaseItems } from '../interfaces/BaseItems';
-import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
 import type { CategoryFilters } from '../interfaces/CategoryFilters';
+import type { CategoryOptions } from '../interfaces/CategoryOptions';
 
 export class CategoryGateway {
 	private repository: EntityRepository<Category>;
@@ -12,15 +12,15 @@ export class CategoryGateway {
 		this.repository = orm.em.getRepository(Category);
 	}
 
-	public async findAll(filters: CategoryFilters, options: PaginatedOptions): Promise<BaseItems<Category>> {
+	public async findAll(filters?: CategoryFilters, options?: CategoryOptions): Promise<BaseItems<Category>> {
 		const pagination = paginate(options);
 
 		const parentFilterValues = [];
-		if (filters.parentId) parentFilterValues.push(filters.parentId);
+		if (filters?.parentId) parentFilterValues.push(filters.parentId);
 		const parentWhere = `category.parent_id ${parentFilterValues.length ? '= ?' : 'IS NULL'}`;
-		const qb = this.repository.createQueryBuilder('category').where(parentWhere, parentFilterValues);
+		const qb = this.repository.createQueryBuilder('category').where(parentWhere, parentFilterValues).leftJoinAndSelect('category.image', 'image');
 
-		if (filters.productMaxPrice || filters.productMinPrice || filters.productSearch) {
+		if (filters?.productMaxPrice || filters?.productMinPrice || filters?.productSearch) {
 			// Number() to prevent SQL injection
 			const signal = ['>', '<']; // used for mapping
 			const priceQuery = [Number(filters.productMinPrice), Number(filters.productMaxPrice)]
@@ -69,8 +69,82 @@ export class CategoryGateway {
 
 		const totalResultsQb = qb.clone();
 
-		// Order and Pagination
-		void qb.leftJoinAndSelect('category.image', 'image').orderBy({ name: 'ASC' }).limit(pagination.limit).offset(pagination.offset);
+		// TODO DOESN'T WORK IDK
+
+		void qb.groupBy('category.id');
+
+		// ----- Pagination subquery (because we want to LIMIT before grouping)
+		// Process the order by
+		let innerOrderBy = `category.name ASC`;
+		const leftJoins = [];
+		switch (options?.orderBy) {
+			case 'popularityAsc':
+				// We need to join product_spec_category because it holds the (category, productSpec)
+				leftJoins.push(`left join product_spec_category as productSpecCategories
+				on category.id = productSpecCategories.category_id`);
+				// We need to join producerProduct to get the orderItems
+				leftJoins.push(`left join producer_product as producerProduct
+				on productSpecCategories.product_spec_id = producerProduct.product_spec_id`);
+				// We need to join orderItem to get the quantity
+				leftJoins.push(`left join order_item as orderItem
+				on producerProduct.id = orderItem.producer_product_id`);
+
+				innerOrderBy = `SUM(orderItem.quantity) ASC`;
+
+				// Outter order by
+				void qb.orderBy({ 'SUM(orderItem.quantity)': 'ASC' });
+				break;
+			case 'popularityDesc':
+				// We need to join product_spec_category because it holds the (category, productSpec)
+				leftJoins.push(`left join product_spec_category as productSpecCategories
+				on category.id = productSpecCategories.category_id`);
+				// We need to join producerProduct to get the orderItems
+				leftJoins.push(`left join producer_product as producerProduct
+				on productSpecCategories.product_spec_id = producerProduct.product_spec_id`);
+				// We need to join orderItem to get the quantity
+				leftJoins.push(`left join order_item as orderItem
+				on producerProduct.id = orderItem.producer_product_id`);
+
+				innerOrderBy = `SUM(orderItem.quantity) DESC`;
+
+				// Outter order by
+				void qb.orderBy({ 'SUM(orderItem.quantity)': 'DESC' });
+				break;
+			case 'ZA':
+				innerOrderBy = `category.name DESC`;
+
+				// Outter order by
+				void qb.orderBy({ 'category.name': 'DESC' });
+				break;
+			case 'AZ':
+			default:
+				innerOrderBy = `category.name ASC`;
+
+				// Outter order by
+				void qb.orderBy({ 'category.name': 'ASC' });
+				break;
+		}
+
+		void qb.andWhere(
+			`category.id IN (select category.id
+			from (select category.id
+				  from category as category
+						   ${leftJoins.join(' ')}
+				  group by category.id
+				  order by ${innerOrderBy}
+				  limit ?, ?) as category)`,
+			[pagination.offset, pagination.limit]
+		);
+
+		// Add orderItem if needed to the outer query
+		if (options?.orderBy?.startsWith('popularity')) {
+			// Do the joins
+			void qb
+				.leftJoin('category.productSpecCategories', 'productSpecCategories')
+				.leftJoin('productSpecCategories.productSpec', 'productSpec')
+				.leftJoin('productSpec.producerProducts', 'producerProduct')
+				.leftJoin('producerProduct.orderItems', 'orderItem');
+		}
 
 		const [categories, totalResults] = await Promise.all([qb.getResult(), totalResultsQb.count()]);
 		return {
