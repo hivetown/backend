@@ -484,7 +484,8 @@ export class ProducersController {
 			items: newItems,
 			totalPages: orders.totalPages,
 			page: orders.page,
-			pageSize: orders.pageSize
+			pageSize: orders.pageSize,
+			totalItems: orders.totalItems
 		});
 	}
 
