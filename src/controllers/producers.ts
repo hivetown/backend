@@ -760,7 +760,7 @@ export class ProducersController {
 		validate({
 			params: Joi.object({ producerId: Joi.number().required() }),
 			query: Joi.object({
-				search: Joi.string().optional(),
+				search: Joi.string().optional().min(1),
 				page: Joi.number().min(1).optional(),
 				pageSize: Joi.number().min(1).optional(),
 				raio: Joi.number().min(1).optional(),
@@ -970,7 +970,8 @@ export class ProducersController {
 			query: Joi.object({
 				page: Joi.number().optional(),
 				pageSize: Joi.number().optional(),
-				status: Joi.string().valid('Available', 'Unavailable').optional()
+				status: Joi.string().valid('Available', 'Unavailable').optional(),
+				search: Joi.string().optional().min(1)
 			})
 		}),
 		authenticationMiddleware,
@@ -1007,7 +1008,8 @@ export class ProducersController {
 
 		const filters: CarrierFilters = {
 			productionUnitId: productionUnit.id,
-			status: req.query.status === 'Available' || req.query.status === 'Unavailable' ? req.query.status : undefined
+			status: req.query.status === 'Available' || req.query.status === 'Unavailable' ? req.query.status : undefined,
+			search: req.query.search ? { value: req.query.search as string, type: StringSearchType.CONTAINS } : undefined
 		};
 
 		const carriers = await container.carrierGateway.findFromProductionUnit(filters, options);
