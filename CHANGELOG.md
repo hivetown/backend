@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0](https://github.com/hivetown/backend/compare/v1.3.0...v1.4.0) (2023-07-11)
+
+
+### Features
+
+* allow sorting products by popularity and price ([2c0bd04](https://github.com/hivetown/backend/commit/2c0bd0452270dd3fcf0a756ee8ee469baab629c3))
+
+
+### Bug Fixes
+
+* products count was incorrect ([c8592bd](https://github.com/hivetown/backend/commit/c8592bde592eb368217be5d1ee167b3b15d21f7b))
+* unit products were not populating spec ([f30755b](https://github.com/hivetown/backend/commit/f30755bf1148ea1914ac7f3f1beb68a4b9180a51))
+
 ## [1.3.0](https://github.com/hivetown/backend/compare/v1.2.2...v1.3.0) (2023-07-06)
 
 ### Features
