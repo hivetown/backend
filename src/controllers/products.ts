@@ -28,7 +28,8 @@ export class ProductsController {
 				pageSize: Joi.number().integer().min(1),
 				field: Joi.object().pattern(/^'\d+'$/, Joi.array()),
 				minPrice: Joi.number().integer().min(0),
-				maxPrice: Joi.number().integer().min(0)
+				maxPrice: Joi.number().integer().min(0),
+				orderBy: Joi.string().valid('AZ', 'ZA', 'priceAsc', 'priceDesc', 'popularityAsc', 'popularityDesc')
 			})
 		})
 	])
@@ -65,8 +66,8 @@ export class ProductsController {
 
 		const options: ProductSpecOptions = {
 			page: Number(req.query.page) || -1,
-			size: Number(req.query.pageSize) || -1
-			// sort: 'sort' in req.query ? (req.query.sort as string) : undefined
+			size: Number(req.query.pageSize) || -1,
+			orderBy: req.query.orderBy as ProductSpecOptions['orderBy']
 		};
 
 		// const optionsFiltrados = Object.fromEntries(Object.entries(options).filter(([_, v]) => v !== undefined));

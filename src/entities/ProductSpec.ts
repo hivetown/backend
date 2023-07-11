@@ -25,6 +25,9 @@ export class ProductSpec {
 
 	@Property({ persist: false })
 	public producersCount = 0;
+
+	@Property({ persist: false })
+	public timesOrdered = 0;
 	// -----------------
 
 	// Max 5 images

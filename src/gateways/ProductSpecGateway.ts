@@ -27,7 +27,10 @@ export class ProductSpecGateway {
 		options?: ProductSpecOptions
 	): Promise<BaseItems<ProductSpec> | { minPrice: number; maxPrice: number }> {
 		const pagination = paginate(options);
-		const qb: QueryBuilder<ProductSpec> = this.repository.createQueryBuilder('spec').select('*');
+		const qb: QueryBuilder<ProductSpec> = this.repository
+			.createQueryBuilder('spec')
+			.select('*')
+			.leftJoin('spec.producerProducts', 'producerProduct');
 
 		if (filter?.categoryId) {
 			// Number() to prevent SQL injection
@@ -47,13 +50,13 @@ export class ProductSpecGateway {
 		}
 
 		if (filter?.minPrice) {
-			void qb.leftJoin('spec.producerProducts', 'producerProduct').andWhere({
+			void qb.andWhere({
 				'producerProduct.current_price': { $gte: filter.minPrice }
 			});
 		}
 
 		if (filter?.maxPrice) {
-			void qb.leftJoin('spec.producerProducts', 'producerProduct').andWhere({
+			void qb.andWhere({
 				'producerProduct.current_price': { $lte: filter.maxPrice }
 			});
 		}
@@ -78,10 +81,9 @@ export class ProductSpecGateway {
 		// Calculate items count before grouping and paginating
 		const miscQb = qb
 			.clone()
-			.select('COUNT(*) as totalItems')
+			.select('COUNT(DISTINCT spec.id) as totalItems')
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
-			.addSelect('MAX(producerProduct.current_price) as maxPrice')
-			.leftJoin('spec.producerProducts', 'producerProduct') as unknown as SelectQueryBuilder<{
+			.addSelect('MAX(producerProduct.current_price) as maxPrice') as unknown as SelectQueryBuilder<{
 			totalItems: number;
 			minPrice: number;
 			maxPrice: number;
@@ -89,15 +91,101 @@ export class ProductSpecGateway {
 
 		// Add producers count, min and max price
 		void qb
-			.leftJoinAndSelect('spec.images', 'image')
-			.leftJoin('spec.producerProducts', 'producerProduct')
 			.groupBy(['spec.id', 'image.id'])
+			.leftJoinAndSelect('spec.images', 'image')
 			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
-			.addSelect('MAX(producerProduct.current_price) as maxPrice');
+			.addSelect('MAX(producerProduct.current_price) as maxPrice')
+			// Count how many orders the producerProduct has
+			.leftJoin('producerProduct.orderItems', 'orderItem')
+			.addSelect('SUM(orderItem.quantity) as timesOrdered');
 
-		// Order & Paginate
-		void qb.orderBy({ name: 'ASC' }).offset(pagination.offset).limit(pagination.limit);
+		// ----- Pagination subquery (because we want to LIMIT before grouping)
+		// Process the order by
+		let innerOrderBy = `spec.name ASC`;
+		const leftJoins = [];
+		switch (options?.orderBy) {
+			case 'priceAsc':
+				// We need to join producerProduct to get the price
+				leftJoins.push(
+					`left join producer_product as producerProduct
+				on spec.id = producerProduct.product_spec_id`
+				);
+
+				innerOrderBy = `AVG(producerProduct.current_price) ASC`;
+
+				// Outter order by
+				void qb.orderBy({ 'AVG(producerProduct.current_price)': 'ASC' });
+				break;
+			case 'priceDesc':
+				// We need to join producerProduct to get the price
+				leftJoins.push(
+					`left join producer_product as producerProduct
+				on spec.id = producerProduct.product_spec_id`
+				);
+
+				innerOrderBy = `AVG(producerProduct.current_price) DESC`;
+
+				// Outter order by
+				void qb.orderBy({ 'AVG(producerProduct.current_price)': 'DESC' });
+				break;
+			case 'popularityAsc':
+				// We need to join producerProduct to get the orderItems
+				leftJoins.push(
+					`left join producer_product as producerProduct
+				on spec.id = producerProduct.product_spec_id`
+				);
+				// We need to join orderItem to get the quantity
+				leftJoins.push(`left join order_item as orderItem
+				on producerProduct.id = orderItem.producer_product_id`);
+
+				innerOrderBy = `SUM(orderItem.quantity) ASC`;
+
+				// Outter order by
+				void qb.orderBy({ 'SUM(orderItem.quantity)': 'ASC' });
+				break;
+			case 'popularityDesc':
+				// We need to join producerProduct to get the orderItems
+				leftJoins.push(
+					`left join producer_product as producerProduct
+				on spec.id = producerProduct.product_spec_id`
+				);
+				// We need to join orderItem to get the quantity
+				leftJoins.push(`left join order_item as orderItem
+				on producerProduct.id = orderItem.producer_product_id`);
+
+				innerOrderBy = `SUM(orderItem.quantity) DESC`;
+
+				// Outter order by
+				void qb.orderBy({ 'SUM(orderItem.quantity)': 'DESC' });
+				break;
+			case 'ZA':
+				innerOrderBy = `spec.name DESC`;
+
+				// Outter order by
+				void qb.orderBy({ 'spec.name': 'DESC' });
+				break;
+			case 'AZ':
+			default:
+				innerOrderBy = `spec.name ASC`;
+
+				// Outter order by
+				void qb.orderBy({ 'spec.name': 'ASC' });
+				break;
+		}
+
+		void qb.andWhere(
+			`spec.id IN (
+			select spec.id
+                      from (select spec.id
+                            from product_spec as spec
+                              ${leftJoins.join(' ')}
+                            group by spec.id
+                            order by ${innerOrderBy}
+                            limit ?, ?) as spec
+		)`,
+			[pagination.offset, pagination.limit]
+		);
 
 		// Fetch results and map them
 		const [miscData, productSpecs] = await Promise.all([miscQb.execute('get'), qb.getResultList()]);
@@ -126,6 +214,8 @@ export class ProductSpecGateway {
 			.addSelect('COUNT(producerProduct.producer_id) as producersCount')
 			.addSelect('MIN(producerProduct.current_price) as minPrice')
 			.addSelect('MAX(producerProduct.current_price) as maxPrice')
+			.leftJoin('producerProduct.orderItems', 'orderItem')
+			.addSelect('SUM(orderItem.quantity) as timesOrdered')
 			.getSingleResult();
 	}
 
