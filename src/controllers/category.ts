@@ -21,7 +21,7 @@ export class CategoryController {
 				pageSize: Joi.number().min(1),
 				productMinPrice: Joi.number().min(0),
 				productMaxPrice: Joi.number().min(0),
-				productSearch: Joi.string(),
+				productSearch: Joi.string().min(1),
 				parentId: Joi.number().min(1)
 			})
 		})

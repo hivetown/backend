@@ -23,7 +23,7 @@ export class ProductsController {
 		validate({
 			query: Joi.object({
 				categoryId: Joi.number().integer().min(1),
-				search: Joi.string().min(3),
+				search: Joi.string().optional().min(3),
 				page: Joi.number().integer().min(1),
 				pageSize: Joi.number().integer().min(1),
 				field: Joi.object().pattern(/^'\d+'$/, Joi.array()),

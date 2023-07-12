@@ -4,6 +4,7 @@ import type { BaseItems } from '../interfaces/BaseItems';
 import type { PaginatedOptions } from '../interfaces/PaginationOptions';
 import { paginate } from '../utils/paginate';
 import type { CarrierFilters } from '../interfaces/CarrierFilters';
+import { stringSearchType } from '../utils/stringSearchType';
 
 export class CarrierGateway {
 	private repository: EntityRepository<Carrier>;
@@ -22,6 +23,10 @@ export class CarrierGateway {
 
 		if (filters.status) {
 			void qb.andWhere({ status: filters.status });
+		}
+
+		if (filters.search) {
+			void qb.andWhere({ licensePlate: { $like: stringSearchType(filters.search) } });
 		}
 
 		const totalItemsQb = qb.clone();
