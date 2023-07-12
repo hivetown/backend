@@ -32,50 +32,51 @@ export class ProductSpecGateway {
 			.select('*')
 			.leftJoin('spec.producerProducts', 'producerProduct');
 
+		const innerWheres = [];
+		const innerWheresValues = [];
+		const innerLeftJoins = [];
 		if (filter?.categoryId) {
-			// Number() to prevent SQL injection
-			const categoryId = Number(filter.categoryId);
-
-			void qb.leftJoin('spec.categories', 'specCategory').andWhere(`
-			(specCategory.category_id = ${categoryId} OR
+			innerLeftJoins.push(`left join product_spec_category as specCategory on spec.id = specCategory.product_spec_id`);
+			innerWheres.push(`
+			(specCategory.category_id = ? OR
 			specCategory.category_id IN
 				(select category.parent_id
 				 from (select *
 					   from category c
 					   order by parent_id, id) category,
-					  (select @pv := '${categoryId}') initialisation
+					  (select @pv := '?') initialisation
 				 where find_in_set(parent_id, @pv) > 0
 						   and @pv := concat(@pv, ',', category.id)))
 			`);
+			innerWheresValues.push(filter.categoryId, filter.categoryId);
 		}
 
+		let hasProducerProductLeftJoin = false;
 		if (filter?.minPrice) {
-			void qb.andWhere({
-				'producerProduct.current_price': { $gte: filter.minPrice }
-			});
+			hasProducerProductLeftJoin = true;
+			innerLeftJoins.push(`left join producer_product as producerProduct on spec.id = producerProduct.product_spec_id`);
+			innerWheres.push(`producerProduct.current_price >= ?`);
+			innerWheresValues.push(filter.minPrice);
 		}
 
 		if (filter?.maxPrice) {
-			void qb.andWhere({
-				'producerProduct.current_price': { $lte: filter.maxPrice }
-			});
+			if (!hasProducerProductLeftJoin)
+				innerLeftJoins.push(`left join producer_product as producerProduct on spec.id = producerProduct.product_spec_id`);
+			innerWheres.push(`producerProduct.current_price <= ?`);
+			innerWheresValues.push(filter.maxPrice);
 		}
 
 		if (filter?.search) {
-			void qb.andWhere({
-				$or: [
-					{ 'lower(spec.name)': { $like: stringSearchType(filter.search) } },
-					{ 'lower(spec.description)': { $like: stringSearchType(filter.search) } }
-				]
-			});
+			innerWheres.push(`(lower(spec.name) like ? or lower(spec.description) like ?)`);
+			const search = stringSearchType(filter.search);
+			innerWheresValues.push(search, search);
 		}
 
 		if (filter?.fields && !isEmpty(filter.fields)) {
-			void qb.leftJoin('spec.categories', 'specCategory').leftJoin('specCategory.fields', 'specField');
-
-			for (const [fieldId, values] of Object.entries(filter.fields)) {
-				void qb.andWhere({ 'specField.value': { $in: values }, 'specField.field_id': fieldId });
-			}
+			// void qb.leftJoin('spec.categories', 'specCategory').leftJoin('specCategory.fields', 'specField');
+			// for (const [fieldId, values] of Object.entries(filter.fields)) {
+			// 	void qb.andWhere({ 'specField.value': { $in: values }, 'specField.field_id': fieldId });
+			// }
 		}
 
 		// Calculate items count before grouping and paginating
@@ -103,11 +104,10 @@ export class ProductSpecGateway {
 		// ----- Pagination subquery (because we want to LIMIT before grouping)
 		// Process the order by
 		let innerOrderBy = `spec.name ASC`;
-		const leftJoins = [];
 		switch (options?.orderBy) {
 			case 'priceAsc':
 				// We need to join producerProduct to get the price
-				leftJoins.push(
+				innerLeftJoins.push(
 					`left join producer_product as producerProduct
 				on spec.id = producerProduct.product_spec_id`
 				);
@@ -119,7 +119,7 @@ export class ProductSpecGateway {
 				break;
 			case 'priceDesc':
 				// We need to join producerProduct to get the price
-				leftJoins.push(
+				innerLeftJoins.push(
 					`left join producer_product as producerProduct
 				on spec.id = producerProduct.product_spec_id`
 				);
@@ -131,12 +131,12 @@ export class ProductSpecGateway {
 				break;
 			case 'popularityAsc':
 				// We need to join producerProduct to get the orderItems
-				leftJoins.push(
+				innerLeftJoins.push(
 					`left join producer_product as producerProduct
 				on spec.id = producerProduct.product_spec_id`
 				);
 				// We need to join orderItem to get the quantity
-				leftJoins.push(`left join order_item as orderItem
+				innerLeftJoins.push(`left join order_item as orderItem
 				on producerProduct.id = orderItem.producer_product_id`);
 
 				innerOrderBy = `SUM(orderItem.quantity) ASC`;
@@ -146,12 +146,12 @@ export class ProductSpecGateway {
 				break;
 			case 'popularityDesc':
 				// We need to join producerProduct to get the orderItems
-				leftJoins.push(
+				innerLeftJoins.push(
 					`left join producer_product as producerProduct
 				on spec.id = producerProduct.product_spec_id`
 				);
 				// We need to join orderItem to get the quantity
-				leftJoins.push(`left join order_item as orderItem
+				innerLeftJoins.push(`left join order_item as orderItem
 				on producerProduct.id = orderItem.producer_product_id`);
 
 				innerOrderBy = `SUM(orderItem.quantity) DESC`;
@@ -179,12 +179,13 @@ export class ProductSpecGateway {
 			select spec.id
                       from (select spec.id
                             from product_spec as spec
-                              ${leftJoins.join(' ')}
+                              ${innerLeftJoins.join(' ')}
+							  ${innerWheres.length ? `where ${innerWheres.join(' and ')}` : ''}
                             group by spec.id
                             order by ${innerOrderBy}
                             limit ?, ?) as spec
 		)`,
-			[pagination.offset, pagination.limit]
+			[...innerWheresValues, pagination.offset, pagination.limit]
 		);
 
 		// Fetch results and map them
