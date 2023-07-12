@@ -32,11 +32,23 @@ export class ProductSpecGateway {
 			.select('*')
 			.leftJoin('spec.producerProducts', 'producerProduct');
 
+		// Calculate items count before grouping and paginating
+		const miscQb = qb
+			.clone()
+			.select('COUNT(DISTINCT spec.id) as totalItems')
+			.addSelect('MIN(producerProduct.current_price) as minPrice')
+			.addSelect('MAX(producerProduct.current_price) as maxPrice') as unknown as SelectQueryBuilder<{
+			totalItems: number;
+			minPrice: number;
+			maxPrice: number;
+		}>;
+
 		const innerWheres = [];
 		const innerWheresValues = [];
 		const innerLeftJoins = [];
 		if (filter?.categoryId) {
 			innerLeftJoins.push(`left join product_spec_category as specCategory on spec.id = specCategory.product_spec_id`);
+			void miscQb.leftJoin('spec.categories', 'specCategory');
 			innerWheres.push(`
 			(specCategory.category_id = ? OR
 			specCategory.category_id IN
@@ -54,14 +66,17 @@ export class ProductSpecGateway {
 		let hasProducerProductLeftJoin = false;
 		if (filter?.minPrice) {
 			hasProducerProductLeftJoin = true;
+			void miscQb.leftJoin('spec.producerProducts', 'producerProduct');
 			innerLeftJoins.push(`left join producer_product as producerProduct on spec.id = producerProduct.product_spec_id`);
 			innerWheres.push(`producerProduct.current_price >= ?`);
 			innerWheresValues.push(filter.minPrice);
 		}
 
 		if (filter?.maxPrice) {
-			if (!hasProducerProductLeftJoin)
+			if (!hasProducerProductLeftJoin) {
 				innerLeftJoins.push(`left join producer_product as producerProduct on spec.id = producerProduct.product_spec_id`);
+				void miscQb.leftJoin('spec.producerProducts', 'producerProduct');
+			}
 			innerWheres.push(`producerProduct.current_price <= ?`);
 			innerWheresValues.push(filter.maxPrice);
 		}
@@ -79,16 +94,7 @@ export class ProductSpecGateway {
 			// }
 		}
 
-		// Calculate items count before grouping and paginating
-		const miscQb = qb
-			.clone()
-			.select('COUNT(DISTINCT spec.id) as totalItems')
-			.addSelect('MIN(producerProduct.current_price) as minPrice')
-			.addSelect('MAX(producerProduct.current_price) as maxPrice') as unknown as SelectQueryBuilder<{
-			totalItems: number;
-			minPrice: number;
-			maxPrice: number;
-		}>;
+		if (innerWheres.length) void miscQb.andWhere(innerWheres.join(' AND '), innerWheresValues);
 
 		// Add producers count, min and max price
 		void qb
