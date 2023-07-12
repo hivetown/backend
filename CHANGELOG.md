@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/hivetown/backend/compare/v1.4.0...v1.4.1) (2023-07-12)
+
+
+### Bug Fixes
+
+* product search because of inner query ([a14e201](https://github.com/hivetown/backend/commit/a14e2019ce69d85186ea1f2b82d2d829a6490f21))
+
 ## [1.4.0](https://github.com/hivetown/backend/compare/v1.3.0...v1.4.0) (2023-07-11)
 
 
